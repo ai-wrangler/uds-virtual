@@ -14,7 +14,12 @@ for (const [name, w, h] of SIZES) {
     if (name === 'desktop-1440') await page.screenshot({ path: path.join(OUT, 'power-overlay-1440.png') });
     await page.getByTestId('power').click();
     await page.waitForFunction(() => document.body.dataset.state === 'running');
-    await page.getByTestId('pattern-A13').click();
+    const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+    await page.getByTestId('slot-file-0').setInputFiles(path.join(root, 'app/data/midi/demo.mid'));
+    await page.getByTestId('slot-file-1').setInputFiles(path.join(root, 'tests/audio/fixtures/basic-format0.mid'));
+    await page.getByTestId('slot-file-4').setInputFiles(path.join(root, 'tests/audio/fixtures/tempo-format1.mid'));
+    await page.getByTestId('slot-0').click();
+    await page.waitForTimeout(5200);   // let the toasts go
     await page.getByTestId('rhythm-toggle').click();
     await page.waitForTimeout(900);
     await page.keyboard.press('5');

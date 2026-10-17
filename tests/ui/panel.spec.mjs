@@ -1,6 +1,12 @@
 // Panel tests (owner: ui). Run: npx playwright test --project=ui
 // They use the silent fake (?fake=1), so they do not depend on the audio or engine parts.
 import { test, expect } from '@playwright/test';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const FX = (n) => path.join(ROOT, 'tests/audio/fixtures', n);
+const DEMO = path.join(ROOT, 'app/data/midi/demo.mid');
 
 const SEG7 = [0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07];
 
@@ -38,12 +44,13 @@ test('every data-testid from CONTRACT section 6 exists', async ({ page }) => {
     'display', 'sim-speed', 'wav-export'];
   for (let i = 0; i < 8; i++) ids.push(`pad-${i}`);
   for (const s of 'abcdefg') ids.push(`seg-${s}`);
-  const pats = await page.evaluate(() => window.uds.patterns.map((p) => p.id));
-  expect(pats.length).toBe(18);
-  for (const p of pats) ids.push(`pattern-${p}`);
+  for (let i = 0; i < 16; i++) ids.push(`slot-${i}`, `slot-file-${i}`, `slot-clear-${i}`);
+  await expect(page.locator('[data-testid^=pattern-]')).toHaveCount(0);
   for (let ch = 0; ch < 8; ch++) for (const k of ['pitch', 'sweep', 'decay', 'balance', 'level']) ids.push(`knob-${ch}-${k}`);
   for (const id of ids) await expect(page.getByTestId(id), id).toHaveCount(1);
   await expect(page.getByTestId('midi-file')).toHaveAttribute('type', 'file');
+  await expect(page.getByTestId('slot-file-3')).toHaveAttribute('type', 'file');
+  await expect(page.getByTestId('slot-file-3')).toHaveAttribute('accept', '.mid,.midi');
   for (const k of await page.locator('[data-testid^=knob-], [data-testid=tempo]').all()) {
     await expect(k).toHaveAttribute('role', 'slider');
     for (const a of ['aria-valuemin', 'aria-valuemax', 'aria-valuenow']) expect(await k.getAttribute(a)).toMatch(/^\d+$/);
@@ -140,39 +147,96 @@ test('sim-speed turns amber below 1.2x and red below 1.0x', async ({ page }) => 
   await expect(page.locator('#speed-box')).not.toHaveClass(/warn|bad/);
 });
 
-test('rhythm: patterns, space toggles, steps fit the pattern length, Esc stops', async ({ page }) => {
+test('slots: all empty at first, Start disabled on an empty slot', async ({ page }) => {
+  await open(page);
+  for (let i = 0; i < 16; i++) await expect(page.getByTestId(`slot-${i}`)).toContainText('empty');
+  await expect(page.getByTestId('rhythm-toggle')).toBeDisabled();
+  await page.keyboard.press('Space');
+  expect(await page.evaluate(() => window.uds.rhythmPlaying)).toBe(false);
+  expect(await page.evaluate(() => window.uds.slots.every((s) => s === null))).toBe(true);
+});
+
+test('slots: load, name and bars, tempo from the file, steps fit, Space and Esc, clear, reload', async ({ page }) => {
   await open(page);
   await powerOn(page);
-  await page.getByTestId('pattern-A8').click(); // waltz, 24 steps
-  await expect(page.locator('#steps .step')).toHaveCount(24);
-  await page.getByTestId('pattern-B0').click(); // house, 124 bpm
-  await expect(page.getByTestId('tempo')).toHaveAttribute('aria-valuenow', '124');
-  await expect(page.locator('#steps .step')).toHaveCount(32);
-  await page.getByTestId('pattern-B1').click();
+  await page.getByTestId('slot-file-2').setInputFiles(FX('no-ch10.mid'));     // 100 bpm, 1 bar
+  await expect(page.getByTestId('slot-2')).toContainText('no-ch10.mid');
+  await expect(page.getByTestId('slot-2')).toContainText('1 bar');
+  await expect(page.getByTestId('slot-2')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('tempo')).toHaveAttribute('aria-valuenow', '100');
   await expect(page.locator('#steps .step')).toHaveCount(16);
-  await page.getByTestId('pattern-A0').click();
-  await expect(page.getByTestId('pattern-A0')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('slot-file-0').setInputFiles(DEMO);                    // 104 bpm, 4 bars
+  await expect(page.getByTestId('slot-0')).toContainText('4 bars');
+  await expect(page.getByTestId('tempo')).toHaveAttribute('aria-valuenow', '104');
+  await expect(page.locator('#steps .step')).toHaveCount(64);
+  await page.getByTestId('slot-2').click();                                     // select
+  await expect(page.getByTestId('slot-2')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('tempo')).toHaveAttribute('aria-valuenow', '100');
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('Space');
   await expect(page.getByTestId('rhythm-toggle')).toHaveAttribute('aria-pressed', 'true');
-  await expect.poll(() => page.evaluate(() => window.__steps.length)).toBeGreaterThan(3);
+  await expect.poll(() => page.evaluate(() => window.__steps.filter((s) => s.slot === 2).length)).toBeGreaterThan(3);
   await expect(page.locator('#steps .step.on')).toHaveCount(1);
   expect(await page.evaluate(() => window.__hits.some((h) => h.source === 'rhythm'))).toBe(true);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('rhythm-toggle')).toHaveAttribute('aria-pressed', 'false');
-  expect(await page.evaluate(() => window.uds.rhythmPlaying)).toBe(false);
-  await page.getByTestId('rhythm-toggle').click();
-  await expect(page.getByTestId('rhythm-toggle')).toHaveAttribute('aria-pressed', 'true');
-  await page.getByTestId('rhythm-toggle').click();
-  await expect(page.getByTestId('rhythm-toggle')).toHaveAttribute('aria-pressed', 'false');
-  // Space on the focused toggle button toggles once, not twice
-  await page.getByTestId('rhythm-toggle').focus();
-  await page.keyboard.press('Space');
-  await page.waitForTimeout(100);
-  await expect(page.getByTestId('rhythm-toggle')).toHaveAttribute('aria-pressed', 'true');
-  await page.keyboard.press('Space');
-  await page.waitForTimeout(100);
-  await expect(page.getByTestId('rhythm-toggle')).toHaveAttribute('aria-pressed', 'false');
+  // a file with no drum notes is refused with a message, the slot stays empty
+  await page.getByTestId('slot-file-5').setInputFiles({ name: 'piano.mid', mimeType: 'audio/midi', buffer: pianoMidi() });
+  await expect(page.locator('#toast')).toContainText('No drum notes');
+  await expect(page.getByTestId('slot-5')).toContainText('empty');
+  // reload: slots and selection survive
+  await page.reload();
+  await page.waitForSelector('body.ready');
+  await powerOn(page);
+  await expect(page.getByTestId('slot-0')).toContainText('demo.mid');
+  await expect(page.getByTestId('slot-2')).toHaveAttribute('aria-pressed', 'true');
+  // clear
+  await page.getByTestId('slot-clear-2').click();
+  await expect(page.getByTestId('slot-2')).toContainText('empty');
+  await expect(page.getByTestId('rhythm-toggle')).toBeDisabled();
+  await page.reload();
+  await page.waitForSelector('body.ready');
+  await powerOn(page);
+  await expect(page.getByTestId('slot-2')).toContainText('empty');
+  await expect(page.getByTestId('slot-0')).toContainText('demo.mid');
+  // clear all asks for a second click
+  await page.getByTestId('slots-clear-all').click();
+  await expect(page.getByTestId('slot-0')).toContainText('demo.mid');
+  await page.getByTestId('slots-clear-all').click();
+  await expect(page.getByTestId('slot-0')).toContainText('empty');
 });
+
+test('slots: a file longer than 4 bars shows "first 4 bars"', async ({ page }) => {
+  await open(page);
+  const ev = [];
+  for (let bar = 0; bar < 6; bar++) ev.push(bar * 4 * 96, 36);
+  await page.getByTestId('slot-file-7').setInputFiles({ name: 'long.mid', mimeType: 'audio/midi', buffer: drumMidi(ev) });
+  await expect(page.getByTestId('slot-7')).toContainText('first 4 bars');
+});
+
+test('page has no Cyrillic text', async ({ page }) => {
+  await open(page);
+  await powerOn(page);
+  await page.getByTestId('slot-file-0').setInputFiles(DEMO);
+  const txt = await page.evaluate(() => document.body.innerText + document.title
+    + [...document.querySelectorAll('[title],[aria-label]')].map((e) => (e.title || '') + (e.getAttribute('aria-label') || '')).join(' '));
+  expect(txt.match(/[\u0400-\u04FF]+/g)).toBeNull();
+});
+
+// format 0, 96 ppq: [tick, note, tick, note, ...] on channel 10
+function drumMidi(flat, ch = 9) {
+  const trk = [];
+  let last = 0;
+  for (let i = 0; i < flat.length; i += 2) {
+    const d = flat[i] - last; last = flat[i];
+    const v = []; let x = d; v.unshift(x & 0x7f); while ((x >>= 7)) v.unshift((x & 0x7f) | 0x80);
+    trk.push(...v, 0x90 | ch, flat[i + 1], 100);
+  }
+  trk.push(0, 0xff, 0x2f, 0);
+  const u32 = (v) => [(v >>> 24) & 255, (v >>> 16) & 255, (v >>> 8) & 255, v & 255];
+  return Buffer.from([0x4d, 0x54, 0x68, 0x64, ...u32(6), 0, 0, 0, 1, 0, 96, 0x4d, 0x54, 0x72, 0x6b, ...u32(trk.length), ...trk]);
+}
+function pianoMidi() { return drumMidi([0, 60, 96, 64], 0); }
 
 function midiFile() {
   // format 0, 480 ppq, 120 bpm: kick, snare, hat, and an unmapped note 60
@@ -202,11 +266,14 @@ test('output: filter, volume and WAV export download', async ({ page }) => {
   expect(await page.evaluate(() => window.uds.filter)).toBe('warm');
   await page.getByTestId('volume').fill('0.5');
   expect(await page.evaluate(() => window.uds.volume)).toBe(0.5);
+  await expect(page.getByTestId('wav-export')).toBeDisabled();      // nothing loaded yet
+  await page.getByTestId('slot-file-0').setInputFiles(FX('basic-format0.mid'));
+  await expect(page.locator('#wav-what')).toContainText('Slot 1 · 8 bars');
   const dl = page.waitForEvent('download');
   await page.getByTestId('wav-export').click();
   await expect(page.getByTestId('wav-export')).toHaveClass(/busy/);
   const d = await dl;
-  expect(d.suggestedFilename()).toBe('uds-1x1-A0-120bpm.wav');
+  expect(d.suggestedFilename()).toBe('uds-1x1-slot1-basic-format0-120bpm.wav');
   await expect(page.getByTestId('wav-export')).not.toHaveClass(/busy/);
 });
 

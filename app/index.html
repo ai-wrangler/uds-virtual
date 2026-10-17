@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,21 +14,21 @@
     <div class="brand">
       <div class="plate">
         <h1>UDS-1x1</h1>
-        <span class="model">УДС-1х1</span>
+        <span class="model">virtual</span>
       </div>
       <p class="sub">virtual chip · homage to the Formanta UDS</p>
     </div>
     <div class="hdr-meters">
-      <div class="badge" id="engine-badge" title="Simulation backend"><span class="ru">Движок</span> <b id="engine-name">…</b></div>
+      <div class="badge" id="engine-badge" title="Simulation backend"><span class="lb">Engine</span> <b id="engine-name">…</b></div>
       <div class="speed" id="speed-box">
-        <span class="ru">Скорость <small>sim speed</small></span>
+        <span class="lb">Sim speed</span>
         <output data-testid="sim-speed" id="sim-speed">— MHz · —x real time</output>
         <span class="speed-hint" id="speed-hint">slower than real time: sound may stutter, WAV export still works</span>
       </div>
     </div>
     <button class="power" data-testid="power" id="power" type="button" aria-pressed="false">
       <span class="power-lamp" aria-hidden="true"></span>
-      <span class="lbl"><span class="ru">Сеть</span><small>power</small></span>
+      <span class="lbl"><span class="lb">Power</span></span>
     </button>
   </header>
 
@@ -36,16 +36,16 @@
 
   <main class="panel">
     <section class="block strips-block" aria-labelledby="h-strips">
-      <h2 id="h-strips" class="block-title"><span class="ru">Каналы</span> <small>channels</small></h2>
+      <h2 id="h-strips" class="block-title"><span class="lb">Channels</span> <small>pads 1–8 · chip ch 0–7</small></h2>
       <div class="strips" id="strips"></div>
     </section>
 
     <aside class="side">
       <section class="block chip-block" aria-labelledby="h-chip">
-        <h2 id="h-chip" class="block-title"><span class="ru">Микросхема</span> <small>chip</small></h2>
+        <h2 id="h-chip" class="block-title"><span class="lb">Chip</span></h2>
         <div class="chip-row">
           <div class="display-well">
-            <svg class="display" data-testid="display" id="display" viewBox="0 0 60 100" role="img" aria-label="7-segment display">
+            <svg class="display" data-testid="display" id="display" viewBox="0 0 60 100" role="img" aria-label="7-segment display: the chip channel (0..7) last hit, which is the pad number minus 1"><title>Chip channel last hit, 0..7 (pad number − 1)</title>
               <polygon class="seg seg-a" data-testid="seg-a" points="14,6 46,6 50,10 46,14 14,14 10,10"/>
               <polygon class="seg seg-b" data-testid="seg-b" points="48,12 52,16 52,44 48,48 44,44 44,16"/>
               <polygon class="seg seg-c" data-testid="seg-c" points="48,52 52,56 52,84 48,88 44,84 44,56"/>
@@ -57,85 +57,89 @@
             </svg>
           </div>
           <div class="chip-leds">
-            <div class="ledline"><i class="led led-amber" id="led-busy"></i><span class="ru">ЗАНЯТ</span><small>busy</small></div>
-            <div class="ledline"><i class="led led-red" id="led-cs"></i><span class="ru">ВЫБОР</span><small>cs</small></div>
-            <div class="ledline"><i class="led led-green" id="led-frame"></i><span class="ru">КАДР</span><small>frame</small></div>
+            <div class="ledline"><i class="led led-amber" id="led-busy"></i><span class="lb">Busy</span></div>
+            <div class="ledline"><i class="led led-red" id="led-cs"></i><span class="lb">CS</span></div>
+            <div class="ledline"><i class="led led-green" id="led-frame"></i><span class="lb">Frame</span></div>
           </div>
         </div>
         <dl class="counters">
-          <div><dt><span class="ru">Такты</span> <small>cycles</small></dt><dd id="cnt-cycles">0</dd></div>
-          <div><dt><span class="ru">Кадры</span> <small>frames</small></dt><dd id="cnt-frames">0</dd></div>
-          <div><dt><span class="ru">Модель</span> <small>backend</small></dt><dd id="cnt-backend">—</dd></div>
+          <div><dt><span class="lb">Cycles</span></dt><dd id="cnt-cycles">0</dd></div>
+          <div><dt><span class="lb">Frames</span></dt><dd id="cnt-frames">0</dd></div>
+          <div><dt><span class="lb">Backend</span></dt><dd id="cnt-backend">—</dd></div>
         </dl>
       </section>
 
       <section class="block out-block" aria-labelledby="h-out">
-        <h2 id="h-out" class="block-title"><span class="ru">Выход</span> <small>output</small></h2>
+        <h2 id="h-out" class="block-title"><span class="lb">Output</span></h2>
         <div class="scope-well"><canvas id="scope" class="scope" width="320" height="120" aria-label="Oscilloscope"></canvas></div>
         <div class="out-controls">
           <label class="ctl">
-            <span class="ctl-lbl"><span class="ru">Фильтр</span> <small>filter</small></span>
+            <span class="ctl-lbl"><span class="lb">Filter</span></span>
             <select data-testid="filter" id="filter">
               <option value="rc">RC 15.9 kHz</option>
-              <option value="warm">тёплый · warm 4 kHz</option>
-              <option value="off">выкл · off</option>
+              <option value="warm">Warm 4 kHz</option>
+              <option value="off">Off</option>
             </select>
           </label>
           <label class="ctl">
-            <span class="ctl-lbl"><span class="ru">Громкость</span> <small>volume</small> <output id="volume-out">80</output></span>
+            <span class="ctl-lbl"><span class="lb">Volume</span> <output id="volume-out">80</output></span>
             <input type="range" data-testid="volume" id="volume" min="0" max="1" step="0.01" value="0.8">
           </label>
         </div>
         <div class="wav-row">
           <select id="wav-what" aria-label="What to export">
-            <option value="rhythm">Ритм · 8 bars</option>
+            <option value="rhythm" disabled>Selected slot · 8 bars</option>
             <option value="midi" disabled>MIDI file</option>
           </select>
-          <button type="button" class="btn" data-testid="wav-export" id="wav-export"><span class="ru">Запись WAV</span><small>export</small></button>
+          <button type="button" class="btn" data-testid="wav-export" id="wav-export"><span class="lb">Export WAV</span></button>
         </div>
       </section>
       <section class="block midi-block" aria-labelledby="h-midi">
-        <h2 id="h-midi" class="block-title"><span class="ru">МИДИ</span> <small>midi</small></h2>
+        <h2 id="h-midi" class="block-title"><span class="lb">MIDI</span></h2>
         <div class="midi-file">
           <label class="btn file-btn">
-            <span class="ru">Файл .mid</span><small>open</small>
+            <span class="lb">Open .mid</span><small>from your computer</small>
             <input type="file" data-testid="midi-file" id="midi-file" accept=".mid,.midi,audio/midi,audio/x-midi">
           </label>
           <div class="midi-info">
-            <div class="midi-name" id="midi-name">перетащите .mid сюда · drop a .mid file</div>
+            <div class="midi-name" id="midi-name">or drop a .mid file here</div>
             <div class="midi-bar"><div class="midi-fill" id="midi-fill"></div></div>
             <div class="midi-meta"><span id="midi-pos">0:00</span> / <span id="midi-dur">0:00</span> <span id="midi-unmapped" class="dim"></span></div>
           </div>
           <div class="midi-btns">
-            <button type="button" class="btn" data-testid="midi-play" id="midi-play" disabled aria-pressed="false"><span class="ru">Играть</span><small>play</small></button>
-            <label class="chk"><input type="checkbox" id="midi-loop"> <span class="ru">Повтор</span><small>loop</small></label>
+            <button type="button" class="btn" data-testid="midi-play" id="midi-play" disabled aria-pressed="false"><span class="lb">Play</span></button>
+            <label class="chk"><input type="checkbox" id="midi-loop"> <span class="lb">Loop</span></label>
           </div>
         </div>
         <div class="midi-live">
-          <button type="button" class="btn" data-testid="midi-input" id="midi-input"><span class="ru">Живой МИДИ</span><small>live input</small></button>
+          <button type="button" class="btn" data-testid="midi-input" id="midi-input"><span class="lb">Live MIDI</span><small>input</small></button>
           <i class="led led-green" id="led-midi" title="MIDI activity"></i>
-          <span class="midi-devs dim" id="midi-devs">выкл · off</span>
+          <span class="midi-devs dim" id="midi-devs">off</span>
         </div>
       </section>
     </aside>
 
     <section class="block rhythm-block" aria-labelledby="h-rhythm">
-      <h2 id="h-rhythm" class="block-title"><span class="ru">Авторитм</span> <small>autorhythm</small></h2>
+      <h2 id="h-rhythm" class="block-title"><span class="lb">Autorhythm</span> <small>16 slots · load a .mid into any slot</small></h2>
       <div class="rhythm-grid">
-        <div class="banks">
-          <div class="bank"><span class="bank-lbl">A</span><div class="pats" id="bank-A"></div></div>
-          <div class="bank bank-b"><span class="bank-lbl">B</span><div class="pats" id="bank-B"></div></div>
+        <div class="slots-wrap">
+          <div class="slots" id="slots" role="group" aria-label="Rhythm slots 1 to 16"></div>
+          <div class="slots-foot">
+            <span class="dim" id="slots-hint">Click an empty slot to load a .mid file, or drop one on it.</span>
+            <button type="button" class="btn btn-small" id="slots-clear-all" data-testid="slots-clear-all"><span class="lb">Clear all</span></button>
+          </div>
         </div>
         <div class="transport">
-          <button type="button" class="btn btn-big" data-testid="rhythm-toggle" id="rhythm-toggle" aria-pressed="false">
-            <span class="tri" aria-hidden="true"></span><span class="lbl"><span class="ru">Пуск</span><small>start</small></span>
+          <button type="button" class="btn btn-big" data-testid="rhythm-toggle" id="rhythm-toggle" aria-pressed="false" disabled>
+            <span class="tri" aria-hidden="true"></span><span class="lbl"><span class="lb">Start</span></span>
           </button>
           <div class="tempo-box" id="tempo-box"></div>
-          <button type="button" class="btn btn-stop" id="stop-all" title="Esc"><span class="ru">Стоп</span><small>stop all · Esc</small></button>
+          <button type="button" class="btn btn-stop" id="stop-all" title="Esc"><span class="lb">Stop all</span><small>Esc</small></button>
         </div>
       </div>
       <div class="steps-row">
         <div class="steps" id="steps" aria-label="Rhythm steps"></div>
+        <span class="bar-count" id="bar-count" hidden></span>
         <span class="pat-name" id="pat-name"></span>
       </div>
     </section>
@@ -143,7 +147,7 @@
   </main>
 
   <footer class="foot">
-    <span>Клавиши · keys: <kbd>1</kbd>…<kbd>8</kbd> pads · <kbd>Space</kbd> rhythm · <kbd>Esc</kbd> stop</span>
+    <span>Keys: <kbd>1</kbd>…<kbd>8</kbd> pads · <kbd>Space</kbd> rhythm · <kbd>Esc</kbd> stop</span>
     <span>UDS-1x1 — Tiny Tapeout chip, Verilog simulated at 6 MHz · <a href="https://github.com/ai-wrangler/uds-virtual">source</a></span>
   </footer>
 </div>
@@ -151,13 +155,12 @@
 <div class="overlay" id="overlay">
   <button type="button" class="overlay-btn" id="overlay-btn">
     <span class="power-lamp" aria-hidden="true"></span>
-    <span class="ru">Включить</span>
-    <small>Power on</small>
+    <span class="lb">Power on</span>
   </button>
   <p class="overlay-note">The browser needs a click before it plays sound.</p>
 </div>
 
-<div class="drop-hint" id="drop-hint" hidden><span>Отпустите .mid · drop to load</span></div>
+<div class="drop-hint" id="drop-hint" hidden><span>Drop the .mid to load it into the MIDI player</span></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script type="module" src="ui/main.js"></script>

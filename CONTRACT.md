@@ -117,6 +117,15 @@ uds.patterns;               // [{ id: 'A0'..'A15', 'B0', 'B1', bank, index, name
 uds.setPattern(id); uds.setTempo(bpm);   // tempo 40..240, default 120
 uds.startRhythm(); uds.stopRhythm(); uds.rhythmPlaying; uds.pattern /* id string, e.g. 'A0' */; uds.tempo;
 
+// Autorhythm slots (the panel's rhythm source; the built-in patterns above stay in the API, unused by the panel)
+uds.slots;                  // Array(16): null or { index, name, bars, steps, stepsPerBeat (4), stepsPerBar, beatSteps,
+                            //   meter, notes: [{ step, ch, v, velocity, note }], bpm, truncated, unmapped }
+await uds.loadSlot(index, arrayBuffer, name);   // -> the slot; throws an Error if no note maps to a drum channel
+uds.clearSlot(index); uds.setSlot(index | null); uds.slot;   // selected index or null (null = the pattern plays)
+// startRhythm() does nothing while the selected slot is empty. setSlot applies the slot's bpm; while playing,
+// a slot-to-slot switch happens at the next bar line and starts at bar 1. renderWav({ what: 'rhythm' })
+// renders the selected slot (default 8 bars + 1 s).
+
 await uds.loadMidi(arrayBuffer, name);   // -> { name, duration, notes, unmapped: { [note]: count } }
 uds.playMidi(); uds.stopMidi(); uds.setMidiLoop(on); uds.midiPlaying;
 
@@ -131,7 +140,8 @@ await uds.renderWav({ what: 'rhythm' | 'midi', seconds });   // -> Blob (audio/w
 //           simHz = chip clocks per second of time spent in engine.render (smoothed); realtime = simHz / 6e6,
 //           i.e. headroom. Extra fields: leadTargetMs, dropped, hits, sampleRate, backend, mock, midi
 //  'hit'    { ch, level, source: 'pad' | 'rhythm' | 'midi' | 'midi-in' }    when the hit is heard
-//  'step'   { index, length, patternId }                                  when a rhythm step is heard
+//  'step'   { index, length, patternId, slot }    when a rhythm step is heard (slot: index, or null for a pattern)
+//  'slots'  { slots, slot }                       after loadSlot, clearSlot, setSlot
 //  'midi'   { position, duration, playing }
 //  'midi-input' { inputs }
 //  'error'  { message }
@@ -145,6 +155,13 @@ Rules shared by every source of hits (pads, rhythm, MIDI file, live MIDI):
   softer (as in `pattern_events` in the model).
 - A rhythm step lasts `60 / (tempo * stepsPerBeat)` seconds. Bank B patterns carry a default bpm, which
   `setPattern` applies.
+- Slots (`app/audio/slots.js`): the MIDI file's note map and channel rule below; note-ons quantized to the
+  nearest 16th; the loop is whole bars of the first time signature (default 4/4) covering the last note and
+  the last whole bar before end-of-track, at most 4 bars (later notes dropped, `truncated: true`); per-hit
+  velocity as below; two notes on one step and channel play once at the higher velocity; bpm = the first
+  tempo, rounded, clamped to 40..240 (120 if none).
+- Output: the worker's 3x make-up gain is followed by a soft limiter (linear to 0.8, tanh knee towards 1.0),
+  not a hard clamp.
 - MIDI file: General MIDI drum notes on channel 10 (if a file has no notes on channel 10, all channels are
   used). Live MIDI: note-ons on any channel. Velocity 1..127 maps to v = velocity / 127. Note map:
 
@@ -177,7 +194,9 @@ The page sets `window.uds` to its `UDSAudio` instance once created, mirrors `uds
 | `power` | the start button (first click starts audio) |
 | `pad-0` .. `pad-7` | pads |
 | `knob-<ch>-<key>` | knobs, e.g. `knob-4-pitch`: `role="slider"`, `aria-valuemin/max/now`, arrow keys change it |
-| `pattern-<id>` | pattern buttons, e.g. `pattern-A0` |
+| `slot-0` .. `slot-15` | Autorhythm slot buttons (click: select; an empty slot also opens the file picker) |
+| `slot-file-0` .. `slot-file-15` | `<input type=file accept=".mid,.midi">` per slot (hidden) |
+| `slot-clear-0` .. `slot-clear-15` | clear one slot (`slot-load-<n>` replaces its file; `slots-clear-all` clears all after a second click) |
 | `rhythm-toggle`, `tempo` | rhythm start/stop, tempo control (`role="slider"` or `<input type=range>`) |
 | `midi-file`, `midi-play`, `midi-input` | `<input type=file>` for .mid, play/stop, enable live MIDI |
 | `filter`, `volume` | filter switch, master volume |
@@ -187,7 +206,9 @@ The page sets `window.uds` to its `UDSAudio` instance once created, mirrors `uds
 
 - `filter` is a `<select>` (values `rc`, `warm`, `off`), `volume` an `<input type=range>` 0..1, `tempo` a
   knob (`role="slider"`).
-- `body.ready` is set once the panel is fully built (pads, knobs and patterns appear after
+- The pattern buttons (`pattern-<id>`) were removed: the panel is English only and the Autorhythm plays .mid
+  files from 16 slots, saved in localStorage (`uds-virtual.slots.v1`: base64 bytes + name, and the selection).
+- `body.ready` is set once the panel is fully built (pads, knobs and stored slots appear after
   `UDSAudio.create()` resolves); tests wait for it.
 
 URL flags: `?engine=mock` makes the page use the mock engine; `?fake=1` uses the ui's silent fake

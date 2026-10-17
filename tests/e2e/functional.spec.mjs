@@ -1,7 +1,8 @@
 // Functional end-to-end tests, run with the mock engine and with the real engine.
 import { test, expect } from '@playwright/test';
+import path from 'node:path';
 import {
-  MODES, startMode, requireTestId, events, now, measure, readDisplay, rockMidi, SEG7,
+  ROOT, MODES, startMode, requireTestId, events, now, measure, readDisplay, rockMidi, SEG7,
 } from './helpers.mjs';
 
 const SILENCE_RMS = 1e-4;
@@ -40,46 +41,19 @@ for (const mode of MODES) {
       }
     });
 
-    test('rhythm starts and steps come at the set tempo (±5%)', async ({ page }) => {
+    test('tempo change changes the step rate of a slot', async ({ page }) => {
       await startMode(page, mode);
-      await requireTestId(page, 'rhythm-toggle');
-      await page.getByTestId('pattern-A0').click();
-      await page.evaluate(() => window.uds.setTempo(120));
-      const spb = await page.evaluate(() => window.uds.patterns.find((p) => p.id === 'A0').stepsPerBeat);
-      expect(await page.evaluate(() => window.uds.pattern?.id ?? window.uds.pattern)).toBe('A0');
-      const t0 = await now(page);
-      await page.getByTestId('rhythm-toggle').click();
-      await expect.poll(() => page.evaluate(() => window.uds.rhythmPlaying)).toBe(true);
-      await page.waitForTimeout(4500);
-      const steps = (await events(page, 'step', t0)).filter((e) => e.detail.patternId === 'A0');
-      const hits = await events(page, 'hit', t0);
-      await page.getByTestId('rhythm-toggle').click();
-      await expect.poll(() => page.evaluate(() => window.uds.rhythmPlaying)).toBe(false);
-      expect(steps.length).toBeGreaterThan(8);
-      // skip the first step (start-up latency) and use the span of the rest
-      const s = steps.slice(1);
-      const interval = (s[s.length - 1].t - s[0].t) / (s.length - 1) / 1000;
-      const expected = 60 / (120 * spb);
-      test.info().annotations.push({ type: 'step interval', description: `${interval.toFixed(4)} s, expected ${expected.toFixed(4)} s` });
-      expect(Math.abs(interval / expected - 1), `step interval ${interval}s vs ${expected}s`).toBeLessThan(0.05);
-      expect(hits.some((h) => h.detail.source === 'rhythm'), 'rhythm hits').toBe(true);
-      // steps are consecutive indices
-      for (let i = 1; i < s.length; i++) expect(s[i].detail.index).toBe((s[i - 1].detail.index + 1) % s[i].detail.length);
-    });
-
-    test('tempo change changes the step rate', async ({ page }) => {
-      await startMode(page, mode);
-      await requireTestId(page, 'rhythm-toggle');
-      await page.getByTestId('pattern-A0').click();
+      await requireTestId(page, 'slot-file-0');
+      await page.getByTestId('slot-file-0').setInputFiles(path.join(ROOT, 'tests/audio/fixtures/basic-format0.mid'));
+      await expect.poll(() => page.evaluate(() => !!window.uds.slots[0])).toBe(true);
       await page.evaluate(() => window.uds.setTempo(180));
-      const spb = await page.evaluate(() => window.uds.patterns.find((p) => p.id === 'A0').stepsPerBeat);
       const t0 = await now(page);
       await page.getByTestId('rhythm-toggle').click();
       await page.waitForTimeout(3500);
       const s = (await events(page, 'step', t0)).slice(1);
       await page.getByTestId('rhythm-toggle').click();
       const interval = (s[s.length - 1].t - s[0].t) / (s.length - 1) / 1000;
-      expect(Math.abs(interval / (60 / (180 * spb)) - 1)).toBeLessThan(0.05);
+      expect(Math.abs(interval / (60 / (180 * 4)) - 1)).toBeLessThan(0.05);
     });
 
     test('MIDI file uploads through midi-file and plays', async ({ page }) => {
@@ -223,6 +197,8 @@ for (const mode of MODES) {
     test('wav-export button gives a download', async ({ page }) => {
       await startMode(page, mode);
       await requireTestId(page, 'wav-export');
+      await page.getByTestId('slot-file-0').setInputFiles(path.join(ROOT, 'tests/audio/fixtures/basic-format0.mid'));
+      await expect(page.getByTestId('wav-export')).toBeEnabled();
       const dl = page.waitForEvent('download', { timeout: 30_000 });
       await page.getByTestId('wav-export').click();
       const d = await dl;

@@ -1,9 +1,13 @@
 // main.js — the UDS-1x1 panel. Talks only to the UDSAudio API (CONTRACT.md section 5).
 import { createKnob } from './knob.js';
+import { loadStored, storeSlot, forgetSlot, forgetAll, storeSelection, bytesFromB64 } from './slot-store.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const SEG = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+// pad labels by chip channel: snare, small (high) tom, middle tom, big (low) tom, bass drum, cymbal, hats
+const PAD_SHORT = ['SD', 'HT', 'MT', 'LT', 'BD', 'CY', 'CH', 'OH'];
+const SLOTS = 16;
 
 function h(tag, cls, text) {
   const e = document.createElement(tag);
@@ -11,9 +15,10 @@ function h(tag, cls, text) {
   if (text !== undefined) e.textContent = text;
   return e;
 }
-function bil(ru, en) {
+function lbl(text, sub) {
   const f = document.createDocumentFragment();
-  f.append(h('span', 'ru', ru), h('small', null, en));
+  f.append(h('span', 'lb', text));
+  if (sub) f.append(h('small', null, sub));
   return f;
 }
 const fmtTime = (s) => {
@@ -53,7 +58,7 @@ async function main() {
   // the tempo control does not depend on the data, so it exists before UDSAudio is created
   const tempoKnob = createKnob({
     min: 40, max: 240, value: 120, def: 120, step: 2, testid: 'tempo',
-    label: 'tempo', labelRu: 'Темп', ariaLabel: 'Tempo (BPM)', className: 'knob-tempo',
+    label: 'Tempo', ariaLabel: 'Tempo (BPM)', className: 'knob-tempo',
     format: (v) => `${v}`,
     onChange: (v) => { window.uds?.setTempo(v); $('tempo-read').textContent = v; },
   });
@@ -74,8 +79,8 @@ async function main() {
     const n = $('notice');
     n.hidden = false;
     n.textContent = why === '?fake=1'
-      ? 'Демо без звука · fake audio (?fake=1): no sound, simulated chip status.'
-      : 'Звук недоступен · the audio module could not be loaded, so this is the silent fake. Check the console.';
+      ? 'Silent demo: fake audio (?fake=1), no sound, simulated chip status.'
+      : 'No sound: the audio module could not be loaded, so this is the silent fake. Check the console.';
   }
 
   // ---------------- header ----------------
@@ -97,7 +102,7 @@ async function main() {
       overlay.hidden = true;
     } catch (err) {
       console.warn(err);
-      toast('Не удалось включить · could not start audio: ' + (err?.message || err), 'bad');
+      toast('Could not start audio: ' + (err?.message || err), 'bad');
       overlay.hidden = true;
     }
   }
@@ -112,7 +117,7 @@ async function main() {
     if (s === 'running') overlay.hidden = true;
     showBackend();
     if (s !== 'running') clearLeds();
-    if (s === 'error') toast('Ошибка звука · audio error; WAV export may still work', 'bad');
+    if (s === 'error') toast('Audio error; WAV export may still work', 'bad');
   }
   uds.addEventListener('state', onState);
 
@@ -122,7 +127,7 @@ async function main() {
   legend.appendChild(h('div', 'legend-head'));
   for (const k of uds.knobs) {
     const row = h('div', 'legend-row');
-    row.append(bil(k.labelRu, k.label));
+    row.append(h('span', 'lb', k.label));
     row.title = k.note || '';
     legend.appendChild(row);
   }
@@ -139,8 +144,11 @@ async function main() {
     const led = h('i', 'led led-red strip-led');
     stripLeds[c.ch] = led;
     const num = h('span', 'strip-num', String(c.ch + 1));
+    num.title = `Pad ${c.ch + 1} (key ${c.ch + 1}) = chip channel ${c.ch}`;
     const names = h('div', 'strip-names');
-    names.append(h('span', 'ru', c.nameRu), h('small', null, c.name));
+    const chTag = h('small', 'strip-ch', `ch ${c.ch}`);
+    chTag.title = `Chip channel ${c.ch}: the 7-segment display shows ${c.ch} when this pad plays`;
+    names.append(h('span', 'lb', c.name), chTag);
     head.append(num, names, led);
     strip.appendChild(head);
     knobs[c.ch] = {};
@@ -149,8 +157,8 @@ async function main() {
     for (const k of uds.knobs) {
       const knob = createKnob({
         min: k.min, max: k.max, value: cur[k.key], def: c.params[k.key],
-        label: k.label, labelRu: k.labelRu, testid: `knob-${c.ch}-${k.key}`,
-        ariaLabel: `${c.name} ${k.label}`, title: `${k.labelRu} · ${k.label}: ${k.note || ''}\nDouble-click: default (${c.params[k.key]})`,
+        label: k.label, testid: `knob-${c.ch}-${k.key}`,
+        ariaLabel: `${c.name} ${k.label}`, title: `${c.name} ${k.label}: ${k.note || ''}\nDouble-click: default (${c.params[k.key]})`,
         onChange: (v) => uds.setParams(c.ch, { [k.key]: v }),
       });
       knobs[c.ch][k.key] = knob;
@@ -160,8 +168,9 @@ async function main() {
     const pad = h('button', 'pad');
     pad.type = 'button';
     pad.dataset.testid = `pad-${c.ch}`;
-    pad.setAttribute('aria-label', `${c.name} pad (key ${c.ch + 1})`);
-    pad.append(h('span', 'pad-short', c.shortRu), h('kbd', 'pad-key', String(c.ch + 1)));
+    pad.setAttribute('aria-label', `${c.name} pad (key ${c.ch + 1}, chip channel ${c.ch})`);
+    pad.title = `${c.name} · key ${c.ch + 1} · chip channel ${c.ch}`;
+    pad.append(h('span', 'pad-short', PAD_SHORT[c.ch] || c.name.slice(0, 2).toUpperCase()), h('kbd', 'pad-key', String(c.ch + 1)));
     pad.addEventListener('pointerdown', (e) => { if (e.button === 0) { e.preventDefault(); padHit(c.ch); } });
     pad.addEventListener('click', (e) => { if (e.detail === 0) padHit(c.ch); }); // keyboard activation
     pads[c.ch] = pad;
@@ -170,7 +179,7 @@ async function main() {
   }
   const resetBtn = h('button', 'btn btn-small reset-all');
   resetBtn.type = 'button';
-  resetBtn.append(bil('Сброс', 'reset knobs'));
+  resetBtn.append(lbl('Reset', 'knobs'));
   resetBtn.addEventListener('click', () => {
     uds.resetParams();
     for (const c of uds.channels) {
@@ -199,83 +208,252 @@ async function main() {
     scopeKick(ch, level);
   });
 
-  // ---------------- autorhythm ----------------
-  const patBtns = {};
-  for (const p of uds.patterns) {
-    const b = h('button', 'pat');
-    b.type = 'button';
-    b.dataset.testid = `pattern-${p.id}`;
-    b.setAttribute('aria-pressed', 'false');
-    b.title = `${p.id} · ${p.name} · ${p.meter}${p.bpm ? ' · ' + p.bpm + ' BPM' : ''}${p.notes ? '\n' + p.notes : ''}`;
-    const idx = h('span', 'pat-idx', String(p.index + 1));
-    const nm = h('span', 'pat-nm');
-    nm.append(h('span', 'ru', p.nameRu), h('small', null, p.name));
-    b.append(idx, nm);
-    b.addEventListener('click', () => selectPattern(p.id));
-    patBtns[p.id] = b;
-    $(p.bank === 'B' ? 'bank-B' : 'bank-A').appendChild(b);
+  // ---------------- autorhythm: 16 slots of .mid loops ----------------
+  let endDrag = () => {};
+  const slotCells = [];
+  const slotParts = [];
+  const curSlot = () => (uds.slot !== null && uds.slot !== undefined ? uds.slots[uds.slot] : null);
+  const slotReady = () => !!curSlot();
+  const LOAD_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8M4.5 5.5 8 2l3.5 3.5M2.5 10.5v3h11v-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  for (let i = 0; i < SLOTS; i++) {
+    const cell = h('div', 'slot empty');
+    cell.dataset.index = i;
+    const btn = h('button', 'slot-btn');
+    btn.type = 'button';
+    btn.dataset.testid = `slot-${i}`;
+    btn.setAttribute('aria-pressed', 'false');
+    const num = h('span', 'slot-num', String(i + 1));
+    const name = h('span', 'slot-name', 'empty');
+    const meta = h('span', 'slot-meta', '+ load .mid');
+    btn.append(num, name, meta);
+    const file = document.createElement('input');
+    file.type = 'file';
+    file.accept = '.mid,.midi';
+    file.hidden = true;
+    file.dataset.testid = `slot-file-${i}`;
+    file.setAttribute('aria-label', `Load a .mid file into slot ${i + 1}`);
+    const load = h('button', 'slot-icon slot-load');
+    load.type = 'button';
+    load.innerHTML = LOAD_ICON;
+    load.title = `Load a .mid file into slot ${i + 1}`;
+    load.setAttribute('aria-label', load.title);
+    load.dataset.testid = `slot-load-${i}`;
+    const clr = h('button', 'slot-icon slot-clear', '×');
+    clr.type = 'button';
+    clr.title = `Clear slot ${i + 1}`;
+    clr.setAttribute('aria-label', clr.title);
+    clr.dataset.testid = `slot-clear-${i}`;
+    cell.append(btn, load, clr, file);
+
+    btn.addEventListener('click', () => {
+      if (!uds.slots[i]) { selectSlot(i); file.click(); } else selectSlot(i);
+    });
+    load.addEventListener('click', () => file.click());
+    file.addEventListener('change', () => { const f = file.files[0]; file.value = ''; if (f) loadSlotFile(i, f); });
+    clr.addEventListener('click', () => clearSlot(i));
+    cell.addEventListener('dragover', (e) => { if (hasFiles(e)) { e.preventDefault(); cell.classList.add('drop'); } });
+    cell.addEventListener('dragleave', (e) => { if (!cell.contains(e.relatedTarget)) cell.classList.remove('drop'); });
+    cell.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      endDrag();
+      const f = [...(e.dataTransfer?.files || [])].find((x) => /\.midi?$/i.test(x.name)) || e.dataTransfer?.files?.[0];
+      if (f) loadSlotFile(i, f);
+    });
+    slotCells.push(cell);
+    slotParts.push({ btn, name, meta });
+    $('slots').appendChild(cell);
   }
 
+  function renderSlots() {
+    for (let i = 0; i < SLOTS; i++) {
+      const s = uds.slots[i];
+      const { btn, name, meta } = slotParts[i];
+      const cell = slotCells[i];
+      const sel = uds.slot === i;
+      cell.classList.toggle('empty', !s);
+      cell.classList.toggle('sel', sel);
+      cell.classList.toggle('playing', sel && !!uds.rhythmPlaying);
+      btn.setAttribute('aria-pressed', String(sel));
+      if (s) {
+        name.textContent = s.name;
+        meta.textContent = `${s.bars} bar${s.bars === 1 ? '' : 's'}${s.truncated ? ' · first 4 bars' : ''}`;
+        btn.title = `Slot ${i + 1}: ${s.name}\n${s.bars} bar${s.bars === 1 ? '' : 's'} of ${s.meter} · ${s.steps} steps · ${s.bpm} BPM`
+          + (s.truncated ? '\nLonger than 4 bars: only the first 4 bars play' : '');
+        cell.classList.toggle('trunc', !!s.truncated);
+      } else {
+        name.textContent = 'empty';
+        meta.textContent = '+ load .mid';
+        btn.title = `Slot ${i + 1} is empty: click to load a .mid file, or drop one here`;
+        cell.classList.remove('trunc');
+      }
+    }
+    $('slots-clear-all').disabled = !uds.slots.some(Boolean);
+  }
 
+  async function loadSlotFile(i, file) {
+    try {
+      const buf = await file.arrayBuffer();
+      const info = await uds.loadSlot(i, buf.slice(0), file.name);
+      const stored = storeSlot(i, file.name, buf);
+      selectSlot(i);
+      toast(`Slot ${i + 1}: ${info.name} · ${info.bars} bar${info.bars === 1 ? '' : 's'} · ${info.bpm} BPM`
+        + (info.truncated ? ' · first 4 bars only' : '') + (stored ? '' : ' · not saved (browser storage unavailable)'));
+    } catch (err) {
+      console.warn(err);
+      toast(`Slot ${i + 1}: ${err?.message || err}`, 'bad');
+    }
+  }
+  function clearSlot(i) {
+    uds.clearSlot(i);
+    forgetSlot(i);
+    renderSlots();
+    if (uds.slot === i) buildSteps();
+    syncTransport();
+    updateWavLabel();
+  }
+  let clearArmed = 0;
+  $('slots-clear-all').addEventListener('click', () => {
+    const b = $('slots-clear-all');
+    if (Date.now() - clearArmed > 3000) {
+      clearArmed = Date.now();
+      b.classList.add('armed');
+      b.querySelector('.lb').textContent = 'Clear all 16?';
+      setTimeout(() => { if (Date.now() - clearArmed >= 2900) disarm(); }, 3000);
+      return;
+    }
+    disarm();
+    for (let i = 0; i < SLOTS; i++) uds.clearSlot(i);
+    forgetAll();
+    renderSlots();
+    buildSteps();
+    syncTransport();
+    updateWavLabel();
+    toast('All slots cleared');
+  });
+  function disarm() {
+    clearArmed = 0;
+    const b = $('slots-clear-all');
+    b.classList.remove('armed');
+    b.querySelector('.lb').textContent = 'Clear all';
+  }
+
+  function selectSlot(i) {
+    uds.setSlot(i);
+    storeSelection(i);
+    tempoKnob.set(uds.tempo, false);
+    $('tempo-read').textContent = uds.tempo;
+    renderSlots();
+    buildSteps();
+    syncTransport();
+    updateWavLabel();
+  }
+
+  // Step LEDs: one per step, grouped by beat. Above 16 steps on a narrow screen: the current bar plus a counter.
   let stepEls = [];
-  function buildSteps(p) {
+  let lastStep = -1;
+  let compact = false;
+  const wantCompact = (s) => !!s && s.steps > s.stepsPerBar && $('steps').parentElement.clientWidth < 12 * s.steps;
+  function buildSteps() {
     const row = $('steps');
     row.textContent = '';
     stepEls = [];
-    row.style.setProperty('--n', p.length);
-    for (let i = 0; i < p.length; i++) {
-      const s = h('i', 'step');
-      if (i % p.stepsPerBeat === 0) s.classList.add('beat');
-      if (p.steps && p.steps[i]) s.classList.add('has');
-      stepEls.push(s);
-      row.appendChild(s);
+    lastStep = -1;
+    const s = curSlot();
+    compact = wantCompact(s);
+    const n = s ? (compact ? s.stepsPerBar : s.steps) : 16;
+    const per = s ? s.beatSteps : 4;
+    const bar = s ? s.stepsPerBar : 16;
+    const has = new Set();
+    if (s) for (const nt of s.notes) has.add(compact ? nt.step % s.stepsPerBar : nt.step);
+    row.style.setProperty('--n', n);
+    row.classList.toggle('empty', !s);
+    for (let i = 0; i < n; i++) {
+      const el = h('i', 'step');
+      if (i % per === 0) el.classList.add('beat');
+      if (i && i % bar === 0) el.classList.add('bar');
+      if (has.has(i)) el.classList.add('has');
+      stepEls.push(el);
+      row.appendChild(el);
     }
-    $('pat-name').textContent = '';
-    $('pat-name').append(h('b', null, p.id), ' ', h('span', 'ru', p.nameRu), ' ', h('small', null, `${p.name} · ${p.meter} · ${p.length}`));
-  }
-  function selectPattern(id) {
-    uds.setPattern(id);
-    for (const [k, b] of Object.entries(patBtns)) {
-      b.classList.toggle('sel', k === id);
-      b.setAttribute('aria-pressed', String(k === id));
+    const bc = $('bar-count');
+    bc.hidden = !compact;
+    bc.textContent = compact ? `bar 1/${s.bars}` : '';
+    const pn = $('pat-name');
+    pn.textContent = '';
+    if (uds.slot === null || uds.slot === undefined) pn.append(h('small', null, 'no slot selected'));
+    else if (!s) pn.append(h('b', null, `Slot ${uds.slot + 1}`), ' ', h('small', null, 'empty · load a .mid'));
+    else {
+      const nm = h('span', 'pn-name', s.name);
+      nm.title = s.name;
+      pn.append(h('b', null, `Slot ${uds.slot + 1}`), ' ', nm, ' ',
+        h('small', null, `${s.bars} bar${s.bars === 1 ? '' : 's'} · ${s.meter} · ${s.bpm} BPM`));
     }
-    const p = uds.patterns.find((x) => x.id === id);
-    if (p) buildSteps(p);
-    tempoKnob.set(uds.tempo, false);
-    $('tempo-read').textContent = uds.tempo;
-    updateWavLabel();
   }
-  selectPattern(uds.pattern || uds.patterns[0].id);
-
-  let lastStep = -1;
-  uds.addEventListener('step', (e) => {
-    const { index, patternId } = e.detail;
-    if (patternId && patternId !== uds.pattern) return;
+  function clearStepLed() {
     if (stepEls[lastStep]) stepEls[lastStep].classList.remove('on');
-    if (stepEls[index]) stepEls[index].classList.add('on');
-    lastStep = index;
+    lastStep = -1;
+  }
+  window.addEventListener('resize', () => { if (wantCompact(curSlot()) !== compact) buildSteps(); });
+
+  uds.addEventListener('step', (e) => {
+    const { index, slot } = e.detail;
+    if (slot === undefined || slot !== uds.slot) return;
+    const s = curSlot();
+    if (!s) return;
+    const li = compact ? index % s.stepsPerBar : index;
+    if (stepEls[lastStep]) stepEls[lastStep].classList.remove('on');
+    if (stepEls[li]) stepEls[li].classList.add('on');
+    lastStep = li;
+    if (compact) $('bar-count').textContent = `bar ${Math.floor(index / s.stepsPerBar) + 1}/${s.bars}`;
   });
+  uds.addEventListener('slots', () => { renderSlots(); syncTransport(); });
+
+  async function restoreSlots() {
+    const saved = loadStored();
+    for (let i = 0; i < SLOTS; i++) {
+      const e = saved.slots[i];
+      if (!e || !e.b64) continue;
+      try { await uds.loadSlot(i, bytesFromB64(e.b64), e.name || `slot${i + 1}.mid`); } catch (err) {
+        console.warn('stored slot', i + 1, 'could not be loaded:', err);
+        forgetSlot(i);
+      }
+    }
+    let sel = saved.sel;
+    if (!(sel >= 0 && sel < SLOTS)) sel = uds.slots.findIndex(Boolean);
+    if (sel < 0) sel = 0;
+    selectSlot(sel);
+  }
 
   function syncTransport() {
     const on = !!uds.rhythmPlaying;
     const b = $('rhythm-toggle');
+    b.disabled = !on && !slotReady();
+    b.title = b.disabled ? 'The selected slot is empty: load a .mid file into it first' : 'Start or stop the rhythm (Space)';
+    const sc = slotCells[uds.slot];
+    for (const c of slotCells) c.classList.toggle('playing', on && c === sc);
     if (b.getAttribute('aria-pressed') !== String(on)) {
       b.setAttribute('aria-pressed', String(on));
       b.querySelector('.lbl').textContent = '';
-      b.querySelector('.lbl').append(on ? bil('Стоп', 'stop') : bil('Пуск', 'start'));
-      if (!on && stepEls[lastStep]) { stepEls[lastStep].classList.remove('on'); lastStep = -1; }
+      b.querySelector('.lbl').append(lbl(on ? 'Stop' : 'Start'));
+      if (!on) clearStepLed();
     }
     const mp = !!uds.midiPlaying;
     const m = $('midi-play');
     if (m.getAttribute('aria-pressed') !== String(mp)) {
       m.setAttribute('aria-pressed', String(mp));
       m.textContent = '';
-      m.append(mp ? bil('Стоп', 'stop') : bil('Играть', 'play'));
+      m.append(lbl(mp ? 'Stop' : 'Play'));
     }
   }
   async function toggleRhythm() {
     if (uds.rhythmPlaying) uds.stopRhythm();
-    else { await ensureRunning(); uds.startRhythm(); }
+    else {
+      if (!slotReady()) { toast('The selected slot is empty: load a .mid file into it first'); return; }
+      await ensureRunning();
+      uds.startRhythm();
+    }
     syncTransport();
   }
   $('rhythm-toggle').addEventListener('click', toggleRhythm);
@@ -305,10 +483,11 @@ async function main() {
       $('midi-unmapped').title = un.map(([n, c]) => `note ${n}: ${c}`).join('\n');
       $('midi-play').disabled = false;
       $('wav-what').querySelector('option[value=midi]').disabled = false;
+      updateWavLabel();
       toast(`MIDI: ${midiInfo.name || file.name} · ${fmtTime(midiInfo.duration)}`);
     } catch (err) {
       console.warn(err);
-      toast('Не удалось прочитать MIDI · could not read MIDI file: ' + (err?.message || err), 'bad');
+      toast('Could not read the MIDI file: ' + (err?.message || err), 'bad');
     }
   }
   $('midi-file').addEventListener('change', (e) => loadMidiFile(e.target.files[0]));
@@ -329,21 +508,21 @@ async function main() {
 
   // drag and drop anywhere
   let dragDepth = 0;
+  endDrag = () => { dragDepth = 0; $('drop-hint').hidden = true; for (const c of slotCells) c.classList.remove('drop'); };
   const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes('Files');
   window.addEventListener('dragenter', (e) => { if (hasFiles(e)) { dragDepth++; $('drop-hint').hidden = false; } });
   window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $('drop-hint').hidden = true; });
   window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
   window.addEventListener('drop', (e) => {
     e.preventDefault();
-    dragDepth = 0;
-    $('drop-hint').hidden = true;
+    endDrag();
     const f = [...(e.dataTransfer?.files || [])].find((x) => /\.midi?$/i.test(x.name)) || e.dataTransfer?.files?.[0];
     if (f) loadMidiFile(f);
   });
 
   function showInputs(list) {
     const d = $('midi-devs');
-    d.textContent = list && list.length ? list.map((i) => i.name).join(' · ') : 'нет устройств · no devices';
+    d.textContent = list && list.length ? list.map((i) => i.name).join(' · ') : 'no devices';
   }
   $('midi-input').addEventListener('click', async () => {
     try {
@@ -352,8 +531,8 @@ async function main() {
       $('midi-input').classList.add('on');
       showInputs(list);
     } catch (err) {
-      $('midi-devs').textContent = 'недоступно · ' + (err?.message || 'Web MIDI unavailable');
-      toast('Живой МИДИ недоступен · ' + (err?.message || err), 'bad');
+      $('midi-devs').textContent = 'unavailable · ' + (err?.message || 'Web MIDI unavailable');
+      toast('Live MIDI is unavailable: ' + (err?.message || err), 'bad');
     }
   });
   uds.addEventListener('midi-input', (e) => showInputs(e.detail.inputs));
@@ -369,33 +548,47 @@ async function main() {
   uds.setVolume?.(Number($('volume').value));
 
   function wavSeconds() {
-    if ($('wav-what').value === 'midi' && midiInfo) return Math.min(180, (midiInfo.duration || 0) + 1);
-    const p = uds.patterns.find((x) => x.id === uds.pattern) || uds.patterns[0];
-    const [num, den] = String(p.meter || '4/4').split(/[/ ]/).map(Number);
-    const beatsPerBar = den === 8 ? num / 3 : num || 4;
-    return Math.ceil(((8 * beatsPerBar * 60) / (uds.tempo || 120)) * 100) / 100;
+    if (wavWhat() === 'midi') return Math.min(180, (midiInfo.duration || 0) + 1);
+    const s = curSlot();
+    if (!s) return 0;
+    return Math.ceil(((8 * s.stepsPerBar * 60) / ((uds.tempo || 120) * s.stepsPerBeat)) * 100) / 100;
+  }
+  function wavWhat() {
+    const v = $('wav-what').value;
+    if (v === 'midi' && midiInfo) return 'midi';
+    if (slotReady()) return 'rhythm';
+    return midiInfo ? 'midi' : null;
   }
   function updateWavLabel() {
-    const o = $('wav-what').querySelector('option[value=rhythm]');
-    o.textContent = `${uds.pattern} · 8 тактов/bars · ${wavSeconds().toFixed(1)} s`;
+    const sel = $('wav-what');
+    const o = sel.querySelector('option[value=rhythm]');
+    const s = curSlot();
+    o.disabled = !s;
+    if (s && !midiInfo) sel.value = 'rhythm';
+    if (!s && midiInfo) sel.value = 'midi';
+    const secs = s ? Math.ceil(((8 * s.stepsPerBar * 60) / ((uds.tempo || 120) * s.stepsPerBeat)) * 10) / 10 : 0;
+    o.textContent = s ? `Slot ${uds.slot + 1} · 8 bars · ${secs.toFixed(1)} s` : 'Selected slot · 8 bars (empty)';
+    if (!$('wav-export').classList.contains('busy')) $('wav-export').disabled = !wavWhat();
   }
   $('wav-what').addEventListener('change', updateWavLabel);
   $('wav-export').addEventListener('click', async () => {
     const btn = $('wav-export');
     if (btn.classList.contains('busy')) return;
-    const what = $('wav-what').value === 'midi' && midiInfo ? 'midi' : 'rhythm';
+    const what = wavWhat();
+    if (!what) { toast('Nothing to export: load a .mid into a slot or the MIDI player'); return; }
     const seconds = wavSeconds();
     btn.classList.add('busy');
     btn.disabled = true;
     btn.setAttribute('aria-busy', 'true');
     const old = btn.innerHTML;
     btn.textContent = '';
-    btn.append(bil('Рендер…', 'rendering'));
+    btn.append(lbl('Rendering…'));
     try {
       const blob = await uds.renderWav({ what, seconds });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const base = what === 'midi' ? (midiInfo?.name || 'midi').replace(/\.midi?$/i, '') : `${uds.pattern}-${uds.tempo}bpm`;
+      const slotName = (curSlot()?.name || '').replace(/\.midi?$/i, '').replace(/[^\w.-]+/g, '_').slice(0, 40);
+      const base = what === 'midi' ? (midiInfo?.name || 'midi').replace(/\.midi?$/i, '') : `slot${uds.slot + 1}-${slotName}-${uds.tempo}bpm`;
       a.href = url;
       a.download = `uds-1x1-${base}.wav`;
       document.body.appendChild(a);
@@ -405,12 +598,13 @@ async function main() {
       toast(`WAV: ${a.download} · ${seconds.toFixed(1)} s`);
     } catch (err) {
       console.warn(err);
-      toast('Ошибка записи · WAV export failed: ' + (err?.message || err), 'bad');
+      toast('WAV export failed: ' + (err?.message || err), 'bad');
     } finally {
       btn.classList.remove('busy');
       btn.disabled = false;
       btn.removeAttribute('aria-busy');
       btn.innerHTML = old;
+      updateWavLabel();
     }
   });
 
@@ -443,7 +637,7 @@ async function main() {
     syncTransport();
   });
 
-  uds.addEventListener('error', (e) => toast('Ошибка · ' + (e.detail?.message || 'error'), 'bad'));
+  uds.addEventListener('error', (e) => toast('Error: ' + (e.detail?.message || 'error'), 'bad'));
 
   // ---------------- keyboard ----------------
   window.addEventListener('keydown', (e) => {
@@ -546,8 +740,10 @@ async function main() {
   }
   requestAnimationFrame(draw);
 
+  await restoreSlots();
   onState();
   syncTransport();
+  updateWavLabel();
   body.classList.add('ready');
 }
 
@@ -556,5 +752,5 @@ main().catch((err) => {
   document.body.dataset.state = 'error';
   const n = $('notice');
   n.hidden = false;
-  n.textContent = 'Ошибка запуска · the panel failed to start: ' + (err?.message || err);
+  n.textContent = 'The panel failed to start: ' + (err?.message || err);
 });

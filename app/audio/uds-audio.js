@@ -7,6 +7,7 @@
 
 import { parseMidi, midiToHits, mapNote, velocityToV } from './midi.js';
 import { TEMPO_MIN, TEMPO_MAX, TEMPO_DEFAULT } from './scheduler.js';
+import { SLOT_COUNT, midiBytesToSlot, slotToPattern, slotPatternId, slotIndexOf } from './slots.js';
 
 const HERE = import.meta.url;
 const FILTER_HZ = { rc: 15900, warm: 4000, off: 0 };
@@ -52,6 +53,9 @@ export class UDSAudio extends EventTarget {
     this.accentLevelDrop = 4;
     this._params = [];
     this.pattern = 'A0';
+    this.slots = new Array(SLOT_COUNT).fill(null);   // Autorhythm slots (MIDI loops), see loadSlot
+    this.slot = null;                                // selected slot index, or null (then the pattern plays)
+    this._slotPatterns = new Array(SLOT_COUNT).fill(null);
     this.tempo = TEMPO_DEFAULT;
     this.rhythmPlaying = false;
     this.midiPlaying = false;
@@ -197,14 +201,60 @@ export class UDSAudio extends EventTarget {
     const p = this.patterns.find(x => x.id === id);
     if (!p) throw new Error('unknown pattern ' + id);
     this.pattern = id;
+    if (this.slot !== null) { this.slot = null; this._emitSlots(); }
     this.worker.postMessage({ type: 'pattern', id });
     if (p.bpm) this.setTempo(p.bpm);
+  }
+
+  // ---- Autorhythm slots: a .mid file as the rhythm loop (slots.js has the conversion rules) ----
+  _slotInfo(i) {
+    const s = this.slots[i];
+    return s ? { ...s, notes: s.notes.map(n => ({ ...n })) } : null;
+  }
+  _emitSlots() { this._emit('slots', { slots: this.slots.map((_, i) => this._slotInfo(i)), slot: this.slot }); }
+  async loadSlot(index, arrayBuffer, name = 'file.mid') {
+    index = Number(index);
+    if (!(index >= 0 && index < SLOT_COUNT) || !Number.isInteger(index)) throw new Error('slot index must be 0..' + (SLOT_COUNT - 1));
+    const c = midiBytesToSlot(arrayBuffer, name);     // throws a clear Error when nothing maps
+    const slot = { index, name: c.name, bars: c.bars, steps: c.steps, stepsPerBeat: c.stepsPerBeat,
+      stepsPerBar: c.stepsPerBar, beatSteps: c.beatSteps, meter: c.meter, notes: c.notes, bpm: c.bpm,
+      truncated: c.truncated, unmapped: c.unmapped };
+    this.slots[index] = slot;
+    const pat = slotToPattern(index, slot);
+    this._slotPatterns[index] = pat;
+    this.worker.postMessage({ type: 'addPattern', pattern: pat });
+    if (this.slot === index) this.setTempo(slot.bpm);
+    this._emitSlots();
+    return this._slotInfo(index);
+  }
+  clearSlot(index) {
+    if (!this.slots[index]) return;
+    if (this.slot === index && this.rhythmPlaying) this.stopRhythm();
+    this.slots[index] = null; this._slotPatterns[index] = null;
+    this.worker.postMessage({ type: 'removePattern', id: slotPatternId(index) });
+    this._emitSlots();
+  }
+  // Select a slot (or null). An empty slot can be selected; the rhythm then does not start. While the
+  // rhythm plays, the switch happens at the next bar line. The file's tempo is applied.
+  setSlot(index) {
+    if (index === null || index === undefined) { this.slot = null; this._emitSlots(); return; }
+    index = Number(index);
+    if (!(index >= 0 && index < SLOT_COUNT)) throw new Error('slot index must be 0..' + (SLOT_COUNT - 1));
+    this.slot = index;
+    const s = this.slots[index];
+    if (s) {
+      this.worker.postMessage({ type: 'pattern', id: slotPatternId(index) });
+      this.setTempo(s.bpm);
+    } else if (this.rhythmPlaying) this.stopRhythm();
+    this._emitSlots();
   }
   setTempo(bpm) {
     this.tempo = Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, Math.round(Number(bpm)) || TEMPO_DEFAULT));
     this.worker.postMessage({ type: 'tempo', bpm: this.tempo });
   }
-  startRhythm() { this.rhythmPlaying = true; this.worker.postMessage({ type: 'rhythm', on: true }); }
+  startRhythm() {
+    if (this.slot !== null && !this.slots[this.slot]) return;     // the selected slot is empty
+    this.rhythmPlaying = true; this.worker.postMessage({ type: 'rhythm', on: true }); }
   stopRhythm() { this.rhythmPlaying = false; this.worker.postMessage({ type: 'rhythm', on: false }); }
 
   // ---- MIDI file ----
@@ -266,9 +316,14 @@ export class UDSAudio extends EventTarget {
   // ---- offline WAV ----
   async renderWav({ what = 'rhythm', seconds } = {}) {
     if (what === 'midi' && !this._midiHits) throw new Error('no MIDI file loaded');
+    if (what === 'rhythm' && this.slot !== null && !this.slots[this.slot]) throw new Error('the selected slot is empty');
+    const slotPat = what === 'rhythm' && this.slot !== null ? this._slotPatterns[this.slot] : null;
     if (!seconds) {
       if (what === 'midi') seconds = this._midiHits.duration + 1.5;
-      else {
+      else if (this.slot !== null && this.slots[this.slot]) {
+        const sl = this.slots[this.slot];
+        seconds = 8 * sl.stepsPerBar * 60 / (this.tempo * sl.stepsPerBeat) + 1;
+      } else {
         const p = this._patternsFull.find(x => x.id === this.pattern);
         seconds = 2 * p.length * 60 / (this.tempo * p.stepsPerBeat) + 1;
       }
@@ -284,7 +339,8 @@ export class UDSAudio extends EventTarget {
       const res = await workerCall(w, {
         type: 'offline', id: 'wav', what, seconds,
         state: {
-          params: this._params, pattern: this.pattern, tempo: this.tempo, midi: this._midiHits,
+          params: this._params, pattern: slotPat ? slotPat.id : this.pattern, tempo: this.tempo, midi: this._midiHits,
+          extraPatterns: slotPat ? [slotPat] : [],
           midiLoop: false, filterHz: FILTER_HZ[this.filter],
         },
       }, null, 'wav');
@@ -312,7 +368,7 @@ export class UDSAudio extends EventTarget {
     if (m.type !== 'marks') return;
     for (const k of m.marks) {
       if (k.type === 'hit') this._emit('hit', { ch: k.ch, level: k.level, source: k.source });
-      else if (k.type === 'step') this._emit('step', { index: k.index, length: k.length, patternId: k.patternId });
+      else if (k.type === 'step') this._emit('step', { index: k.index, length: k.length, patternId: k.patternId, slot: slotIndexOf(k.patternId) });
       else if (k.type === 'midi-end') {
         this.midiPlaying = false;
         this._emitMidi(this.midiInfo ? this.midiInfo.duration : 0);

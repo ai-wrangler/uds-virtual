@@ -8,7 +8,7 @@ UDSAudio ── commands ───────────▶ engine-worker.js  
   │  (postMessage)                  engine (wasm or mock)                     FIFO of chunks
   │                                 Scheduler: rhythm + MIDI file             underrun -> silence, counted
   │ ◀── status ~20/s ─────────────  render() split at event samples ──chunks▶  (MessagePort, transferred)
-  │                                 3x make-up gain, 10 Hz DC blocker  ◀──── played count every 8 quanta
+  │                                 3x gain, soft limit, 10 Hz DC block  ◀──── played count every 8 quanta
   │ ◀──────────────── hit / step marks, posted when the worklet plays them ────────┘
 AudioWorkletNode → GainNode (volume) → AnalyserNode → destination
 ```
@@ -19,6 +19,8 @@ AudioWorkletNode → GainNode (volume) → AnalyserNode → destination
 | `engine-worker.js` | Runs the engine ahead of real time (live mode) or as fast as possible (`renderWav`) |
 | `player-worklet.js` | AudioWorkletProcessor `uds-player` |
 | `scheduler.js` | Autorhythm sequencer and MIDI-file player, in output-sample positions (pure, tested in Node) |
+| `slots.js` | Autorhythm slots: .mid -> 16th-grid loop (quantize, bars, 4-bar cap, velocity, tempo), as a Scheduler pattern |
+| `limiter.js` | Soft limiter after the make-up gain (linear to 0.8, tanh knee) |
 | `midi.js` | SMF parser (formats 0/1, running status, tempo map), SMF writer, GM drum map, velocity rule |
 | `mock-engine.js` | `loadMockEngine`: engine interface in plain JS, a frame-level port of `chip/model/uds_model.py` |
 | `wav.js` | 16-bit PCM WAV encoder (and a small decoder for tests) |
