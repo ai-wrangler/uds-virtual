@@ -121,6 +121,11 @@ Run `node --test engine/test/*.test.mjs`. It needs `python3`, and takes about 5 
     (7 944 messages, including unknown commands and odd lengths).
   - They also agree frame by frame over 105 650 frames on the fast idle path, and on `render()` output
     split at random samples.
+- **gen.py cell coverage (`test/gen_cells/run.sh`).** A small design with word-level operators that the chip
+  does not use yet (signed compares, `$gt`/`$ge`, `$sshr`/`$sshl`, `$neg`, `$mul`, `$xnor`, `$reduce_xor`/`xnor`)
+  goes through gen.py and through Icarus Verilog; the pins agree on 199 999 clocks of random inputs. (Yosys
+  0.33 CXXRTL differs on that design: it gets a sign-extended `<<<` wrong, so Icarus is the reference there.)
+  It needs yosys, iverilog and g++, so it is not part of `node --test`.
 - **Fixture (`fixture.test.mjs`).** `fixtures/model_frames.json` has 22 019 frames. Its `events` are
   `{frame, bytes}` messages to queue before `runFrames(1)` runs frame `frame`, and `counts` are the model's
   1s per frame. It replays with the contract API alone. `tests/e2e/truth.spec.mjs` runs it in Chromium.
