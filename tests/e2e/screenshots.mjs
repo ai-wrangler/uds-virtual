@@ -13,9 +13,11 @@ for (const [name, viewport, mobile] of [['desktop', { width: 1440, height: 900 }
   if (await power.count()) {
     await power.click();
     await page.waitForSelector('body[data-state=running]', { timeout: 20000 }).catch(() => {});
-    const pad = page.getByTestId('pad-4');
-    if (await pad.count()) await pad.click();
-    await page.waitForTimeout(1500);
+    const rhythm = page.getByTestId('rhythm-toggle');
+    if (await rhythm.count()) await rhythm.click();   // Rock 1 running, so the scope and step LEDs show
+    await page.waitForTimeout(2300);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
   }
   await page.screenshot({ path: `docs/screenshots/${name}.png` });
   console.log(`docs/screenshots/${name}.png`);
