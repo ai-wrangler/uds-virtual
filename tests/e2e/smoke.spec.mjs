@@ -20,12 +20,14 @@ test('every data-testid from CONTRACT section 6 is present', async ({ page }) =>
   await requireUI(page);
   await page.waitForSelector('body.ready', { timeout: 15_000 }).catch(() => {});
   const ids = ['power', 'rhythm-toggle', 'tempo', 'midi-file', 'midi-play', 'midi-input', 'filter', 'volume',
-    'display', 'sim-speed', 'wav-export', 'pattern-A0'];
+    'display', 'sim-speed', 'wav-export'];
+  for (let i = 0; i < 16; i++) ids.push(`slot-${i}`, `slot-file-${i}`, `slot-clear-${i}`);
   for (let i = 0; i < 8; i++) ids.push(`pad-${i}`);
   for (const s of 'abcdefg') ids.push(`seg-${s}`);
   const missing = [];
   for (const id of ids) if ((await page.getByTestId(id).count()) === 0) missing.push(id);
   expect(missing, `missing data-testids: ${missing.join(', ')}`).toEqual([]);
+  expect(await page.locator('[data-testid^=pattern-]').count(), 'pattern buttons were replaced by slots').toBe(0);
   expect(await page.locator('[data-testid^=knob-4-]').count()).toBeGreaterThan(0);
 });
 
