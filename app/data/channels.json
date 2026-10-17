@@ -1,0 +1,168 @@
+{
+ "source": "chip/model/uds_model.py PRESETS (ai-wrangler/tt-uds-1x1)",
+ "accentLevelDrop": 4,
+ "channels": [
+  {
+   "ch": 0,
+   "id": "snare",
+   "name": "Snare",
+   "nameRu": "Малый барабан",
+   "shortRu": "МБ",
+   "group": 0,
+   "params": {
+    "pitch": 80,
+    "sweep": 4,
+    "decay": 7,
+    "balance": 11,
+    "level": 13
+   }
+  },
+  {
+   "ch": 1,
+   "id": "small-tom",
+   "name": "Small tom",
+   "nameRu": "Малый том",
+   "shortRu": "МТ",
+   "group": 1,
+   "params": {
+    "pitch": 84,
+    "sweep": 5,
+    "decay": 8,
+    "balance": 2,
+    "level": 12
+   }
+  },
+  {
+   "ch": 2,
+   "id": "middle-tom",
+   "name": "Middle tom",
+   "nameRu": "Средний том",
+   "shortRu": "СТ",
+   "group": 2,
+   "params": {
+    "pitch": 70,
+    "sweep": 5,
+    "decay": 8,
+    "balance": 2,
+    "level": 12
+   }
+  },
+  {
+   "ch": 3,
+   "id": "big-tom",
+   "name": "Big tom",
+   "nameRu": "Большой том",
+   "shortRu": "БТ",
+   "group": 3,
+   "params": {
+    "pitch": 56,
+    "sweep": 5,
+    "decay": 9,
+    "balance": 2,
+    "level": 12
+   }
+  },
+  {
+   "ch": 4,
+   "id": "bass-drum",
+   "name": "Bass drum",
+   "nameRu": "Большой барабан",
+   "shortRu": "ББ",
+   "group": 4,
+   "params": {
+    "pitch": 20,
+    "sweep": 6,
+    "decay": 9,
+    "balance": 1,
+    "level": 15
+   }
+  },
+  {
+   "ch": 5,
+   "id": "cymbal",
+   "name": "Cymbal",
+   "nameRu": "Тарелка",
+   "shortRu": "Т",
+   "group": 5,
+   "params": {
+    "pitch": 255,
+    "sweep": 0,
+    "decay": 11,
+    "balance": 15,
+    "level": 11
+   }
+  },
+  {
+   "ch": 6,
+   "id": "hihat-closed",
+   "name": "Closed hi-hat",
+   "nameRu": "Хай-хэт закрытый",
+   "shortRu": "ХХ",
+   "group": 6,
+   "params": {
+    "pitch": 255,
+    "sweep": 0,
+    "decay": 6,
+    "balance": 15,
+    "level": 10
+   }
+  },
+  {
+   "ch": 7,
+   "id": "hihat-open",
+   "name": "Open hi-hat",
+   "nameRu": "Хай-хэт открытый",
+   "shortRu": "ХХ о",
+   "group": 6,
+   "params": {
+    "pitch": 255,
+    "sweep": 0,
+    "decay": 9,
+    "balance": 15,
+    "level": 10
+   }
+  }
+ ],
+ "knobs": [
+  {
+   "key": "pitch",
+   "label": "Pitch",
+   "labelRu": "Тон",
+   "min": 0,
+   "max": 255,
+   "note": "8-bit exponential pitch, 32 steps per octave"
+  },
+  {
+   "key": "sweep",
+   "label": "Sweep",
+   "labelRu": "Диап.",
+   "min": 0,
+   "max": 7,
+   "note": "pitch sweep depth (bit 3 of the nibble is reserved, always 0)"
+  },
+  {
+   "key": "decay",
+   "label": "Decay",
+   "labelRu": "Длит.",
+   "min": 0,
+   "max": 13,
+   "note": "envelope steps every 2^decay frames; the chip treats 14 and 15 as 13"
+  },
+  {
+   "key": "balance",
+   "label": "Tone/noise",
+   "labelRu": "Баланс",
+   "min": 0,
+   "max": 15,
+   "note": "0 = all tone ... 15 = almost all noise"
+  },
+  {
+   "key": "level",
+   "label": "Level",
+   "labelRu": "Громк.",
+   "min": 0,
+   "max": 15,
+   "note": "0 = silent"
+  }
+ ]
+}

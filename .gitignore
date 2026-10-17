@@ -1,0 +1,10 @@
+node_modules/
+__pycache__/
+*.pyc
+obj_dir/
+engine/build/
+*.fst
+*.vcd
+test-results/
+playwright-report/
+.DS_Store
