@@ -137,8 +137,8 @@ function maybeStatus(force) {
   const now = performance.now();
   if (!force && now - lastStatus < STATUS_MS) return;
   lastStatus = now;
-  if (busyMs > 2) { const s = busyCycles / (busyMs / 1000); simHz = simHz ? simHz * 0.7 + s * 0.3 : s; }
-  busyMs = 0; busyCycles = 0;
+  // accumulate until there is enough busy time to measure (a fast engine may be busy < 2 ms per window)
+  if (busyMs > 2) { const s = busyCycles / (busyMs / 1000); simHz = simHz ? simHz * 0.7 + s * 0.3 : s; busyMs = 0; busyCycles = 0; }
   // adapt the lead
   if (underruns > lastUnderruns) {
     leadMs = Math.min(LEAD_MAX, Math.round(leadMs * 1.25 + 5)); lastUnderrunAt = now;

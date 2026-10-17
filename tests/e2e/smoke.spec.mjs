@@ -18,6 +18,7 @@ test('page loads with ?engine=mock and no console errors', async ({ page }) => {
 test('every data-testid from CONTRACT section 6 is present', async ({ page }) => {
   await openApp(page, '?engine=mock');
   await requireUI(page);
+  await page.waitForSelector('body.ready', { timeout: 15_000 }).catch(() => {});
   const ids = ['power', 'rhythm-toggle', 'tempo', 'midi-file', 'midi-play', 'midi-input', 'filter', 'volume',
     'display', 'sim-speed', 'wav-export', 'pattern-A0'];
   for (let i = 0; i < 8; i++) ids.push(`pad-${i}`);
