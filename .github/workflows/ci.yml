@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  model:
+    name: Python model sanity check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Render the model demo
+        run: |
+          mkdir -p out
+          python3 chip/model/uds_model.py out
+          test -s out/model_demo.wav
+      - name: Pattern export is up to date
+        if: hashFiles('tools/export_patterns.py') != ''
+        run: |
+          python3 tools/export_patterns.py
+          git diff --stat --exit-code -- app/data || (echo "::error::app/data is stale: run python3 tools/export_patterns.py"; exit 1)
+
+  node:
+    name: Node tests (engine, audio, ui)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run node --test where it exists
+        run: |
+          status=0; ran=0
+          for d in engine/test tests/audio tests/ui; do
+            files=$(find "$d" -maxdepth 2 -type f \( -name '*.test.js' -o -name '*.test.mjs' -o -name 'test-*.mjs' -o -name 'test_*.mjs' \) 2>/dev/null | sort)
+            if [ -n "$files" ]; then
+              echo "::group::node --test $d"; ran=1
+              node --test $files || status=1
+              echo "::endgroup::"
+            else
+              echo "No Node tests in $d (part not merged yet): skipped"
+            fi
+          done
+          exit $status
+
+  e2e:
+    name: Playwright e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Playwright (e2e and part suites)
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore

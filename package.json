@@ -1,0 +1,16 @@
+{
+  "name": "uds-virtual",
+  "private": true,
+  "version": "0.1.0",
+  "description": "UDS-1x1 Virtual: the real UDS-1x1 Verilog, simulated in WebAssembly, as a browser drum machine",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "serve": "python3 -m http.server -d app 8000",
+    "test:e2e": "playwright test",
+    "test:node": "node tools/run-node-tests.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.0"
+  }
+}
