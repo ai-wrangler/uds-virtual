@@ -22,11 +22,11 @@
       "wasm": "uds_engine_sd2.wasm",
       "chip": "ai-wrangler/tt-uds-1x1",
       "branch": "sd2",
-      "commit": null,
+      "commit": "48eb2d1",
       "chipDir": "chip-sd2",
       "backend": "gen",
-      "gain": 6,
-      "available": false
+      "gain": 6.3,
+      "available": true
     }
   ]
 }

@@ -20,6 +20,14 @@ covers about 400 clocks per HIT, so it does not change the averages above.
 The 6 MHz real-time figure is a hard requirement. The other speeds in `engine/NOTES.md` are native figures
 from the setup session.
 
+### The 2nd-order DAC preview (`uds_engine_sd2.wasm`)
+
+The same test in the same sandbox, run back to back (`node engine/test/bench.mjs app/engine/*.wasm`): the as-built
+engine 64 to 68 MHz, the sd2 engine 51 MHz (8.5x real time; about 22 % slower, with a wider DAC loop in the
+netlist). That sandbox was about 2.3x slower than the one in the table, so on Juris's machine the sd2 build
+should run at about 120 MHz (20x real time). Chromium truth test: 17.8 to 31.5 MHz on `runFrames(1)` per frame
+(the as-built engine ran 22.9 to 25.3 MHz the same way).
+
 ## How it works
 
 ```
@@ -126,6 +134,22 @@ Run `node --test engine/test/*.test.mjs`. It needs `python3`, and takes about 5 
   goes through gen.py and through Icarus Verilog; the pins agree on 199 999 clocks of random inputs. (Yosys
   0.33 CXXRTL differs on that design: it gets a sign-extended `<<<` wrong, so Icarus is the reference there.)
   It needs yosys, iverilog and g++, so it is not part of `node --test`.
+- **2nd-order DAC preview (`chip-sd2/`, `engine/wasm/sd2/`).** The same checks run for the sd2 build:
+  - **Model check.** 316 185 frames, 0 differences against the sd2 model's per-frame counts.
+  - **Cross-check.** gen and CXXRTL agree on all 10 004 294 clocks (`uo_out` and `uio_out`) and on 105 650 frames.
+  - **Fixture.** `fixtures/model_frames_sd2.json` replays in Node, and in Chromium (`tests/e2e/dac.spec.mjs`).
+  - **READ VERSION.** It answers 0x22.
+
+  `tools/vendor_sd2.sh` vendors, builds and verifies a new commit of branch `sd2`. `audio_sd2.test.mjs` checks the
+  silence after a sound (below -80 dBFS; it is -92 dBFS) and the loudness match.
+- **Pin truth (`pin_truth.mjs`, needs numpy).** It records the raw audio pin clock by clock for 3 s of hits, then
+  band-limits it to 20 Hz..20 kHz, which is what an ideal analog filter passes. It compares that with
+  `render()`:
+  - as built (count of 1s): error -41 dB overall and -77 dB in the quiet tail, where the pin is at -65 dB;
+  - sd2 (sinc³): error -45 dB overall and -79 dB in the tail, where the pin is at -71 dB.
+
+  With the count of 1s, the sd2 build's tail error was -42 dB, 34 dB above the pin's own tail. That aliasing is
+  why the sd2 build uses sinc³.
 - **Fixture (`fixture.test.mjs`).** `fixtures/model_frames.json` has 22 019 frames. Its `events` are
   `{frame, bytes}` messages to queue before `runFrames(1)` runs frame `frame`, and `counts` are the model's
   1s per frame. It replays with the contract API alone. `tests/e2e/truth.spec.mjs` runs it in Chromium.

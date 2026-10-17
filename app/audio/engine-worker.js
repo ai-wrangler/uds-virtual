@@ -62,6 +62,18 @@ async function loadWasm(wasmUrl, rate) {
   return mod.loadEngine(await wasmModule(source), { sampleRate: rate });
 }
 
+// Compile another build and run it for a moment in the background: a module's first runs use the browser's
+// baseline WebAssembly code, several times slower than the optimized code it tiers up to, which made the
+// first switch to a new DAC underrun. Small chunks, so the live pump keeps running in between.
+async function warmUp(url) {
+  const e = await loadWasm(url, sampleRate);
+  for (let i = 0; i < 100; i++) {
+    if (i % 25 === 0) { e.hit(4, { pitch: 20, sweep: 6, decay: 9, balance: 1, level: 15 }); e.hit(6, { pitch: 255, decay: 6, balance: 15, level: 10 }); }
+    e.render(480);
+    await new Promise((r) => setTimeout(r, 5));
+  }
+}
+
 async function loadAnyEngine(kind, wasmUrl, rate) {
   if (kind === 'mock') {
     engine = await loadMockEngine({ sampleRate: rate }); mock = true; backend = engine.backend;
@@ -242,7 +254,7 @@ self.onmessage = async (e) => {
         setDc(sampleRate);
         if (err) { dac = '1st'; gain = DEFAULT_GAIN; }
         // compile the other DAC builds in the background, so a switch while playing is instant
-        else if (!mock && m.prefetch) for (const u of m.prefetch) wasmModule(u).catch(() => {});
+        else if (!mock && m.prefetch) for (const u of m.prefetch) warmUp(u).catch(() => {});
         post({ type: 'ready', info: { backend, mock, sampleRate, dac, gain }, error: err });
         break;
       }

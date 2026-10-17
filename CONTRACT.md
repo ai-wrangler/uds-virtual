@@ -84,7 +84,9 @@ dac, wasm, chip, branch, commit, chipDir, backend, gain, available }] }`. `1st` 
 as built, `chip/`, gain 3, the default); `2nd` is `uds_engine_sd2.wasm` (the second-order sigma-delta proposed
 on tt-uds-1x1 branch `sd2`, `chip-sd2/`, not taped out). Both have the API above; `gain` is the audio
 worker's make-up gain, matched on a reference pattern by `engine/test/loudness.mjs`. `available: false` means
-not built yet.
+not built yet. The sd2 chip answers READ VERSION with 0x22 (version 2, 2 voices). Its Audio Pmod model uses a sinc³
+decimator (three 96-clock boxcars) instead of the count of 1s per frame (`engine.audioModel`: `'count'` or
+`'sinc3'`); `runFrames`/`runCounts` still return the count of 1s per frame for both.
 
 Extras beyond this list (used by the engine tests, not needed by other parts): `runCycles(n)`,
 `runCounts(n)`, `runTrace(n)`, `takeLog()`. In an AudioWorklet pass the `.wasm` bytes (an ArrayBuffer), not

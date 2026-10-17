@@ -100,7 +100,9 @@ test('2nd-order DAC: switching both ways while the rhythm plays', async ({ page 
   await page.evaluate(() => window.uds.addEventListener('dac', (e) => window.__ev.push({ type: 'dac', t: performance.now(), detail: e.detail })));
   await page.getByTestId('rhythm-toggle').click();
   await expect.poll(() => page.evaluate(() => window.uds.rhythmPlaying)).toBe(true);
-  const levels = {};
+  const levels = {}, under = [];
+  await page.waitForTimeout(1500);
+  under.push(await page.evaluate(() => window.uds.lastStatus.underruns));
   for (const dac of ['2nd', '1st', '2nd', '1st']) {
     const t0 = await now(page);
     await page.getByTestId('dac').selectOption(dac);
@@ -111,6 +113,7 @@ test('2nd-order DAC: switching both ways while the rhythm plays', async ({ page 
     expect(steps.length, `rhythm steps after switching to ${dac}`).toBeGreaterThan(4);
     expect(m.maxRms, `sound after switching to ${dac}`).toBeGreaterThan(0.01);
     (levels[dac] ||= []).push(m.meanRms);
+    under.push(await page.evaluate(() => window.uds.lastStatus.underruns));
   }
   const st = await page.evaluate(() => window.uds.lastStatus);
   expect(st.dac).toBe('1st');
@@ -118,8 +121,8 @@ test('2nd-order DAC: switching both ways while the rhythm plays', async ({ page 
   const dacEvents = await events(page, 'dac');
   expect(dacEvents.map((e) => e.detail.dac)).toEqual(['2nd', '1st', '2nd', '1st']);
   test.info().annotations.push({ type: 'levels', description: JSON.stringify({ levels, underruns: st.underruns }) });
-  console.log(`[dac switch] ${JSON.stringify({ levels, underruns: st.underruns })}`);
-  expect(st.underruns, 'underruns during four switches').toBeLessThan(20);
+  console.log(`[dac switch] ${JSON.stringify({ levels, underruns: under })}`);
+  expect(under[4] - under[0], 'underruns during four switches').toBeLessThan(12);
   expect(errors).toEqual([]);
 });
 
