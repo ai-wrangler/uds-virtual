@@ -1,22 +1,165 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>UDS-1x1 Virtual</title>
-<style>
-  :root { color-scheme: dark; }
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #1b1a18; color: #e8e2d6;
-         font: 16px/1.5 system-ui, sans-serif; padding: 16px; box-sizing: border-box; }
-  main { max-width: 34rem; }
-  h1 { font-size: 1.6rem; margin: 0 0 .5rem; }
-</style>
+<meta name="description" content="A virtual drum machine that runs the real UDS-1x1 Tiny Tapeout chip, clock by clock, in your browser. Homage to the Formanta UDS.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="ui/panel.css">
 </head>
-<body>
-<main>
-  <h1>UDS-1x1 Virtual</h1>
-  <p>A virtual drum machine that runs the real UDS-1x1 chip, simulated clock by clock in your browser.
-     The panel is being built; this placeholder will be replaced.</p>
-</main>
+<body data-state="loading">
+<div class="case">
+  <header class="hdr">
+    <div class="brand">
+      <div class="plate">
+        <h1>UDS-1x1</h1>
+        <span class="model">УДС-1х1</span>
+      </div>
+      <p class="sub">virtual chip · homage to the Formanta UDS</p>
+    </div>
+    <div class="hdr-meters">
+      <div class="badge" id="engine-badge" title="Simulation backend"><span class="ru">Движок</span> <b id="engine-name">…</b></div>
+      <div class="speed" id="speed-box">
+        <span class="ru">Скорость <small>sim speed</small></span>
+        <output data-testid="sim-speed" id="sim-speed">— MHz · —x real time</output>
+        <span class="speed-hint" id="speed-hint">slower than real time: sound may stutter, WAV export still works</span>
+      </div>
+    </div>
+    <button class="power" data-testid="power" id="power" type="button" aria-pressed="false">
+      <span class="power-lamp" aria-hidden="true"></span>
+      <span class="lbl"><span class="ru">Сеть</span><small>power</small></span>
+    </button>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <main class="panel">
+    <section class="block strips-block" aria-labelledby="h-strips">
+      <h2 id="h-strips" class="block-title"><span class="ru">Каналы</span> <small>channels</small></h2>
+      <div class="strips" id="strips"></div>
+    </section>
+
+    <aside class="side">
+      <section class="block chip-block" aria-labelledby="h-chip">
+        <h2 id="h-chip" class="block-title"><span class="ru">Микросхема</span> <small>chip</small></h2>
+        <div class="chip-row">
+          <div class="display-well">
+            <svg class="display" data-testid="display" id="display" viewBox="0 0 60 100" role="img" aria-label="7-segment display">
+              <polygon class="seg seg-a" data-testid="seg-a" points="14,6 46,6 50,10 46,14 14,14 10,10"/>
+              <polygon class="seg seg-b" data-testid="seg-b" points="48,12 52,16 52,44 48,48 44,44 44,16"/>
+              <polygon class="seg seg-c" data-testid="seg-c" points="48,52 52,56 52,84 48,88 44,84 44,56"/>
+              <polygon class="seg seg-d" data-testid="seg-d" points="14,86 46,86 50,90 46,94 14,94 10,90"/>
+              <polygon class="seg seg-e" data-testid="seg-e" points="12,52 16,56 16,84 12,88 8,84 8,56"/>
+              <polygon class="seg seg-f" data-testid="seg-f" points="12,12 16,16 16,44 12,48 8,44 8,16"/>
+              <polygon class="seg seg-g" data-testid="seg-g" points="14,46 46,46 50,50 46,54 14,54 10,50"/>
+              <circle class="seg seg-dp" cx="56" cy="92" r="3"/>
+            </svg>
+          </div>
+          <div class="chip-leds">
+            <div class="ledline"><i class="led led-amber" id="led-busy"></i><span class="ru">ЗАНЯТ</span><small>busy</small></div>
+            <div class="ledline"><i class="led led-red" id="led-cs"></i><span class="ru">ВЫБОР</span><small>cs</small></div>
+            <div class="ledline"><i class="led led-green" id="led-frame"></i><span class="ru">КАДР</span><small>frame</small></div>
+          </div>
+        </div>
+        <dl class="counters">
+          <div><dt><span class="ru">Такты</span> <small>cycles</small></dt><dd id="cnt-cycles">0</dd></div>
+          <div><dt><span class="ru">Кадры</span> <small>frames</small></dt><dd id="cnt-frames">0</dd></div>
+          <div><dt><span class="ru">Модель</span> <small>backend</small></dt><dd id="cnt-backend">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="block out-block" aria-labelledby="h-out">
+        <h2 id="h-out" class="block-title"><span class="ru">Выход</span> <small>output</small></h2>
+        <div class="scope-well"><canvas id="scope" class="scope" width="320" height="120" aria-label="Oscilloscope"></canvas></div>
+        <div class="out-controls">
+          <label class="ctl">
+            <span class="ctl-lbl"><span class="ru">Фильтр</span> <small>filter</small></span>
+            <select data-testid="filter" id="filter">
+              <option value="rc">RC 15.9 kHz</option>
+              <option value="warm">тёплый · warm 4 kHz</option>
+              <option value="off">выкл · off</option>
+            </select>
+          </label>
+          <label class="ctl">
+            <span class="ctl-lbl"><span class="ru">Громкость</span> <small>volume</small> <output id="volume-out">80</output></span>
+            <input type="range" data-testid="volume" id="volume" min="0" max="1" step="0.01" value="0.8">
+          </label>
+        </div>
+        <div class="wav-row">
+          <select id="wav-what" aria-label="What to export">
+            <option value="rhythm">Ритм · 8 bars</option>
+            <option value="midi" disabled>MIDI file</option>
+          </select>
+          <button type="button" class="btn" data-testid="wav-export" id="wav-export"><span class="ru">Запись WAV</span><small>export</small></button>
+        </div>
+      </section>
+      <section class="block midi-block" aria-labelledby="h-midi">
+        <h2 id="h-midi" class="block-title"><span class="ru">МИДИ</span> <small>midi</small></h2>
+        <div class="midi-file">
+          <label class="btn file-btn">
+            <span class="ru">Файл .mid</span><small>open</small>
+            <input type="file" data-testid="midi-file" id="midi-file" accept=".mid,.midi,audio/midi,audio/x-midi">
+          </label>
+          <div class="midi-info">
+            <div class="midi-name" id="midi-name">перетащите .mid сюда · drop a .mid file</div>
+            <div class="midi-bar"><div class="midi-fill" id="midi-fill"></div></div>
+            <div class="midi-meta"><span id="midi-pos">0:00</span> / <span id="midi-dur">0:00</span> <span id="midi-unmapped" class="dim"></span></div>
+          </div>
+          <div class="midi-btns">
+            <button type="button" class="btn" data-testid="midi-play" id="midi-play" disabled aria-pressed="false"><span class="ru">Играть</span><small>play</small></button>
+            <label class="chk"><input type="checkbox" id="midi-loop"> <span class="ru">Повтор</span><small>loop</small></label>
+          </div>
+        </div>
+        <div class="midi-live">
+          <button type="button" class="btn" data-testid="midi-input" id="midi-input"><span class="ru">Живой МИДИ</span><small>live input</small></button>
+          <i class="led led-green" id="led-midi" title="MIDI activity"></i>
+          <span class="midi-devs dim" id="midi-devs">выкл · off</span>
+        </div>
+      </section>
+    </aside>
+
+    <section class="block rhythm-block" aria-labelledby="h-rhythm">
+      <h2 id="h-rhythm" class="block-title"><span class="ru">Авторитм</span> <small>autorhythm</small></h2>
+      <div class="rhythm-grid">
+        <div class="banks">
+          <div class="bank"><span class="bank-lbl">A</span><div class="pats" id="bank-A"></div></div>
+          <div class="bank bank-b"><span class="bank-lbl">B</span><div class="pats" id="bank-B"></div></div>
+        </div>
+        <div class="transport">
+          <button type="button" class="btn btn-big" data-testid="rhythm-toggle" id="rhythm-toggle" aria-pressed="false">
+            <span class="tri" aria-hidden="true"></span><span class="lbl"><span class="ru">Пуск</span><small>start</small></span>
+          </button>
+          <div class="tempo-box" id="tempo-box"></div>
+          <button type="button" class="btn btn-stop" id="stop-all" title="Esc"><span class="ru">Стоп</span><small>stop all · Esc</small></button>
+        </div>
+      </div>
+      <div class="steps-row">
+        <div class="steps" id="steps" aria-label="Rhythm steps"></div>
+        <span class="pat-name" id="pat-name"></span>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <span>Клавиши · keys: <kbd>1</kbd>…<kbd>8</kbd> pads · <kbd>Space</kbd> rhythm · <kbd>Esc</kbd> stop</span>
+    <span>UDS-1x1 — Tiny Tapeout chip, Verilog simulated at 6 MHz · <a href="https://github.com/ai-wrangler/uds-virtual">source</a></span>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <button type="button" class="overlay-btn" id="overlay-btn">
+    <span class="power-lamp" aria-hidden="true"></span>
+    <span class="ru">Включить</span>
+    <small>Power on</small>
+  </button>
+  <p class="overlay-note">The browser needs a click before it plays sound.</p>
+</div>
+
+<div class="drop-hint" id="drop-hint" hidden><span>Отпустите .mid · drop to load</span></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script type="module" src="ui/main.js"></script>
 </body>
 </html>
