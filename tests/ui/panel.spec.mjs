@@ -164,6 +164,14 @@ test('rhythm: patterns, space toggles, steps fit the pattern length, Esc stops',
   await expect(page.getByTestId('rhythm-toggle')).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('rhythm-toggle').click();
   await expect(page.getByTestId('rhythm-toggle')).toHaveAttribute('aria-pressed', 'false');
+  // Space on the focused toggle button toggles once, not twice
+  await page.getByTestId('rhythm-toggle').focus();
+  await page.keyboard.press('Space');
+  await page.waitForTimeout(100);
+  await expect(page.getByTestId('rhythm-toggle')).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Space');
+  await page.waitForTimeout(100);
+  await expect(page.getByTestId('rhythm-toggle')).toHaveAttribute('aria-pressed', 'false');
 });
 
 function midiFile() {

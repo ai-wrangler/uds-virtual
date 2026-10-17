@@ -97,6 +97,7 @@ async function main() {
     if (s === 'running') overlay.hidden = true;
     showBackend();
     if (s !== 'running') clearLeds();
+    if (s === 'error') toast('Ошибка звука · audio error; WAV export may still work', 'bad');
   }
   uds.addEventListener('state', onState);
 
@@ -457,6 +458,11 @@ async function main() {
       e.preventDefault();
       stopAll();
     }
+  });
+
+  // a Space keydown was taken by the rhythm toggle: do not let it also click a focused button on keyup
+  window.addEventListener('keyup', (e) => {
+    if ((e.key === ' ' || e.code === 'Space') && e.target?.tagName === 'BUTTON') e.preventDefault();
   });
 
   // ---------------- scope ----------------
