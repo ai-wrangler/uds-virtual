@@ -50,6 +50,21 @@ async function loadAudio() {
 }
 
 async function main() {
+  // the tempo control does not depend on the data, so it exists before UDSAudio is created
+  const tempoKnob = createKnob({
+    min: 40, max: 240, value: 120, def: 120, step: 2, testid: 'tempo',
+    label: 'tempo', labelRu: 'Темп', ariaLabel: 'Tempo (BPM)', className: 'knob-tempo',
+    format: (v) => `${v}`,
+    onChange: (v) => { window.uds?.setTempo(v); $('tempo-read').textContent = v; },
+  });
+  const tb = $('tempo-box');
+  tb.appendChild(tempoKnob.el);
+  const tr = h('div', 'tempo-read');
+  const trv = h('output', null, '120');
+  trv.id = 'tempo-read';
+  tr.append(trv, h('small', null, 'BPM'));
+  tb.appendChild(tr);
+
   const { uds, fake, why } = await loadAudio();
   window.uds = uds;
   const body = document.body;
@@ -201,19 +216,6 @@ async function main() {
     $(p.bank === 'B' ? 'bank-B' : 'bank-A').appendChild(b);
   }
 
-  const tempoKnob = createKnob({
-    min: 40, max: 240, value: uds.tempo || 120, def: 120, step: 2, testid: 'tempo',
-    label: 'tempo', labelRu: 'Темп', ariaLabel: 'Tempo (BPM)', className: 'knob-tempo',
-    format: (v) => `${v}`,
-    onChange: (v) => { uds.setTempo(v); $('tempo-read').textContent = v; },
-  });
-  const tb = $('tempo-box');
-  tb.appendChild(tempoKnob.el);
-  const tr = h('div', 'tempo-read');
-  const trv = h('output', null, String(uds.tempo || 120));
-  trv.id = 'tempo-read';
-  tr.append(trv, h('small', null, 'BPM'));
-  tb.appendChild(tr);
 
   let stepEls = [];
   function buildSteps(p) {
@@ -315,6 +317,7 @@ async function main() {
     else { await ensureRunning(); uds.playMidi(); }
     syncTransport();
   });
+  $('midi-loop').checked = !!uds.midiLoop;
   $('midi-loop').addEventListener('change', (e) => uds.setMidiLoop(e.target.checked));
   uds.addEventListener('midi', (e) => {
     const { position, duration } = e.detail;
@@ -469,6 +472,7 @@ async function main() {
   const canvas = $('scope');
   const ctx = canvas.getContext('2d');
   let tdBuf = null;
+  let scopeGain = 1;
   const kicks = [];
   function scopeKick(ch, level) {
     if (uds.analyser) return;
@@ -499,8 +503,21 @@ async function main() {
       uds.analyser.getFloatTimeDomainData(tdBuf);
       // trigger on a rising zero crossing for a stable trace
       let start = 0;
-      for (let i = 1; i < tdBuf.length / 2; i++) if (tdBuf[i - 1] < 0 && tdBuf[i] >= 0) { start = i; break; }
-      data = tdBuf.subarray(start, Math.min(tdBuf.length, start + N));
+      let m0 = 0;
+      for (const v of tdBuf) m0 += v;
+      m0 /= tdBuf.length;
+      for (let i = 1; i < tdBuf.length / 2; i++) if (tdBuf[i - 1] < m0 && tdBuf[i] >= m0) { start = i; break; }
+      const raw = tdBuf.subarray(start, Math.min(tdBuf.length, start + N));
+      // remove the DC of the 1-bit stream and auto-scale (up to 8x), so quiet voices are visible
+      let mean = 0;
+      for (const v of tdBuf) mean += v;
+      mean /= tdBuf.length;
+      let peak = 0;
+      for (const v of raw) peak = Math.max(peak, Math.abs(v - mean));
+      const want = Math.min(8, 0.9 / Math.max(peak, 1e-4));
+      scopeGain += (want - scopeGain) * (want < scopeGain ? 0.5 : 0.05);
+      data = new Float32Array(raw.length);
+      for (let i = 0; i < raw.length; i++) data[i] = (raw[i] - mean) * scopeGain;
     } else {
       data = new Float32Array(N);
       const now = performance.now();
