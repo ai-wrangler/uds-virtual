@@ -366,6 +366,16 @@ body[data-state="running"] .led#led-frame { }
   .strips { grid-template-columns: 68px repeat(8, minmax(0, 1fr)); }
   .legend-row { font-size: 12px; }
 }
+@media (min-width: 760px) and (max-width: 1279px) {
+  .strips-block { --headh: 66px; }
+  .pat-nm .ru { white-space: normal; overflow-wrap: anywhere; font-size: 11px; }
+  .strip-head { grid-template-columns: auto minmax(0, 1fr) auto; row-gap: 3px; padding: 0 2px; }
+  .strip-num { grid-row: 1; width: 20px; height: 20px; font-size: 15px; }
+  .strip-names { grid-column: 1 / -1; grid-row: 2; }
+  .strip-names .ru { font-size: 11px; hyphens: auto; overflow-wrap: anywhere; }
+  .strip-names small { font-size: 8px; }
+  .strip-led { margin-top: 5px; }
+}
 
 /* ---------- narrow: stack ---------- */
 @media (max-width: 899px) {

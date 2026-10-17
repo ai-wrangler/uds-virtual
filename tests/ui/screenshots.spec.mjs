@@ -1,13 +1,15 @@
-// Screenshots of the panel (with the silent fake) for docs/screenshots/ui/.
-const { test } = require('./pw.js');
-const path = require('path');
+// Screenshots of the panel (silent fake) into docs/screenshots/ui/. Run: npx playwright test --project=ui
+import { test } from '@playwright/test';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const OUT = path.join(__dirname, '..', '..', 'docs', 'screenshots', 'ui');
+const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../docs/screenshots/ui');
+const SIZES = [['desktop-1440', 1440, 900], ['desktop-1280', 1280, 800], ['desktop-1024', 1024, 768], ['mobile-390', 390, 844]];
 
-for (const [name, w, h] of [['desktop-1440', 1440, 900], ['desktop-1280', 1280, 800], ['desktop-1024', 1024, 768], ['mobile-390', 390, 844]]) {
+for (const [name, w, h] of SIZES) {
   test(`screenshot ${name}`, async ({ page }) => {
     await page.setViewportSize({ width: w, height: h });
-    await page.goto('index.html?fake=1');
+    await page.goto('./?fake=1');
     await page.waitForSelector('body.ready');
     if (name === 'desktop-1440') await page.screenshot({ path: path.join(OUT, 'power-overlay-1440.png') });
     await page.getByTestId('power').click();
