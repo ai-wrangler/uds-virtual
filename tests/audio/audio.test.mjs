@@ -232,3 +232,24 @@ test('mock engine: interface and sound', async () => {
   assert.equal(e.sampleRate, 44100);
   assert.equal(e.frames, 0);
 });
+
+// ---------- mock vs real engine (runs once app/engine/ is present) ----------
+import { existsSync } from 'node:fs';
+const ENGINE_JS = join(root, 'app/engine/uds-engine.js');
+test('mock engine sounds like the real engine (correlation per drum)', { skip: !existsSync(ENGINE_JS) && 'app/engine not present' }, async () => {
+  const { loadEngine } = await import('../../app/engine/uds-engine.js');
+  const real = await loadEngine(readFileSync(join(root, 'app/engine/uds_engine.wasm')), { sampleRate: 48000 });
+  const mock = await loadMockEngine({ sampleRate: 48000 });
+  for (const c of channels.channels) {
+    real.reset(); mock.reset();
+    real.hit(c.ch, c.params); mock.hit(c.ch, c.params);
+    const a = Float32Array.from(real.render(8192)), b = Float32Array.from(mock.render(8192));
+    let best = -1;
+    for (let lag = -64; lag <= 64; lag++) {
+      let ab = 0, aa = 0, bb = 0;
+      for (let i = 100; i < 8000; i++) { const x = a[i], y = b[i + lag]; ab += x * y; aa += x * x; bb += y * y; }
+      best = Math.max(best, ab / Math.sqrt(aa * bb));
+    }
+    assert.ok(best > 0.85, `${c.id}: correlation ${best.toFixed(3)}`);
+  }
+});

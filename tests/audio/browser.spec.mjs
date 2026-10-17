@@ -153,3 +153,43 @@ test.describe(`UDSAudio with the ${ENGINE} engine`, () => {
     expect(await page.evaluate(() => window.rec.state)).toEqual(['starting', 'running', 'suspended', 'running']);
   });
 });
+
+test.describe('degrading cleanly', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/tests/audio/test.html');
+    await page.waitForFunction(() => window.testPageReady);
+  });
+
+  test('a .wasm that fails to load falls back to the mock and emits error', async ({ page }) => {
+    const r = await page.evaluate(() => window.createUds('wasm', { wasmUrl: '/nonexistent/uds_engine.wasm' }));
+    expect(r.info.mock).toBe(true);
+    expect(r.info.backend).toBe('mock');
+    await page.waitForTimeout(50);
+    const errs = await page.evaluate(() => window.rec.error);
+    expect(errs.length).toBe(1);
+    expect(errs[0].message).toMatch(/mock/);
+    await page.evaluate(() => window.uds.start());
+    await page.evaluate(() => window.uds.hit(4));
+    expect(await page.evaluate(() => window.peakOver(300))).toBeGreaterThan(0.02);
+  });
+
+  test('an engine slower than real time: realtime < 1, underruns grow, audio keeps going', async ({ page }) => {
+    await page.evaluate(() => window.createUds('mock', { slowdown: 0.6 }));
+    await page.evaluate(() => { window.uds.start(); window.uds.setPattern('A13'); window.uds.startRhythm(); });
+    await page.waitForTimeout(3000);
+    const st = await page.evaluate(() => window.rec.status.slice(-5));
+    const last = st.at(-1);
+    console.log(`slow engine: ${last.realtime.toFixed(2)}x, underruns ${last.underruns}, lead target ${last.leadTargetMs} ms`);
+    expect(last.realtime).toBeLessThan(0.8);
+    expect(last.realtime).toBeGreaterThan(0.3);
+    expect(last.underruns).toBeGreaterThan(10);
+    expect(st.length).toBe(5);                       // status still flows
+    const steps = await page.evaluate(() => window.rec.step.length);
+    expect(steps).toBeGreaterThan(5);                // the rhythm still advances
+    expect(await page.evaluate(() => window.uds.state)).toBe('running');
+    expect(await page.evaluate(() => window.rec.error.length)).toBe(0);
+    // WAV export is the fallback
+    const w = await page.evaluate(() => window.wavInfo({ what: 'rhythm', seconds: 1 }));
+    expect(w.peak).toBeGreaterThan(1000);
+  });
+});

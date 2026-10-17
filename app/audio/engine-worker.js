@@ -13,7 +13,7 @@ import { encodeWav } from './wav.js';
 const CLOCK_HZ = 6000000;
 const MAKEUP_GAIN = 3;          // a full-level voice reaches about 1/6 of the pin's swing
 const CHUNK = 256;              // samples per chunk sent to the worklet (128..1024)
-const LEAD_DEFAULT = 60, LEAD_MIN = 30, LEAD_MAX = 200;
+const LEAD_DEFAULT = 60, LEAD_FLOOR = 40, LEAD_MAX = 200;   // ms; the contract allows 30..200
 const STATUS_MS = 50;
 const SLICE_MS = 30;            // longest stretch of rendering before yielding to messages
 
@@ -31,6 +31,7 @@ let busyMs = 0, busyCycles = 0, simHz = 0;
 let lastStatus = 0, act = { busy: false, cs: false, hits: 0 }, dropped = 0;
 let pumpTimer = null, statusTimer = null;
 let midiWasPlaying = false;
+let slowdown = 0;              // test hook (create({ slowdown })): 0 = off
 
 function post(msg, transfer) { self.postMessage(msg, transfer || []); }
 
@@ -62,6 +63,10 @@ function renderInto(dst, off, n) {
     const k = Math.min(n, 8192);
     const t0 = performance.now(), c0 = engine.cycles;
     const src = engine.render(k);
+    if (slowdown > 0) {             // test hook: make the engine look this many times real time
+      const until = t0 + k / sampleRate * 1000 / slowdown;
+      while (performance.now() < until) { /* spin */ }
+    }
     busyMs += performance.now() - t0; busyCycles += engine.cycles - c0;
     let { x, y } = dc;
     for (let i = 0; i < k; i++) {
@@ -137,8 +142,11 @@ function maybeStatus(force) {
   // adapt the lead
   if (underruns > lastUnderruns) {
     leadMs = Math.min(LEAD_MAX, Math.round(leadMs * 1.25 + 5)); lastUnderrunAt = now;
-  } else if (now - lastUnderrunAt > 10000 && now - lastLeadDrop > 10000 && leadMs > LEAD_DEFAULT) {
-    leadMs = Math.max(LEAD_DEFAULT, leadMs - 10); lastLeadDrop = now;
+  } else if (now - lastUnderrunAt > 8000 && now - lastLeadDrop > 4000 && simHz > 1.5 * CLOCK_HZ) {
+    // a fast engine and no underruns for a while: shorten the lead (lower pad latency), not below LEAD_FLOOR
+    const floor = leadMs > LEAD_DEFAULT ? LEAD_DEFAULT : LEAD_FLOOR;
+    if (leadMs > floor) leadMs = Math.max(floor, leadMs - 5);
+    lastLeadDrop = now;
   }
   lastUnderruns = underruns;
   const pp = playPos();
@@ -186,6 +194,7 @@ self.onmessage = async (e) => {
     switch (m.type) {
       case 'init': {
         sampleRate = m.sampleRate || 48000;
+        slowdown = Number(m.slowdown) || 0;
         const err = await loadAnyEngine(m.engine, m.wasmUrl, sampleRate);
         sched = new Scheduler({ sampleRate, patterns: m.patterns, channels: m.channels, accentLevelDrop: m.accentLevelDrop });
         if (m.state) restoreState(m.state);
@@ -204,7 +213,7 @@ self.onmessage = async (e) => {
       case 'params': sched.setParams(m.ch, m.params); break;
       case 'hit': {
         const params = sched.hitParams(m.ch, m.v ?? 1);
-        if (params.level > 0) live.push({ ch: m.ch, params, source: m.source || 'pad' });
+        if (params.level > 0 && running) live.push({ ch: m.ch, params, source: m.source || 'pad' });   // no sound before start()
         if (running && !pumpTimer) pump();
         break;
       }

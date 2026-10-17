@@ -38,8 +38,9 @@ export class UDSAudio extends EventTarget {
     return u;
   }
 
-  constructor({ engine = 'wasm', wasmUrl = null, dataUrl = null } = {}) {
+  constructor({ engine = 'wasm', wasmUrl = null, dataUrl = null, slowdown = 0 } = {}) {
     super();
+    this._slowdown = slowdown;   // test hook: pretend the engine runs at this many times real time
     this.engineKind = engine === 'mock' ? 'mock' : 'wasm';
     this.wasmUrl = wasmUrl;
     this.dataUrl = dataUrl || new URL('../data/', HERE).href;
@@ -83,15 +84,27 @@ export class UDSAudio extends EventTarget {
     this.worker = this._spawn();
     this.worker.addEventListener('message', (e) => this._onWorker(e.data));
     const ready = await workerCall(this.worker, {
-      type: 'init', engine: this.engineKind, wasmUrl: this.wasmUrl, sampleRate: 48000,
+      type: 'init', engine: this.engineKind, wasmUrl: this.wasmUrl, sampleRate: 48000, slowdown: this._slowdown,
       channels: this.channels, patterns: this._patternsFull, accentLevelDrop: this.accentLevelDrop,
     }, null, 'ready');
     this.info.backend = ready.info.backend;
     this.info.mock = ready.info.mock;
     if (ready.error) {
+      // Delivered after create() resolves, to the first 'error' listener (the page adds it after create)
       this.lastError = ready.error;
-      setTimeout(() => this._emit('error', { message: ready.error }), 0);   // after create() resolves
+      this._pendingError = ready.error;
+      setTimeout(() => this._flushPendingError(), 0);
     }
+  }
+
+  addEventListener(type, fn, opts) {
+    super.addEventListener(type, fn, opts);
+    if (type === 'error') { this._hasErrorListener = true; if (this._pendingError) setTimeout(() => this._flushPendingError(), 0); }
+  }
+  _flushPendingError() {
+    if (!this._pendingError || !this._hasErrorListener) return;
+    const message = this._pendingError; this._pendingError = null;
+    this._emit('error', { message });
   }
 
   _spawn() { return new Worker(new URL('./engine-worker.js', HERE), { type: 'module' }); }

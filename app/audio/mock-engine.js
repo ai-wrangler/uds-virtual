@@ -17,6 +17,7 @@ const PHASE_START = 0x4000;
 const METAL = [false, false, false, false, false, true, true, true];
 const DIGITS = [0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07];
 const QUEUE_MAX = 64;
+const MSG_EXTRA_FRAMES = 0;     // extra frames per message (0 correlates best with the real engine)
 const BITREV4 = Array.from({ length: 16 }, (_, i) => parseInt(i.toString(2).padStart(4, '0').split('').reverse().join(''), 2));
 
 // WEIGHTS[env * 16 + balance] = [triangle weight, noise weight] over the voice's 48-clock window
@@ -101,7 +102,7 @@ class MockEngine {
     if (!this.current) {
       if (!this.queue.length || this.pending) return;
       this.current = this.queue.shift();
-      this.msgFrames = Math.ceil(this.current.length * 64 / FRAME_CLOCKS);
+      this.msgFrames = Math.ceil(this.current.length * 64 / FRAME_CLOCKS) + MSG_EXTRA_FRAMES;
     }
     this.act.cs = true;
     if (--this.msgFrames > 0) return;

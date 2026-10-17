@@ -26,8 +26,8 @@ const log = (...a) => { document.getElementById('log').textContent = a.join(' ')
 const rec = { status: [], hit: [], step: [], midi: [], error: [], state: [], midiInput: [] };
 window.rec = rec;
 
-window.createUds = async (engine = q.get('engine') || 'mock') => {
-  const uds = await UDSAudio.create({ engine });
+window.createUds = async (engine = q.get('engine') || 'mock', opts = {}) => {
+  const uds = await UDSAudio.create({ engine, ...opts });
   window.uds = uds;
   const t = () => performance.now();
   uds.addEventListener('status', e => { rec.status.push({ t: t(), ...e.detail }); if (rec.status.length > 2000) rec.status.shift(); });
