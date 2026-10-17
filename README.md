@@ -17,7 +17,7 @@ Every sound you hear is the count of 1s the simulated chip put on its audio pin,
 ## Status
 
 <!-- STATUS:BEGIN -->
-_Final report from the integration session, 17 October 2026, 00:00 Riga time._
+_Final report from the integration session, night of 17–18 October 2026, about 00:00 Riga time._
 
 **URL: https://ai-wrangler.github.io/uds-virtual/** (Chrome or Edge, desktop). Deployed from `main` by GitHub Actions; every merge redeploys.
 
