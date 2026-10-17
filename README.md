@@ -10,7 +10,7 @@ of the Audio Pmod to your speakers.
 UDS-1x1 is a digital homage to the Soviet Formanta UDS drum synthesizer: two voices, eight drums, SPI control.
 Every sound you hear is the count of 1s the simulated chip put on its audio pin, frame by frame.
 
-![Desktop, 1440x900, Rock 1 running on the real engine](docs/screenshots/desktop.png)
+![Desktop, 1440x900, the demo groove playing from slot 1 on the real engine](docs/screenshots/desktop.png)
 
 <img src="docs/screenshots/mobile.png" width="260" alt="Mobile, 390x844">
 
@@ -27,27 +27,29 @@ _Interim status, 22:15 Riga time. The final report replaces this at the end of t
 
 ## How to use it
 
-1. **Power on.** Click **Сеть / Power** (or the «Включить» overlay). Browsers only start audio after a click.
+1. **Power on.** Click **Power** (or the **Power on** overlay). Browsers only start audio after a click.
    The header shows the engine (`gen` = the real chip) and the simulation speed, e.g.
-   `120.6 MHz · 20.11x real time`.
-2. **Pads.** Click a pad or press **1..8** on the keyboard: snare, small tom, middle tom, big tom, bass drum,
-   cymbal, closed hi-hat, open hi-hat. The 7-segment display shows the chip's own output pins: the channel
-   last hit (0..7).
-3. **Knobs.** Each channel has Pitch, Sweep, Decay, Balance (tone/noise) and Level. Drag up/down, use the
-   mouse wheel or arrow keys (Shift = fine), double-click for the default. The next hit of that channel uses
-   the new values. **Сброс / Reset knobs** restores the defaults.
-4. **Autorhythm.** Pick a pattern (A0..A15: Rock 1-4, Rumba, Samba, Bossa nova, Beguine, Waltz, Slow rock,
-   Swing, Lezginka, March, Disco, Tango, 16 beat; B0 House, B1 Downtempo), then **Пуск / Start** or
-   **Space**. Turn the **Tempo** knob (40..240 bpm). **Стоп** or **Esc** stops everything.
-5. **MIDI file.** **Файл .mid / Open**, or drag a `.mid` onto the page, then **Играть / Play**. General MIDI
-   drum notes on channel 10 are mapped to the eight drums; other notes are counted as unmapped. **Повтор**
-   loops.
-6. **Live MIDI.** **Живой МИДИ / Live input** asks for Web MIDI access; then any note-on from a connected
-   keyboard or pad controller plays (velocity sets the level).
-7. **Filter and volume.** RC 15.9 kHz (the Audio Pmod's real filter), Warm 4 kHz, or Off (raw 1-bit
-   stream, harsh). Volume is the master gain.
-8. **WAV export.** **Запись WAV** renders 8 bars of the current pattern (or the MIDI file) offline with a
-   separate engine and downloads a 16-bit WAV. This works even on a machine too slow for real time.
+   `109.2 MHz · 18.21x real time`.
+2. **Pads.** Click a pad or press **1..8**: SD snare, HT small tom, MT middle tom, LT big tom, BD bass drum,
+   CY cymbal, CH closed hi-hat, OH open hi-hat. Pad n is chip channel n−1 (shown as "ch 0".."ch 7"); the
+   7-segment display shows the chip's own output pins: the channel last hit (0..7).
+3. **Knobs.** Each channel has Pitch, Sweep, Decay, Tone/noise and Level. Drag up/down, use the mouse wheel
+   or arrow keys (Shift = fine), double-click for the default. The next hit of that channel uses the new
+   values. **Reset knobs** restores the defaults.
+4. **Autorhythm: 16 slots.** Click an empty slot (or drop a `.mid` on it) to load a drum groove from your
+   computer; it is quantized to 16ths and looped (up to 4 bars), at the file's tempo. Try
+   [`app/data/midi/demo.mid`](app/data/midi/demo.mid). Select a slot, then **Start** or **Space**; switching
+   slots while playing changes at the next bar line. **Tempo** knob 40..240 bpm. **Stop all** or **Esc**
+   stops everything. Slots are remembered in this browser. (The 18 built-in Formanta patterns are still in
+   the API: `uds.setPattern('A0')`.)
+5. **MIDI file.** **Open .mid**, or drop a `.mid` elsewhere on the page, then **Play**. General MIDI drum
+   notes on channel 10 are mapped to the eight drums; other notes are counted as unmapped. **Loop** repeats.
+6. **Live MIDI.** **Live MIDI** asks for Web MIDI access; then any note-on from a connected keyboard or pad
+   controller plays (velocity sets the level).
+7. **Filter and volume.** RC 15.9 kHz (the Audio Pmod's real filter), Warm 4 kHz, or Off (the raw 1-bit
+   stream, harsh). Volume is the master gain; a soft limiter above 0.8 prevents hard clipping.
+8. **Export WAV.** Renders 8 bars of the selected slot (or the MIDI file) offline with a separate engine and
+   downloads a 16-bit WAV. This works even on a machine too slow for real time.
 
 URL flags: `?engine=mock` uses a plain-JS model instead of the chip; `?fake=1` is the ui's silent demo.
 
@@ -84,7 +86,7 @@ URL flags: `?engine=mock` uses a plain-JS model instead of the chip; `?fake=1` i
 | Model check | 316 185 frames, 2 208 SPI messages: per-frame count of 1s on the audio pin from the WASM engine = `chip/model/uds_model.py`, 0 frames differ (all channels, parameter corners, voice stealing, hi-hat group, STOP, back-to-back HITs) | `engine/test/model.test.mjs` |
 | Cross-check | the shipped `gen` backend = Yosys CXXRTL on `uo_out`/`uio_out` for 10 004 294 clocks of random SPI traffic | `engine/test/cross.test.mjs` |
 | Browser truth test | in Chromium, the deployed `uds-engine.js` replays `engine/test/fixtures/model_frames.json`: 22 019 frames, 0 mismatches with the model | `tests/e2e/truth.spec.mjs` |
-| End-to-end | with the mock and the real engine: power on, pad → `hit` event + analyser RMS, all 8 pads → 7-segment table 0x3F..0x07 (and `status.uoOut`), rhythm step interval within ±5% at 120 and 180 bpm, MIDI file upload + play, filter and volume change the output, knobs, `simHz` > 0, non-silent WAV export and download, no console errors | `tests/e2e/*.spec.mjs` |
+| End-to-end | with the mock and the real engine: power on, pad → `hit` event + analyser RMS, all 8 pads → 7-segment table 0x3F..0x07 (and `status.uoOut`), Autorhythm slot load → steps within ±5% at 120 and 180 bpm, per-hit velocity, slots survive a reload, MIDI file upload + play, filter and volume change the output, knobs, `simHz` > 0, non-silent WAV export and download, no console errors | `tests/e2e/*.spec.mjs` |
 | Part suites | audio (Node: sequencer, MIDI parser, WAV, mock; Chromium: timing, degrade paths), ui (every test hook, knobs, keys, layout), engine (API, Chromium main thread / Worker / AudioWorklet) | `tests/audio`, `tests/ui`, `engine/test` |
 
 CI (`.github/workflows/ci.yml`) runs all of it on every PR and on main; `pages.yml` deploys `app/` on every

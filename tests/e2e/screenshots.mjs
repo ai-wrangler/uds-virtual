@@ -13,8 +13,14 @@ for (const [name, viewport, mobile] of [['desktop', { width: 1440, height: 900 }
   if (await power.count()) {
     await power.click();
     await page.waitForSelector('body[data-state=running]', { timeout: 20000 }).catch(() => {});
+    // load the demo groove into Autorhythm slot 1 and play it, so the scope and step LEDs show
+    const slot = page.getByTestId('slot-file-0');
+    if (await slot.count()) {
+      await slot.setInputFiles(new URL('../../app/data/midi/demo.mid', import.meta.url).pathname);
+      await page.waitForFunction(() => window.uds?.slots?.[0], null, { timeout: 10000 }).catch(() => {});
+    }
     const rhythm = page.getByTestId('rhythm-toggle');
-    if (await rhythm.count()) await rhythm.click();   // Rock 1 running, so the scope and step LEDs show
+    if (await rhythm.count() && await rhythm.isEnabled()) await rhythm.click();
     await page.waitForTimeout(2300);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(300);
