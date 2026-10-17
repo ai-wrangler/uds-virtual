@@ -17,12 +17,40 @@ Every sound you hear is the count of 1s the simulated chip put on its audio pin,
 ## Status
 
 <!-- STATUS:BEGIN -->
-_Interim status, 22:15 Riga time. The final report replaces this at the end of the build._
+_Final report from the integration session, 17 October 2026, 00:00 Riga time._
 
-- **Live:** https://ai-wrangler.github.io/uds-virtual/ with the real engine (`gen` backend).
-- **Merged:** engine (#2), audio (#4), ui (#3), integration and glue (#1, #5).
-- **Tests:** CI green on main. Playwright 60/60 locally (e2e, ui, audio); Node: engine 13/13, audio 18/18.
-  The browser truth test on the live site: 22 019 frames, 0 mismatches with the model.
+**URL: https://ai-wrangler.github.io/uds-virtual/** (Chrome or Edge, desktop). Deployed from `main` by GitHub Actions; every merge redeploys.
+
+**What works** (verified on the live site with the real engine):
+- The chip's real Verilog (`chip/src/*.v`) runs clock by clock at 6 MHz in WebAssembly (backend `gen`: Yosys netlist → straight-line C++ → zig wasm32, 91 KB) in a Worker; its 1-bit audio pin goes through the Audio Pmod model (frame count, AC coupling, RC 15.9 kHz, resampler) to an AudioWorklet.
+- Power on, 8 pads (mouse or keys 1..8), 40 knobs, the 7-segment display driven by the chip's own `uo_out` pins.
+- Autorhythm as 16 slots: load a `.mid` groove into a slot, quantized and looped, tempo knob 40..240. (The ui session replaced the 18 pattern buttons with slots and made the panel English-only, citing Juris's request; the built-in Formanta patterns remain in the API, `uds.setPattern('A0')`.)
+- MIDI file player (GM drums on channel 10, loop), live Web MIDI input, filter RC / Warm / Off, volume with a soft limiter, offline WAV export.
+
+**Test results** (CI green on `main`):
+- Engine model check: 316 185 frames, 2 208 SPI messages, **0 frames differ** from `chip/model/uds_model.py`. Cross-check gen = CXXRTL on every pin for 10 004 294 clocks.
+- Browser truth test on the live site: the deployed engine replays the model fixture, **22 019 frames, 0 mismatches**.
+- e2e against the live site: **38/38 passed (mock and real engine)**. Locally: Node **44/44 (engine 13, audio 31)**, Playwright **67/67** (e2e, ui, audio projects).
+
+**Simulation speed** (2.8 GHz Xeon cloud vCPU; real time = 6 MHz): engine alone 152 MHz in Node, 165–169 MHz in headless Chromium (25–28x); the live page while playing reports **104–127 MHz** in `status.simHz` (17–21x real time). On a Ryzen 7 8845HS expect the same or better, roughly 25–40x real time: lots of headroom.
+
+**Known gaps**
+- Not yet measured on Juris's laptop or with real speakers/headphones; all audio checks are analyser/WAV based in headless Chromium.
+- Live MIDI is tested only through the code path (no MIDI device in CI).
+- `hit`/`step` events (pad LEDs, display) fire when the worklet plays the sample, without the device output latency (~10–20 ms on Windows).
+- The 18 built-in patterns are no longer on the panel (API only), after the slots change.
+- If the engine ever runs below real time (battery saver), music slows and audio gaps appear; the speed readout turns amber/red and WAV export still works.
+- One audio-suite timing test (`a MIDI fixture plays`) measures wall-clock event times and can flake under heavy CPU load; CI retries once.
+- Mobile layout works but the target is desktop Chrome/Edge.
+
+**What to try first on the laptop**
+1. Open the URL in Chrome or Edge, click **Power**, check the header: `Engine gen` and a speed of 20x real time or more.
+2. Hit the pads with keys **1..8**; watch the 7-segment display show 0..7 (that's the chip's pins).
+3. Click Autorhythm slot 1, load `app/data/midi/demo.mid` from the repo (or any GM drum `.mid`), press **Space**; turn the Tempo knob and the knobs of the playing drums.
+4. Switch **Filter** to Off to hear the raw 1-bit sigma-delta stream, then back to RC 15.9 kHz.
+5. Plug in a MIDI keyboard or pad controller and click **Live MIDI**.
+6. **Export WAV** and listen to the file.
+
 <!-- STATUS:END -->
 
 ## How to use it
@@ -117,7 +145,7 @@ i.e. 25-40x real time. The audio needs 1x; the rest is headroom. The header's sp
 
 ## Known gaps
 
-See the Status section above for the final list.
+See **Known gaps** in the Status section above.
 
 ## Layout
 
