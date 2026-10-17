@@ -3,6 +3,13 @@
 import { test, expect } from '@playwright/test';
 
 const ENGINE = process.env.UDS_ENGINE || 'mock';
+// median of (t_j - t_i) / (j - i) over pairs at least 4 events apart
+const period = (ev, key = 't') => {
+  const sl = [];
+  for (let i = 0; i < ev.length; i++) for (let j = i + 4; j < ev.length; j++) sl.push((ev[j][key] - ev[i][key]) / (j - i));
+  return median(sl);
+};
+const median = a => { const b = [...a].sort((x, y) => x - y); return b.length % 2 ? b[b.length >> 1] : (b[b.length / 2 - 1] + b[b.length / 2]) / 2; };
 
 test.describe(`UDSAudio with the ${ENGINE} engine`, () => {
   test.beforeEach(async ({ page }) => {
@@ -68,10 +75,14 @@ test.describe(`UDSAudio with the ${ENGINE} engine`, () => {
       expect(steps.length).toBeGreaterThan(2000 / want - 2);
       steps.forEach((s, i) => { expect(s.index).toBe(i % info.length); expect(s.patternId).toBe(id); });
       // events fire when heard: average spacing matches, jitter limited by worklet quanta + message delivery
-      const span = steps.at(-1).t - steps[0].t;
-      const avg = span / (steps.length - 1);
-      console.log(`${id} @ ${info.tempo}: ${steps.length} steps, avg ${avg.toFixed(2)} ms (want ${want.toFixed(2)})`);
-      expect(Math.abs(avg - want)).toBeLessThan(want * 0.03);
+      // Events reach the main thread in bursts (the audio device renders ~10 ms at a time) and delivery can
+      // stall now and then, so estimate the period robustly (Theil-Sen); exact sample positions are tested in Node.
+      // By the audio clock (what the device has played) the period must be right; by the wall clock too, more
+      // loosely: headless Chromium's fake audio device sometimes runs a few percent slow.
+      const per = period(steps, 'ct'), wall = period(steps);
+      console.log(`${id} @ ${info.tempo}: ${steps.length} steps, period ${per.toFixed(2)} ms audio clock, ${wall.toFixed(2)} ms wall (want ${want.toFixed(2)})`);
+      expect(Math.abs(per - want)).toBeLessThan(want * 0.03);
+      expect(Math.abs(wall - want)).toBeLessThan(want * 0.08);
       const hits = await page.evaluate(() => window.rec.hit.filter(h => h.source === 'rhythm').length);
       expect(hits).toBeGreaterThan(0);
       const peak = await page.evaluate(() => Math.max(...window.rec.status.slice(-10).map(s => s.underruns)));
@@ -86,8 +97,7 @@ test.describe(`UDSAudio with the ${ENGINE} engine`, () => {
     const n0 = await page.evaluate(() => window.rec.step.length);
     await page.waitForTimeout(1500);
     const st = await page.evaluate(n => window.rec.step.slice(n + 3), n0);
-    const avg = (st.at(-1).t - st[0].t) / (st.length - 1);
-    expect(Math.abs(avg - 62.5)).toBeLessThan(3);
+    expect(Math.abs(period(st, 'ct') - 62.5)).toBeLessThan(3);
   });
 
   test('a MIDI fixture plays', async ({ page }) => {
