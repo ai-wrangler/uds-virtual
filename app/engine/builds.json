@@ -1,0 +1,32 @@
+{
+  "description": "Engine builds of the UDS-1x1 chip, one per audio DAC. wasm is relative to this file; gain is the audio worker's make-up gain (matched on a reference pattern by engine/test/loudness.mjs); available false = not built yet (the panel shows it as coming soon).",
+  "default": "1st",
+  "builds": [
+    {
+      "id": "1st",
+      "name": "1st order (as built)",
+      "dac": "first-order 1-bit sigma-delta",
+      "wasm": "uds_engine.wasm",
+      "chip": "ai-wrangler/tt-uds-1x1",
+      "branch": "main",
+      "commit": "ba09c49",
+      "chipDir": "chip",
+      "backend": "gen",
+      "gain": 3,
+      "available": true
+    },
+    {
+      "id": "2nd",
+      "name": "2nd order (preview)",
+      "dac": "second-order 1-bit sigma-delta (proposed, not taped out)",
+      "wasm": "uds_engine_sd2.wasm",
+      "chip": "ai-wrangler/tt-uds-1x1",
+      "branch": "sd2",
+      "commit": "c85a310",
+      "chipDir": "chip-sd2",
+      "backend": "gen",
+      "gain": 5.95,
+      "available": true
+    }
+  ]
+}

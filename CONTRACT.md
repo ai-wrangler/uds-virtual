@@ -10,6 +10,7 @@ integration session keeps this file up to date.
 | Path | Owner | Contents |
 | --- | --- | --- |
 | `chip/` | nobody (read-only) | the chip, vendored from ai-wrangler/tt-uds-1x1 at commit ba09c49 |
+| `chip-sd2/` | nobody (read-only) | the 2nd-order DAC preview, vendored from tt-uds-1x1 branch `sd2` (commit in its README) |
 | `engine/`, `app/engine/` | engine | Verilog to WebAssembly build, harness, JS wrapper, engine tests |
 | `app/audio/`, `app/data/`, `tools/export_patterns.py`, `tests/audio/` | audio | AudioContext, worker, worklet, sequencer, MIDI, mock engine |
 | `app/index.html`, `app/ui/`, `app/assets/`, `tests/ui/` | ui | the panel |
@@ -78,6 +79,14 @@ The virtual controller inside the engine works like the RP2040 on the demo board
 in order, SCK = clk/8, and waits for BUSY low before each message. A message queued between `render` calls
 starts on the next clock, so callers get sample-accurate timing by splitting `render` at event times.
 
+**DAC builds.** `app/engine/builds.json` lists one engine build per audio DAC: `{ default, builds: [{ id, name,
+dac, wasm, chip, branch, commit, chipDir, backend, gain, available }] }`. `1st` is `uds_engine.wasm` (the chip
+as built, `chip/`, gain 3, the default); `2nd` is `uds_engine_sd2.wasm` (the second-order sigma-delta proposed
+on tt-uds-1x1 branch `sd2`, `chip-sd2/`, not taped out). Both have the API above; `gain` is the audio
+worker's make-up gain, matched on a reference pattern by `engine/test/loudness.mjs`. `available: false` means
+not built yet. The sd2 chip answers READ VERSION with 0x22 (version 2, 2 voices). Both builds use the same Audio Pmod model, the count
+of 1s per frame (`engine.audioModel` is `'count'`; a build made with `UDS_SINC3=1` reports `'sinc3'`).
+
 Extras beyond this list (used by the engine tests, not needed by other parts): `runCycles(n)`,
 `runCounts(n)`, `runTrace(n)`, `takeLog()`. In an AudioWorklet pass the `.wasm` bytes (an ArrayBuffer), not
 a `WebAssembly.Module`: Chromium does not deliver a Module posted to a worklet port.
@@ -111,6 +120,10 @@ uds.hit(ch, { velocity: 1 });   // play now with the channel's knobs; velocity 0
 uds.stopAll();              // STOP: silence the chip; also stops the rhythm and the MIDI file
 uds.setVolume(v);           // master gain 0..1 (default 0.8)
 uds.setFilter(mode);        // 'rc' (default, 15.9 kHz) | 'warm' (4 kHz) | 'off'
+await uds.setDac(id);       // '1st' (the chip as built, default) | '2nd' (2nd-order DAC preview); works while playing:
+                            //   the chip restarts from reset (20 ms crossfade), rhythm and MIDI go on. Throws for an
+                            //   unknown or unavailable build. UDSAudio.create({ dac }) picks the first one.
+uds.dac;                    // '1st' | '2nd'; uds.builds: the entries of app/engine/builds.json (+ url)
 
 uds.patterns;               // [{ id: 'A0'..'A15', 'B0', 'B1', bank, index, name, nameRu, meter, stepsPerBeat, length, bpm }]
 // patterns entries also carry steps and accents (for step LEDs)
@@ -132,11 +145,11 @@ uds.playMidi(); uds.stopMidi(); uds.setMidiLoop(on); uds.midiPlaying;
 await uds.enableMidiInput();            // -> [{ id, name }]; throws if Web MIDI is missing or denied
 uds.midiInputs;
 
-await uds.renderWav({ what: 'rhythm' | 'midi', seconds });   // -> Blob (audio/wav), offline, real engine
+await uds.renderWav({ what: 'rhythm' | 'midi', seconds });   // -> Blob (audio/wav), offline, real engine, selected DAC
 
 // Events (CustomEvent, data in e.detail):
 //  'state'  { state }
-//  'status' { simHz, realtime, cycles, frames, uoOut, uioOut, busy, cs, queue, leadMs, underruns }  about 20 per second
+//  'status' { simHz, realtime, cycles, frames, uoOut, uioOut, busy, cs, queue, leadMs, underruns, dac }  about 20 per second
 //           simHz = chip clocks per second of time spent in engine.render (smoothed); realtime = simHz / 6e6,
 //           i.e. headroom. Extra fields: leadTargetMs, dropped, hits, sampleRate, backend, mock, midi
 //  'hit'    { ch, level, source: 'pad' | 'rhythm' | 'midi' | 'midi-in' }    when the hit is heard
@@ -144,6 +157,7 @@ await uds.renderWav({ what: 'rhythm' | 'midi', seconds });   // -> Blob (audio/w
 //  'slots'  { slots, slot }                       after loadSlot, clearSlot, setSlot
 //  'midi'   { position, duration, playing }
 //  'midi-input' { inputs }
+//  'dac'    { dac, name }                         after setDac
 //  'error'  { message }
 ```
 
@@ -160,7 +174,7 @@ Rules shared by every source of hits (pads, rhythm, MIDI file, live MIDI):
   the last whole bar before end-of-track, at most 4 bars (later notes dropped, `truncated: true`); per-hit
   velocity as below; two notes on one step and channel play once at the higher velocity; bpm = the first
   tempo, rounded, clamped to 40..240 (120 if none).
-- Output: the worker's 3x make-up gain is followed by a soft limiter (linear to 0.8, tanh knee towards 1.0),
+- Output: the worker's make-up gain (the selected build's `gain`: 3x for the chip as built) is followed by a soft limiter (linear to 0.8, tanh knee towards 1.0),
   not a hard clamp.
 - MIDI file: General MIDI drum notes on channel 10 (if a file has no notes on channel 10, all channels are
   used). Live MIDI: note-ons on any channel. Velocity 1..127 maps to v = velocity / 127. Note map:
@@ -200,6 +214,7 @@ The page sets `window.uds` to its `UDSAudio` instance once created, mirrors `uds
 | `rhythm-toggle`, `tempo` | rhythm start/stop, tempo control (`role="slider"` or `<input type=range>`) |
 | `midi-file`, `midi-play`, `midi-input` | `<input type=file>` for .mid, play/stop, enable live MIDI |
 | `filter`, `volume` | filter switch, master volume |
+| `dac` | DAC switch `<select>` (values `1st`, `2nd`; a build that is not available is a disabled option, "coming soon"); stored in localStorage `uds-virtual.dac.v1`, URL flag `?dac=` |
 | `display` | the 7-segment display (child elements `seg-a` .. `seg-g` with class `on` when lit) |
 | `sim-speed` | text such as `11.8 MHz · 1.97x real time` |
 | `wav-export` | WAV export button |

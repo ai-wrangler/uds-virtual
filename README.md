@@ -53,6 +53,34 @@ _Final report from the integration session, night of 17–18 October 2026, about
 
 <!-- STATUS:END -->
 
+## DAC preview
+
+The Output section has a **DAC** switch:
+
+- **1st order (as built)** is the default. It is the chip as built: `chip/`, the engine as before, byte for byte.
+- **2nd order (preview)** is a proposed chip change. The chip's first-order 1-bit sigma-delta audio DAC is
+  replaced by a second-order one, so quiet decay tails no longer break into sparse single-bit clicks.
+
+The 2nd-order DAC is **not taped out**. It lives on branch [`sd2` of ai-wrangler/tt-uds-1x1](https://github.com/ai-wrangler/tt-uds-1x1/tree/sd2)
+([changes against main](https://github.com/ai-wrangler/tt-uds-1x1/compare/main...sd2); no pull request was open
+on 18 October 2026, 01:00 Riga time). It is vendored read-only in `chip-sd2/`; `chip-sd2/README.md` names the commit.
+Whether it goes into the chip is Juris's call, after listening.
+
+- **Loudness.** The new DAC's input scaling is about 6 dB quieter. Its make-up gain is 5.95 instead of 3, so both
+  match within 0.01 dB on a reference pattern (`engine/test/loudness.mjs`) and within 0.1 dB on the demo groove.
+- **While playing.** Switching works mid-groove. The chip restarts from reset with a 20 ms crossfade, and the
+  rhythm and MIDI file keep going.
+- **Saved choice.** It is kept in localStorage. `?dac=1st` or `?dac=2nd` overrides it.
+- **WAV export.** It uses the selected DAC, and file names end in `-dac1.wav` or `-dac2.wav`.
+- **Listening without the site.** The same 8 bars of the demo groove (slot 1, `demo.mid`) with each DAC:
+  [dac1.wav](docs/audio/dac1.wav) / [dac1.mp3](docs/audio/dac1.mp3) (1st order) and
+  [dac2.wav](docs/audio/dac2.wav) / [dac2.mp3](docs/audio/dac2.mp3) (2nd order).
+- **Audio model.** Both builds use the same Audio Pmod model: the count of 1s per 96-clock frame. The first
+  sd2 commit left the loop wandering after a sound, and the frame count aliased that into a -30 dBFS tone near
+  14.7 kHz. The chip's next commit (`a37080c`) restarts the loop in silent frames, and silence is exact again.
+  `engine/test/pin_truth.mjs` checks `render()` against the raw pin band-limited to 20 kHz. The error is
+  -45.8 dB overall and -82.6 dB in quiet tails, against -41.2 and -76.9 dB for the as-built engine.
+
 ## How to use it
 
 1. **Power on.** Click **Power** (or the **Power on** overlay). Browsers only start audio after a click.

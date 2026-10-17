@@ -195,14 +195,47 @@ def main(path):
         yw = len(c["connections"]["Y"])
         T = ctype(yw)
         M = mask(yw)
-        if t in ("$and", "$or", "$xor", "$add", "$sub"):
-            op = {"$and": "&", "$or": "|", "$xor": "^", "$add": "+", "$sub": "-"}[t]
+        if t in ("$and", "$or", "$xor", "$add", "$sub", "$mul"):
+            if t == "$mul" and yw > 64:
+                raise SystemExit("wide multiply not supported")
+            op = {"$and": "&", "$or": "|", "$xor": "^", "$add": "+", "$sub": "-", "$mul": "*"}[t]
             sg = pint(P["A_SIGNED"]) and pint(P["B_SIGNED"])
             a = operand(c, "A", yw) if sg else expr(c["connections"]["A"], yw)
             b = operand(c, "B", yw) if sg else expr(c["connections"]["B"], yw)
             e = "(%s(%s) %s %s(%s)) & %s" % (T, a, op, T, b, M)
         elif t == "$not":
             e = "~%s(%s) & %s" % (T, operand(c, "A", yw), M)
+        elif t == "$xnor":
+            sg = pint(P["A_SIGNED"]) and pint(P["B_SIGNED"])
+            a = operand(c, "A", yw) if sg else expr(c["connections"]["A"], yw)
+            b = operand(c, "B", yw) if sg else expr(c["connections"]["B"], yw)
+            e = "~(%s(%s) ^ %s(%s)) & %s" % (T, a, T, b, M)
+        elif t == "$neg":
+            e = "(%s(0) - %s(%s)) & %s" % (T, T, operand(c, "A", yw), M)
+        elif t == "$pos":
+            e = "%s(%s) & %s" % (T, operand(c, "A", yw), M)
+        elif t in ("$reduce_xor", "$reduce_xnor"):
+            aw = len(c["connections"]["A"])
+            pc = "__builtin_popcountll" if aw <= 64 else None
+            if pc is None:
+                raise SystemExit("wide reduce_xor not supported")
+            e = "%s((%s(%s) & 1) %s)" % (T, pc, expr(c["connections"]["A"]), "^ 1" if t == "$reduce_xnor" else "")
+        elif t in ("$gt", "$ge") or (t in ("$lt", "$le") and pint(P["A_SIGNED"]) and pint(P["B_SIGNED"])):
+            aw, bw = len(c["connections"]["A"]), len(c["connections"]["B"])
+            mw = max(aw, bw)
+            sg = pint(P["A_SIGNED"]) and pint(P["B_SIGNED"])
+            if sg:
+                # sign-extend both to the full C type, then compare as signed integers
+                FW = 64 if mw <= 64 else 128
+                ST = "int64_t" if FW == 64 else "i128"
+                a = "%s(%s)" % (ST, sext(expr(c["connections"]["A"], FW), aw, FW))
+                b = "%s(%s)" % (ST, sext(expr(c["connections"]["B"], FW), bw, FW))
+            else:
+                CT = ctype(mw)
+                a = "%s(%s)" % (CT, expr(c["connections"]["A"], mw))
+                b = "%s(%s)" % (CT, expr(c["connections"]["B"], mw))
+            op = {"$lt": "<", "$le": "<=", "$gt": ">", "$ge": ">="}[t]
+            e = "%s(%s %s %s)" % (T, a, op, b)
         elif t in ("$eq", "$ne", "$lt", "$le"):
             aw, bw = len(c["connections"]["A"]), len(c["connections"]["B"])
             mw = max(aw, bw)
@@ -247,6 +280,23 @@ def main(path):
             b = expr(c["connections"]["B"])
             op = "<<" if t == "$shl" else ">>"
             e = "(uint64_t(%s) < 64 ? (uint64_t(%s) %s uint64_t(%s)) : 0) & %s" % (b, a, op, b, M)
+        elif t in ("$sshr", "$sshl"):
+            if pint(P["B_SIGNED"]):
+                raise SystemExit("signed shift amount not supported")
+            aw = len(c["connections"]["A"])
+            ww = max(aw, yw)
+            if ww > 64:
+                raise SystemExit("wide shift not supported")
+            b = expr(c["connections"]["B"])
+            if t == "$sshl":
+                a = operand(c, "A", ww)
+                e = "(uint64_t(%s) < 64 ? (uint64_t(%s) << uint64_t(%s)) : 0) & %s" % (b, a, b, M)
+            elif pint(P["A_SIGNED"]):
+                a = "int64_t(%s)" % sext(expr(c["connections"]["A"], 64), aw, 64)
+                e = "uint64_t(%s >> (uint64_t(%s) < 63 ? uint64_t(%s) : 63)) & %s" % (a, b, b, M)
+            else:
+                a = expr(c["connections"]["A"], ww)
+                e = "(uint64_t(%s) < 64 ? (uint64_t(%s) >> uint64_t(%s)) : 0) & %s" % (b, a, b, M)
         else:
             raise SystemExit("unsupported cell " + t)
         w("  const %s %s = %s;" % (T, n, e))

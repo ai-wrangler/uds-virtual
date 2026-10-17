@@ -61,6 +61,12 @@ export class UDSEngine {
      * @type {string}
      */
     this.backend = BACKENDS[x.sim_backend_id()] ?? 'unknown';
+    /**
+     * How the Audio Pmod model turns the 1-bit pin into samples: 'count' (1s per 96-clock frame; both
+     * shipped builds) or 'sinc3' (three cascaded 96-clock boxcars; builds made with UDS_SINC3=1).
+     * @type {string}
+     */
+    this.audioModel = x.sim_audio_order ? 'sinc3' : 'count';
     /** @private */ this._rate = sampleRate;
     x.sim_reset(sampleRate);
   }

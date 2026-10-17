@@ -8,7 +8,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
-#include "gen/uds_chip_cxxrtl.cc"
+#ifndef CXXRTL_SOURCE
+#define CXXRTL_SOURCE "gen/uds_chip_cxxrtl.cc"   // CXXRTL_SOURCE: another chip variant (build.sh sd2)
+#endif
+#include CXXRTL_SOURCE
 
 #define BACKEND_NAME "cxxrtl"
 #define BACKEND_ID 1

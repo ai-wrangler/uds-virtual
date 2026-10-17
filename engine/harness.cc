@@ -41,6 +41,9 @@ uint32_t frames = 0;                 // complete frames since reset
 int fpos = 0;                        // cycles of the current frame already counted (0..FRAME-1)
 int ones = 0;                        // 1s on the audio pin in the current frame
 int last_frame_ones = 48;            // 1s in the last complete frame
+#ifdef AUDIO_SINC3
+int m1 = 0, m2 = 0;                  // sum of j and of j^2 over the 1s of the current frame (j = 0..95)
+#endif
 uint8_t uio_in = 0x01;               // CS high
 
 // takeActivity() latches
@@ -183,6 +186,44 @@ void build_kernel() {
   }
 }
 
+#ifdef AUDIO_SINC3
+// sinc^3 decimator (three cascaded 96-clock boxcars, a CIC of order 3) in place of the plain count of 1s
+// per frame, for chip variants whose 1-bit stream has strong noise near multiples of the frame rate (the
+// 2nd-order sigma-delta): the plain count (one boxcar) aliases that noise into the audio band. Its
+// impulse response h[n], n = 0..3R-3 (n = clocks before the last clock of the newest frame), is quadratic within
+// each of the three frames it spans, so a frame's contribution is c0*S0 + c1*S1 + c2*S2 with the frame's
+// moments S0 = sum b_j, S1 = sum j b_j, S2 = sum j^2 b_j. Scaled so that all 1s give FRAME.
+double sinc3_c[3][3];                // [frame age 0..2][power of j]
+int sinc3_h[3][3];                   // moments of the two previous frames (and the current one)
+inline double cic3(int n) {          // h[n] of three boxcars of length FRAME
+  const int R = FRAME;
+  if (n < 0 || n > 3 * R - 1) return 0;           // h[3R-2] = h[3R-1] = 0 come out of the formula
+  double v = (n + 1.0) * (n + 2.0) / 2;
+  if (n >= R) v -= 3.0 * (n - R + 1.0) * (n - R + 2.0) / 2;
+  if (n >= 2 * R) v += 3.0 * (n - 2 * R + 1.0) * (n - 2 * R + 2.0) / 2;
+  return v;
+}
+void sinc3_init() {
+  const double norm = double(FRAME) * FRAME;          // sum of h = R^3; all 1s -> R
+  for (int age = 0; age < 3; age++) {
+    // weight of the bit at position j of a frame this many frames old: h[(age + 1) * R - 1 - j]
+    double h0 = cic3((age + 1) * FRAME - 1), h1 = cic3((age + 1) * FRAME - 2), h2 = cic3((age + 1) * FRAME - 3);
+    double c2 = (h2 - 2 * h1 + h0) / 2, c1 = h1 - h0 - c2;
+    sinc3_c[age][0] = h0 / norm; sinc3_c[age][1] = c1 / norm; sinc3_c[age][2] = c2 / norm;
+  }
+  // history: the idle pattern 0101... (1s at odd j)
+  for (int a = 0; a < 3; a++) { sinc3_h[a][0] = 48; sinc3_h[a][1] = 2304; sinc3_h[a][2] = 147440; }
+}
+inline double sinc3_push(int s0, int s1, int s2) {
+  for (int k = 0; k < 3; k++) { sinc3_h[2][k] = sinc3_h[1][k]; sinc3_h[1][k] = sinc3_h[0][k]; }
+  sinc3_h[0][0] = s0; sinc3_h[0][1] = s1; sinc3_h[0][2] = s2;
+  double y = 0;
+  for (int a = 0; a < 3; a++)
+    y += sinc3_c[a][0] * sinc3_h[a][0] + sinc3_c[a][1] * sinc3_h[a][1] + sinc3_c[a][2] * sinc3_h[a][2];
+  return y;
+}
+#endif
+
 void set_filter(double hz) {
   filter_hz = hz;
   rc_alpha = hz <= 0.0 ? 1.0 : 1.0 - std::exp(-2.0 * M_PI * hz / FS_IN);
@@ -192,7 +233,12 @@ void set_filter(double hz) {
 void frame_done(int n) {
   last_frame_ones = n;
   frames++;
+#ifdef AUDIO_SINC3
+  double x = (sinc3_push(n, m1, m2) - FRAME / 2) / double(FRAME / 2);
+  m1 = 0; m2 = 0;
+#else
   double x = (n - FRAME / 2) / double(FRAME / 2);     // -1..1, mid-scale = 0
+#endif
   dc += (x - dc) * dc_alpha;                          // AC coupling
   x -= dc;
   rc += (x - rc) * rc_alpha;                          // RC low-pass
@@ -231,6 +277,9 @@ inline void cycle_spi() {
   uio_or |= u;
   if (cycles != 0) {
     ones += backend::uo >> 7;
+#ifdef AUDIO_SINC3
+    if (backend::uo >> 7) { m1 += fpos; m2 += fpos * fpos; }
+#endif
     if (++fpos == FRAME) {
       fpos = 0;
       int n = ones;
@@ -252,7 +301,11 @@ void run_to_frame_end() {
       if (fpos == 0) {
         int n = 0;
         uint8_t o = uio_or;
+#ifdef AUDIO_SINC3
+        if (backend::frame_idle(uio_in, n, o, m1, m2)) {
+#else
         if (backend::frame_idle(uio_in, n, o)) {
+#endif
           uio_or = o;
           seen_uio = backend::uio;
           cycles += FRAME;
@@ -269,6 +322,9 @@ void run_to_frame_end() {
       for (int i = 0; i < left; i++) {
         backend::clock(in);
         n += backend::uo >> 7;
+#ifdef AUDIO_SINC3
+        if (backend::uo >> 7) { m1 += fpos + i; m2 += (fpos + i) * (fpos + i); }
+#endif
         o |= backend::uio;
       }
       seen_uio = backend::uio;
@@ -288,6 +344,10 @@ void run_to_frame_end() {
 void do_reset(double rate) {
   if (rate > 0) out_rate = rate;
   build_kernel();
+#ifdef AUDIO_SINC3
+  sinc3_init();
+  m1 = 0; m2 = 0;
+#endif
   phase_step = FS_IN / out_rate;
   dc_alpha = 2.0 * M_PI * 5.0 / FS_IN;
   set_filter(filter_hz);
@@ -411,3 +471,8 @@ EXPORT(sim_uo_out) int sim_uo_out() { return backend::uo; }
 EXPORT(sim_uio_out) int sim_uio_out() { return backend::uio; }
 EXPORT(sim_cycles) double sim_cycles() { return double(cycles); }
 EXPORT(sim_frames) double sim_frames() { return double(frames); }
+
+#ifdef AUDIO_SINC3
+// Which decimator turns the audio pin into samples: 3 = sinc^3 (this build), absent = the count per frame.
+EXPORT(sim_audio_order) int sim_audio_order() { return 3; }
+#endif

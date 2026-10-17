@@ -6,7 +6,10 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
 #include <utility>
-#include "gen/uds_chip_gen.h"
+#ifndef GEN_HEADER
+#define GEN_HEADER "gen/uds_chip_gen.h"   // GEN_HEADER: another chip variant (build.sh sd2)
+#endif
+#include GEN_HEADER
 
 #define BACKEND_NAME "gen"
 #define BACKEND_ID 3
@@ -46,6 +49,33 @@ __attribute__((always_inline)) inline void frame_idle_seq(std::integer_sequence<
   uo = uint8_t(s.out_uo_out);
   uio = uint8_t(s.out_uio_out);
 }
+#ifdef AUDIO_SINC3
+// The same, also adding the first and second moments of the audio 1s over the frame position
+// I (0..95) to m1 and m2, for the harness's sinc^3 decimator.
+template <int UIO, int... I>
+__attribute__((always_inline)) inline void frame_idle_seq3(std::integer_sequence<int, I...>, int &ones,
+                                                           uint8_t &uio_or, int &m1, int &m2) {
+  int n = 0, a1 = 0, a2 = 0;
+  uint64_t o = 0;
+  gen::State s = gen::S;
+  ((gen::step_at<(I + 1) % 96, UIO>(s), n += int(s.out_uo_out >> 7), a1 += int(s.out_uo_out >> 7) * I,
+    a2 += int(s.out_uo_out >> 7) * (I * I), o |= s.out_uio_out), ...);
+  gen::S = s;
+  ones += n;
+  m1 += a1;
+  m2 += a2;
+  uio_or |= uint8_t(o);
+  uo = uint8_t(s.out_uo_out);
+  uio = uint8_t(s.out_uio_out);
+}
+inline bool frame_idle(uint8_t uio_in, int &ones, uint8_t &uio_or, int &m1, int &m2) {
+  gen::in_uio_in = uio_in;
+  if (uio_in == 0x01) frame_idle_seq3<0x01>(std::make_integer_sequence<int, 96>{}, ones, uio_or, m1, m2);
+  else if (uio_in == 0x03) frame_idle_seq3<0x03>(std::make_integer_sequence<int, 96>{}, ones, uio_or, m1, m2);
+  else return false;
+  return true;
+}
+#else
 // Returns false if these inputs have no specialised version.
 inline bool frame_idle(uint8_t uio_in, int &ones, uint8_t &uio_or) {
   gen::in_uio_in = uio_in;
@@ -54,5 +84,6 @@ inline bool frame_idle(uint8_t uio_in, int &ones, uint8_t &uio_or) {
   else return false;
   return true;
 }
+#endif
 
 }  // namespace backend

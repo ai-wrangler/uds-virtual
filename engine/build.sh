@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 # Build the UDS-1x1 engine: chip/src/*.v -> app/engine/uds_engine.wasm
 #
-#   engine/build.sh [backend]      backend: gen (default) | verilator | cxxrtl | all
+#   engine/build.sh [backend] [variant]
+#     backend: gen (default) | cxxrtl | all
+#     variant: base (default): chip/     -> engine/wasm/*.wasm,     app/engine/uds_engine.wasm
+#              sd2:            chip-sd2/ -> engine/wasm/sd2/*.wasm, app/engine/uds_engine_sd2.wasm
+#                              (2nd-order sigma-delta DAC preview, tt-uds-1x1 branch sd2)
+#     UDS_CHIP_DIR overrides the chip folder of a variant.
 #
 # Installs what it needs (yosys, verilator, zig via pip) if missing. The
 # generated C++ (engine/gen/) and the .wasm files are committed, so the site
@@ -11,6 +16,21 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
 BACKEND=${1:-${UDS_BACKEND:-gen}}
+VARIANT=${2:-${UDS_VARIANT:-base}}
+case "$VARIANT" in
+  base) CHIP=chip;     SFX="";     WDIR=engine/wasm;     OUT=app/engine/uds_engine.wasm ;;
+  sd2)  CHIP=chip-sd2; SFX="_sd2"; WDIR=engine/wasm/sd2; OUT=app/engine/uds_engine_sd2.wasm ;;
+  *) echo "unknown variant $VARIANT"; exit 1 ;;
+esac
+CHIP=${UDS_CHIP_DIR:-$CHIP}
+GEN_H=engine/gen/uds_chip_gen$SFX.h
+CXXRTL_CC=engine/gen/uds_chip_cxxrtl$SFX.cc
+# the base build keeps the header names compiled into backend_*.h (byte-identical output)
+HDR=()
+[ -z "$SFX" ] || HDR=("-DGEN_HEADER=\"gen/uds_chip_gen$SFX.h\"" "-DCXXRTL_SOURCE=\"gen/uds_chip_cxxrtl$SFX.cc\"")
+# UDS_SINC3=1: the Audio Pmod model uses a sinc^3 decimator instead of the count of 1s per frame
+# (harness.cc, AUDIO_SINC3; off in the shipped builds, see engine/README.md)
+[ "${UDS_SINC3:-0}" != 1 ] || HDR+=("-DAUDIO_SINC3")
 
 need() {
   if ! command -v yosys >/dev/null || ! command -v verilator >/dev/null; then
@@ -20,23 +40,23 @@ need() {
 }
 need
 
-SRC="chip/src/project.v chip/src/uds_spi.v chip/src/uds_core.v"
-mkdir -p engine/gen app/engine engine/wasm engine/build
+SRC="$CHIP/src/project.v $CHIP/src/uds_spi.v $CHIP/src/uds_core.v"
+mkdir -p engine/gen app/engine "$WDIR" engine/build
 ZIG="python3 -m ziglang c++ -target wasm32-wasi -mexec-model=reactor"
 WFLAGS="-O3 -flto -fno-exceptions -fno-rtti -Wl,--no-entry -Wl,--strip-all -Wl,-z,stack-size=65536 -Wl,--initial-memory=1048576 -Wl,--max-memory=1048576"
 
 build_cxxrtl() {
-  yosys -q -p "read_verilog -sv $SRC; hierarchy -top tt_um_ai_wrangler_uds1x1; write_cxxrtl -O6 engine/gen/uds_chip_cxxrtl.cc"
-  $ZIG $WFLAGS -std=c++17 -I engine -I engine/third_party/cxxrtl -DBACKEND_CXXRTL \
-    engine/harness.cc -o engine/wasm/uds_engine_cxxrtl.wasm
+  yosys -q -p "read_verilog -sv $SRC; hierarchy -top tt_um_ai_wrangler_uds1x1; write_cxxrtl -O6 $CXXRTL_CC"
+  $ZIG $WFLAGS -std=c++17 -I engine -I engine/third_party/cxxrtl -DBACKEND_CXXRTL ${HDR[@]+"${HDR[@]}"} \
+    engine/harness.cc -o "$WDIR/uds_engine_cxxrtl.wasm"
 }
 
 YOSYS_NETLIST="read_verilog -sv $SRC; hierarchy -top tt_um_ai_wrangler_uds1x1; proc; flatten; opt -full; wreduce; opt_clean; memory; opt -full; opt_clean -purge"
 
 build_gen() {
-  yosys -q -p "$YOSYS_NETLIST; write_json engine/build/uds_netlist.json"
-  python3 engine/gen.py engine/build/uds_netlist.json > engine/gen/uds_chip_gen.h
-  $ZIG $WFLAGS -std=c++17 -I engine -DBACKEND_GEN engine/harness.cc -o engine/wasm/uds_engine_gen.wasm
+  yosys -q -p "$YOSYS_NETLIST; write_json engine/build/uds_netlist$SFX.json"
+  python3 engine/gen.py engine/build/uds_netlist$SFX.json > "$GEN_H"
+  $ZIG $WFLAGS -std=c++17 -I engine -DBACKEND_GEN ${HDR[@]+"${HDR[@]}"} engine/harness.cc -o "$WDIR/uds_engine_gen.wasm"
 }
 
 case "$BACKEND" in
@@ -47,5 +67,5 @@ case "$BACKEND" in
 esac
 SHIP=${UDS_SHIP:-gen}
 [ "$BACKEND" = all ] || SHIP=$BACKEND
-cp "engine/wasm/uds_engine_$SHIP.wasm" app/engine/uds_engine.wasm
-ls -l app/engine/uds_engine.wasm
+cp "$WDIR/uds_engine_$SHIP.wasm" "$OUT"
+ls -l "$OUT"

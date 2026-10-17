@@ -12,7 +12,10 @@ import { encodeWav } from './wav.js';
 import { softLimit, KNEE } from './limiter.js';
 
 const CLOCK_HZ = 6000000;
-const MAKEUP_GAIN = 3;          // a full-level voice reaches about 1/6 of the pin's swing
+// Make-up gain of the selected engine build (app/engine/builds.json): 3 for the chip as built (a full-level
+// voice reaches about 1/6 of the pin's swing); the 2nd-order DAC preview is about 6 dB quieter.
+const DEFAULT_GAIN = 3;
+const FADE_MS = 20;             // crossfade from the old engine to the new one on a DAC switch
 
 const CHUNK = 256;              // samples per chunk sent to the worklet (128..1024)
 const LEAD_DEFAULT = 60, LEAD_FLOOR = 40, LEAD_MAX = 200;   // ms; the contract allows 30..200
@@ -20,6 +23,10 @@ const STATUS_MS = 50;
 const SLICE_MS = 30;            // longest stretch of rendering before yielding to messages
 
 let engine = null, mock = false, backend = 'none';
+let gain = DEFAULT_GAIN, dac = '1st';
+let fade = null;                // { engine, gain, left, total }: the previous engine, fading out after setDac
+let filterHz = 15900;
+const wasmCache = new Map();    // url -> Promise of the compiled WebAssembly.Module (a switch needs no fetch)
 let sched = null;
 let sampleRate = 48000;
 let port = null;                // to the worklet
@@ -37,18 +44,43 @@ let slowdown = 0;              // test hook (create({ slowdown })): 0 = off
 
 function post(msg, transfer) { self.postMessage(msg, transfer || []); }
 
+function wasmModule(url) {
+  if (!wasmCache.has(url)) {
+    const p = fetch(url).then((res) => {
+      if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
+      return res.arrayBuffer();
+    }).then((b) => WebAssembly.compile(b));
+    p.catch(() => wasmCache.delete(url));
+    wasmCache.set(url, p);
+  }
+  return wasmCache.get(url);
+}
+
+async function loadWasm(wasmUrl, rate) {
+  const mod = await import('../engine/uds-engine.js');
+  const source = wasmUrl || new URL('../engine/uds_engine.wasm', import.meta.url).href;
+  return mod.loadEngine(await wasmModule(source), { sampleRate: rate });
+}
+
+// Compile another build and run it for a moment in the background: a module's first runs use the browser's
+// baseline WebAssembly code, several times slower than the optimized code it tiers up to, which made the
+// first switch to a new DAC underrun. Small chunks, so the live pump keeps running in between.
+async function warmUp(url) {
+  const e = await loadWasm(url, sampleRate);
+  for (let i = 0; i < 100; i++) {
+    if (i % 25 === 0) { e.hit(4, { pitch: 20, sweep: 6, decay: 9, balance: 1, level: 15 }); e.hit(6, { pitch: 255, decay: 6, balance: 15, level: 10 }); }
+    e.render(480);
+    await new Promise((r) => setTimeout(r, 5));
+  }
+}
+
 async function loadAnyEngine(kind, wasmUrl, rate) {
   if (kind === 'mock') {
     engine = await loadMockEngine({ sampleRate: rate }); mock = true; backend = engine.backend;
     return null;
   }
   try {
-    const mod = await import('../engine/uds-engine.js');
-    let source = wasmUrl || new URL('../engine/uds_engine.wasm', import.meta.url).href;
-    const res = await fetch(source);
-    if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + source);
-    source = await res.arrayBuffer();
-    engine = await mod.loadEngine(source, { sampleRate: rate });
+    engine = await loadWasm(wasmUrl, rate);
     mock = false; backend = engine.backend || 'wasm';
     return null;
   } catch (e) {
@@ -72,11 +104,27 @@ function renderInto(dst, off, n) {
     }
     busyMs += performance.now() - t0; busyCycles += engine.cycles - c0;
     let { x, y } = dc;
-    for (let i = 0; i < k; i++) {
-      const s = src[i];
-      y = s - x + dcR * y; x = s;
-      const v = y * MAKEUP_GAIN;
-      dst[off + i] = v > KNEE || v < -KNEE ? softLimit(v) : v;
+    if (fade) {
+      // DAC switch: the old engine goes on for FADE_MS and fades out while the new one fades in.
+      // Both are scaled by their own make-up gain before the (shared) DC blocker.
+      const m = Math.min(k, fade.left);
+      const old = fade.engine.render(m), r = fade.gain / gain;
+      for (let i = 0; i < k; i++) {
+        let s = src[i];
+        if (i < m) { const a = (fade.total - fade.left + i) / fade.total; s = s * a + old[i] * r * (1 - a); }
+        y = s - x + dcR * y; x = s;
+        const v = y * gain;
+        dst[off + i] = v > KNEE || v < -KNEE ? softLimit(v) : v;
+      }
+      fade.left -= m;
+      if (fade.left <= 0) fade = null;
+    } else {
+      for (let i = 0; i < k; i++) {
+        const s = src[i];
+        y = s - x + dcR * y; x = s;
+        const v = y * gain;
+        dst[off + i] = v > KNEE || v < -KNEE ? softLimit(v) : v;
+      }
     }
     dc.x = x; dc.y = y;
     off += k; n -= k;
@@ -158,7 +206,7 @@ function maybeStatus(force) {
     cycles: engine.cycles, frames: engine.frames, uoOut: engine.uoOut, uioOut: engine.uioOut,
     busy: act.busy, cs: act.cs, queue: engine.queueLength(),
     leadMs: Math.round((rendered - pp) / sampleRate * 1000), leadTargetMs: leadMs, underruns, dropped,
-    hits: act.hits, sampleRate, backend, mock,
+    hits: act.hits, sampleRate, backend, mock, dac, gain,
   };
   act = { busy: false, cs: false, hits: 0 };
   const midi = sched.midi ? { position: sched.midiPosition(pp), duration: sched.midi.duration, playing: sched.midiPlaying } : null;
@@ -198,16 +246,21 @@ self.onmessage = async (e) => {
       case 'init': {
         sampleRate = m.sampleRate || 48000;
         slowdown = Number(m.slowdown) || 0;
+        if (m.dac) dac = m.dac;
+        if (m.gain > 0) gain = m.gain;
         const err = await loadAnyEngine(m.engine, m.wasmUrl, sampleRate);
         sched = new Scheduler({ sampleRate, patterns: m.patterns, channels: m.channels, accentLevelDrop: m.accentLevelDrop });
         if (m.state) restoreState(m.state);
         setDc(sampleRate);
-        post({ type: 'ready', info: { backend, mock, sampleRate }, error: err });
+        if (err) { dac = '1st'; gain = DEFAULT_GAIN; }
+        // compile the other DAC builds in the background, so a switch while playing is instant
+        else if (!mock && m.prefetch) for (const u of m.prefetch) warmUp(u).catch(() => {});
+        post({ type: 'ready', info: { backend, mock, sampleRate, dac, gain }, error: err });
         break;
       }
       case 'start': {
         if (m.sampleRate && m.sampleRate !== sampleRate) {
-          sampleRate = m.sampleRate; engine.reset(sampleRate); sched.sampleRate = sampleRate; setDc(sampleRate);
+          sampleRate = m.sampleRate; engine.reset(sampleRate); engine.setFilterHz(filterHz); sched.sampleRate = sampleRate; setDc(sampleRate);
         }
         if (m.port) { port = m.port; port.onmessage = onWorklet; }
         startLive();
@@ -221,7 +274,8 @@ self.onmessage = async (e) => {
         break;
       }
       case 'stopAll': sched.stopRhythm(); sched.stopMidi(); live = []; engine.stop(); break;
-      case 'filter': engine.setFilterHz(m.hz); break;
+      case 'filter': filterHz = m.hz; engine.setFilterHz(m.hz); break;
+      case 'dac': dacChain = dacChain.then(() => switchDac(m)); await dacChain; break;
       case 'pattern': sched.setPattern(m.id); break;
       case 'addPattern': sched.addPattern(m.pattern); break;
       case 'removePattern': sched.removePattern(m.id); break;
@@ -243,6 +297,26 @@ self.onmessage = async (e) => {
   }
 };
 
+// Switch to another engine build (another DAC), one switch at a time (dacChain). The chip restarts from
+// reset: sounding voices are cut (with a short crossfade); the rhythm and the MIDI file go on.
+let dacChain = Promise.resolve();
+async function switchDac(m) {
+  try {
+    if (!mock) {
+      const next = await loadWasm(m.wasmUrl, sampleRate);
+      next.setFilterHz(filterHz);
+      const n = Math.round(FADE_MS / 1000 * sampleRate);
+      if (running) fade = { engine, gain, left: n, total: n };
+      engine = next; backend = engine.backend || 'wasm';
+    }
+    dac = m.dac; gain = m.gain > 0 ? m.gain : DEFAULT_GAIN;
+    post({ type: 'dac', id: m.id, dac, gain, backend });
+    maybeStatus(true);
+  } catch (err) {
+    post({ type: 'error', message: String(err && err.message || err), id: m.id });
+  }
+}
+
 function restoreState(s) {
   if (!s) return;
   if (s.params) s.params.forEach((p, ch) => sched.setParams(ch, p));
@@ -251,7 +325,7 @@ function restoreState(s) {
   if (s.tempo) sched.setTempo(s.tempo);
   if (s.midi) sched.loadMidi(s.midi);
   if (s.midiLoop !== undefined) sched.midiLoop = s.midiLoop;
-  if (s.filterHz !== undefined) engine.setFilterHz(s.filterHz);
+  if (s.filterHz !== undefined) { filterHz = s.filterHz; engine.setFilterHz(s.filterHz); }
 }
 
 function onWorklet(e) {

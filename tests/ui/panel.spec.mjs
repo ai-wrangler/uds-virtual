@@ -273,7 +273,7 @@ test('output: filter, volume and WAV export download', async ({ page }) => {
   await page.getByTestId('wav-export').click();
   await expect(page.getByTestId('wav-export')).toHaveClass(/busy/);
   const d = await dl;
-  expect(d.suggestedFilename()).toBe('uds-1x1-slot1-basic-format0-120bpm.wav');
+  expect(d.suggestedFilename()).toBe('uds-1x1-slot1-basic-format0-120bpm-dac1.wav');
   await expect(page.getByTestId('wav-export')).not.toHaveClass(/busy/);
 });
 

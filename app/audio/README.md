@@ -8,7 +8,7 @@ UDSAudio ── commands ───────────▶ engine-worker.js  
   │  (postMessage)                  engine (wasm or mock)                     FIFO of chunks
   │                                 Scheduler: rhythm + MIDI file             underrun -> silence, counted
   │ ◀── status ~20/s ─────────────  render() split at event samples ──chunks▶  (MessagePort, transferred)
-  │                                 3x gain, soft limit, 10 Hz DC block  ◀──── played count every 8 quanta
+  │                                 make-up gain, soft limit, 10 Hz DC   ◀──── played count every 8 quanta
   │ ◀──────────────── hit / step marks, posted when the worklet plays them ────────┘
 AudioWorkletNode → GainNode (volume) → AnalyserNode → destination
 ```
@@ -16,7 +16,7 @@ AudioWorkletNode → GainNode (volume) → AnalyserNode → destination
 | File | What |
 | --- | --- |
 | `uds-audio.js` | `UDSAudio`: AudioContext graph, knob state, data files, live Web MIDI, events, `renderWav` |
-| `engine-worker.js` | Runs the engine ahead of real time (live mode) or as fast as possible (`renderWav`) |
+| `engine-worker.js` | Runs the engine ahead of real time (live mode) or as fast as possible (`renderWav`); swaps engine builds (DACs) |
 | `player-worklet.js` | AudioWorkletProcessor `uds-player` |
 | `scheduler.js` | Autorhythm sequencer and MIDI-file player, in output-sample positions (pure, tested in Node) |
 | `slots.js` | Autorhythm slots: .mid -> 16th-grid loop (quantize, bars, 4-bar cap, velocity, tempo), as a Scheduler pattern |
@@ -47,7 +47,18 @@ AudioWorkletNode → GainNode (volume) → AnalyserNode → destination
 the contract: `leadTargetMs`, `dropped` (hits refused by a full engine queue), `hits`, `sampleRate`,
 `backend`, `mock`; `status.midi` while a file plays.
 
+## DAC builds
+
+`app/engine/builds.json` lists the engine builds, one per audio DAC (`1st`: the chip as built; `2nd`: the
+2nd-order sigma-delta preview). `UDSAudio` reads it in `create()`; the worker gets the selected build's URL and
+make-up gain. `setDac(id)` sends `{ type: 'dac' }` to the worker, which loads the other build (compiled in the
+background after init, so the switch is immediate), copies the filter setting, crossfades 20 ms from the old
+engine to the new one and from then on uses the new gain. Switches are serialized. The new chip starts from
+reset, so sounding voices are cut; the rhythm and the MIDI file go on. `renderWav` starts its offline worker
+with the selected build. With the mock engine the DAC is only recorded (the mock has no DAC).
+
 ## Options of `UDSAudio.create`
 
-`{ engine: 'wasm' | 'mock', wasmUrl, dataUrl, slowdown }`. `slowdown` is a test hook: it makes the engine
+`{ engine: 'wasm' | 'mock', wasmUrl, dataUrl, slowdown, dac, buildsUrl }`. `dac` picks the first build ('1st'
+default); `wasmUrl` replaces the file of the first build only. `slowdown` is a test hook: it makes the engine
 behave as if it ran at that many times real time (used by the "slow engine" test).

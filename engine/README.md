@@ -20,6 +20,14 @@ covers about 400 clocks per HIT, so it does not change the averages above.
 The 6 MHz real-time figure is a hard requirement. The other speeds in `engine/NOTES.md` are native figures
 from the setup session.
 
+### The 2nd-order DAC preview (`uds_engine_sd2.wasm`)
+
+The same test in the same sandbox, run back to back (`node engine/test/bench.mjs app/engine/*.wasm`): the as-built
+engine 64 to 68 MHz, the sd2 engine (`c85a310`) 45 to 49 MHz (7.5x to 8.2x real time; about 27 % slower, with a
+wider DAC loop in the netlist). That sandbox was about 2.3x slower than the one in the table, so on Juris's
+machine the sd2 build should run at about 110 MHz (18x real time). Chromium truth test: 17.8 to 31.5 MHz on `runFrames(1)` per frame
+(the as-built engine ran 22.9 to 25.3 MHz the same way).
+
 ## How it works
 
 ```
@@ -79,7 +87,14 @@ chip/src/*.v --yosys--> netlist.json --gen.py--> gen/uds_chip_gen.h ─┐
 engine/build.sh          # gen backend -> engine/wasm/uds_engine_gen.wasm and app/engine/uds_engine.wasm
 engine/build.sh all      # also cxxrtl (needed for the cross-check); ships gen
 engine/build.sh cxxrtl   # build and ship cxxrtl instead
+engine/build.sh all sd2  # the 2nd-order DAC preview: chip-sd2/ -> engine/wasm/sd2/*.wasm, app/engine/uds_engine_sd2.wasm
 ```
+
+The second argument picks the chip variant: `base` (default, `chip/`) or `sd2` (`chip-sd2/`, the second-order
+sigma-delta from tt-uds-1x1 branch `sd2`). The sd2 variant writes `engine/gen/uds_chip_gen_sd2.h` and
+`uds_chip_cxxrtl_sd2.cc` and compiles the same harness with `-DGEN_HEADER` / `-DCXXRTL_SOURCE`; the base build
+is unchanged and still byte-identical. `app/engine/builds.json` describes each build (chip commit, backend,
+make-up gain); `node engine/test/loudness.mjs [--write]` measures the gain that matches the builds' loudness.
 
 It installs `yosys` and `verilator` with apt (Yosys 0.33) and `ziglang` with pip (zig 0.17) if they are
 missing. Then it compiles with `python3 -m ziglang c++ -target wasm32-wasi -mexec-model=reactor -O3 -flto`.
@@ -114,6 +129,30 @@ Run `node --test engine/test/*.test.mjs`. It needs `python3`, and takes about 5 
     (7 944 messages, including unknown commands and odd lengths).
   - They also agree frame by frame over 105 650 frames on the fast idle path, and on `render()` output
     split at random samples.
+- **gen.py cell coverage (`test/gen_cells/run.sh`).** A small design with word-level operators that the chip
+  does not use yet (signed compares, `$gt`/`$ge`, `$sshr`/`$sshl`, `$neg`, `$mul`, `$xnor`, `$reduce_xor`/`xnor`)
+  goes through gen.py and through Icarus Verilog; the pins agree on 199 999 clocks of random inputs. (Yosys
+  0.33 CXXRTL differs on that design: it gets a sign-extended `<<<` wrong, so Icarus is the reference there.)
+  It needs yosys, iverilog and g++, so it is not part of `node --test`.
+- **2nd-order DAC preview (`chip-sd2/`, `engine/wasm/sd2/`).** The same checks run for the sd2 build:
+  - **Model check.** 316 185 frames, 0 differences against the sd2 model's per-frame counts.
+  - **Cross-check.** gen and CXXRTL agree on all 10 004 294 clocks (`uo_out` and `uio_out`) and on 105 650 frames.
+  - **Fixture.** `fixtures/model_frames_sd2.json` replays in Node, and in Chromium (`tests/e2e/dac.spec.mjs`).
+  - **READ VERSION.** It answers 0x22.
+
+  `tools/vendor_sd2.sh` vendors, builds and verifies a new commit of branch `sd2`. `audio_sd2.test.mjs` checks
+  the silence after a sound and after STOP (below -80 dBFS; it is exact silence) and the loudness match.
+- **Pin truth (`pin_truth.mjs`, needs numpy).** It records the raw audio pin clock by clock for 3 s of hits, then
+  band-limits it to 20 Hz..20 kHz, which is what an ideal analog filter passes. It compares that with
+  `render()`:
+  - as built: error -41.2 dB overall and -76.9 dB in the quiet tail, where the pin is at -65.4 dB;
+  - sd2: error -45.8 dB overall and -82.6 dB in the tail, where the pin is at -71.4 dB.
+
+  The first sd2 commit (`48eb2d1`) left its loop wandering after a sound. With the count of 1s that came out as
+  a -30 dBFS tone near 14.7 kHz, with a tail error of -42 dB. A sinc³ decimator in the harness (`AUDIO_SINC3`,
+  build with `UDS_SINC3=1`) removed it. The chip's next commit (`a37080c`) restarts the loop in silent frames,
+  so the shipped sd2 build uses the same count of 1s as the as-built engine. The sinc³ option is kept, but no
+  shipped build uses it.
 - **Fixture (`fixture.test.mjs`).** `fixtures/model_frames.json` has 22 019 frames. Its `events` are
   `{frame, bytes}` messages to queue before `runFrames(1)` runs frame `frame`, and `counts` are the model's
   1s per frame. It replays with the contract API alone. `tests/e2e/truth.spec.mjs` runs it in Chromium.

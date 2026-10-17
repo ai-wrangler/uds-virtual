@@ -3,19 +3,24 @@
 // SPDX-License-Identifier: Apache-2.0
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { loadEngine } from '../../app/engine/uds-engine.js';
-import { script, runScript, modelEvents, modelCounts, FRAME } from './scenario.mjs';
+import { script, runScript, modelEvents, modelCounts, modelRegs, FRAME, VARIANTS } from './scenario.mjs';
 
-const WASM = process.env.UDS_WASM || new URL('../../app/engine/uds_engine.wasm', import.meta.url);
+// base: chip/ and app/engine/uds_engine.wasm (UDS_WASM overrides); sd2: chip-sd2/ and uds_engine_sd2.wasm
+for (const V of VARIANTS) {
+const WASM = V.name === 'base' && process.env.UDS_WASM || V.wasm;
+const ready = existsSync(WASM) && existsSync(V.chip + 'model/uds_model.py');
+const label = V.name === 'base' ? '' : ` [${V.name}]`;
 
-test('per-frame audio matches the Python model (>= 200 000 frames)', async () => {
+test('per-frame audio matches the Python model (>= 200 000 frames)' + label, { skip: !ready && `${V.name} not built` }, async () => {
   const engine = await loadEngine(readFileSync(WASM));
+  const regs = modelRegs(V.chip);
   const sc = script({ randomFrames: 120000, seed: 1 });
   assert.ok(sc.frames >= 200000, `${sc.frames} frames`);
   const { counts, log } = runScript(engine, sc);
   const events = modelEvents(log);
-  const want = modelCounts(events, sc.frames);
+  const want = modelCounts(events, sc.frames, V.chip);
 
   // coverage of the script
   const hits = events.filter((e) => e.kind === 'hit');
@@ -36,16 +41,17 @@ test('per-frame audio matches the Python model (>= 200 000 frames)', async () =>
 
   // registers through MISO
   const reads = log.filter((e) => e.bytes[0] === 0x30 || e.bytes[0] === 0x31);
-  assert.equal(reads[0].rx[1], 0xD5, 'READ ID');
-  assert.equal(reads[1].rx[1], 0x12, 'READ VERSION');
+  assert.equal(reads[0].rx[1], regs.id, 'READ ID');
+  assert.equal(reads[1].rx[1], regs.version, 'READ VERSION');
+  if (V.name === 'base') assert.deepEqual(regs, { id: 0xD5, version: 0x12 });
   for (const e of log) {
-    if (e.bytes[0] === 0x30) assert.equal(e.rx[1], 0xD5);
-    if (e.bytes[0] === 0x31) assert.equal(e.rx[1], 0x12);
+    if (e.bytes[0] === 0x30) assert.equal(e.rx[1], regs.id);
+    if (e.bytes[0] === 0x31) assert.equal(e.rx[1], regs.version);
   }
 
   let bad = 0, first = -1;
   for (let i = 0; i < counts.length; i++) if (counts[i] !== want[i]) { bad++; if (first < 0) first = i; }
-  console.log(`# ${engine.backend}: ${counts.length} frames, ${log.length} messages (${hits.length} HITs,` +
+  console.log(`# ${V.name} ${engine.backend}: ${counts.length} frames, ${log.length} messages (${hits.length} HITs,` +
     ` ${b2b} back to back, ${nearEdge} ending within 3 clocks of a frame edge): ${bad} frames differ`);
   assert.equal(bad, 0, `first difference at frame ${first}`);
   // the script really makes sound
@@ -53,3 +59,4 @@ test('per-frame audio matches the Python model (>= 200 000 frames)', async () =>
   for (const c of counts) if (c !== 48) loud++;
   assert.ok(loud > counts.length / 4);
 });
+}

@@ -1,5 +1,6 @@
 // Cross-check: every backend in engine/wasm/ against the others, cycle by cycle
 // (uo_out and uio_out on every clock), for 10 M clocks of random SPI traffic.
+// The same for each chip variant in a subfolder (engine/wasm/sd2/: the 2nd-order DAC preview).
 // UDS_CROSS_CLOCKS overrides the length.
 // SPDX-License-Identifier: Apache-2.0
 import test from 'node:test';
@@ -8,11 +9,15 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { loadEngine } from '../../app/engine/uds-engine.js';
 import { rng } from './scenario.mjs';
 
-const DIR = new URL('../wasm/', import.meta.url);
-const files = readdirSync(DIR).filter((f) => f.endsWith('.wasm')).sort();
 const CLOCKS = +(process.env.UDS_CROSS_CLOCKS || 10_000_000);
+const ROOT = new URL('../wasm/', import.meta.url);
+const VARIANTS = [['', ROOT], ...readdirSync(ROOT, { withFileTypes: true }).filter((d) => d.isDirectory())
+  .map((d) => [d.name + '/', new URL(d.name + '/', ROOT)])];
 
-test(`backends agree on every clock (${files.join(', ')})`, { skip: files.length < 2 }, async () => {
+for (const [label, DIR] of VARIANTS) {
+const files = readdirSync(DIR).filter((f) => f.endsWith('.wasm')).sort();
+
+test(`backends agree on every clock (${files.map((f) => label + f).join(', ')})`, { skip: files.length < 2 }, async () => {
   const engines = await Promise.all(files.map((f) => loadEngine(readFileSync(new URL(f, DIR)))));
   const r = rng(12345);
   const ri = (n) => Math.floor(r() * n);
@@ -45,10 +50,10 @@ test(`backends agree on every clock (${files.join(', ')})`, { skip: files.length
     }
     clocks += n;
   }
-  console.log(`# cross-check: ${files.length} backends, ${clocks} clocks, ${msgs} messages, audio pin high on ${active} clocks: identical`);
+  console.log(`# cross-check ${label || 'base'}: ${files.length} backends, ${clocks} clocks, ${msgs} messages, audio pin high on ${active} clocks: identical`);
 });
 
-test('backends agree frame by frame on the fast (idle) path and in render()', { skip: files.length < 2 }, async () => {
+test(`${label || 'base'}: backends agree frame by frame on the fast (idle) path and in render()`, { skip: files.length < 2 }, async () => {
   const engines = await Promise.all(files.map((f) => loadEngine(readFileSync(new URL(f, DIR)))));
   const r = rng(777);
   const ri = (n) => Math.floor(r() * n);
@@ -74,5 +79,6 @@ test('backends agree frame by frame on the fast (idle) path and in render()', { 
     }
     frames += n;
   }
-  console.log(`# cross-check (frames): ${frames} frames identical`);
+  console.log(`# cross-check ${label || 'base'} (frames): ${frames} frames identical`);
 });
+}
