@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UDSAudio test page</title>
+<style>body { font: 14px system-ui, sans-serif; background: #111; color: #ddd; padding: 16px; } button { margin: 2px; }</style>
+</head>
+<body>
+<h1>UDSAudio test page</h1>
+<p>Serve the repo root (<code>python3 -m http.server 8000</code>) and open
+  <code>/tests/audio/test.html?engine=mock</code>. Used by <code>tests/audio/browser.spec.mjs</code>.</p>
+<div>
+  <button id="start">start</button>
+  <span id="pads"></span>
+  <button id="rhythm">rhythm</button>
+  <button id="demo">demo.mid</button>
+  <button id="stop">stop all</button>
+  <button id="wav">render WAV</button>
+</div>
+<pre id="log"></pre>
+<script type="module">
+import { UDSAudio } from '../../app/audio/uds-audio.js';
+
+const q = new URLSearchParams(location.search);
+const log = (...a) => { document.getElementById('log').textContent = a.join(' ') + '\n' + document.getElementById('log').textContent.slice(0, 4000); };
+const rec = { status: [], hit: [], step: [], midi: [], error: [], state: [], midiInput: [] };
+window.rec = rec;
+
+window.createUds = async (engine = q.get('engine') || 'mock') => {
+  const uds = await UDSAudio.create({ engine });
+  window.uds = uds;
+  const t = () => performance.now();
+  uds.addEventListener('status', e => { rec.status.push({ t: t(), ...e.detail }); if (rec.status.length > 2000) rec.status.shift(); });
+  uds.addEventListener('hit', e => rec.hit.push({ t: t(), ...e.detail }));
+  uds.addEventListener('step', e => rec.step.push({ t: t(), ...e.detail }));
+  uds.addEventListener('midi', e => rec.midi.push({ t: t(), ...e.detail }));
+  uds.addEventListener('error', e => { rec.error.push(e.detail); log('error', e.detail.message); });
+  uds.addEventListener('state', e => rec.state.push(e.detail.state));
+  uds.addEventListener('midi-input', e => rec.midiInput.push(e.detail));
+  return { info: uds.info, channels: uds.channels.length, patterns: uds.patterns.length };
+};
+
+// RMS over the analyser's time-domain buffer
+window.level = () => {
+  const a = window.uds.analyser; if (!a) return 0;
+  const b = new Float32Array(a.fftSize); a.getFloatTimeDomainData(b);
+  let s = 0; for (const x of b) s += x * x; return Math.sqrt(s / b.length);
+};
+window.peakOver = (ms) => new Promise(res => {
+  let peak = 0; const t0 = performance.now();
+  const tick = () => { peak = Math.max(peak, window.level()); if (performance.now() - t0 < ms) setTimeout(tick, 5); else res(peak); };
+  tick();
+});
+window.loadMidiUrl = async (url) => {
+  const buf = await (await fetch(url)).arrayBuffer();
+  return window.uds.loadMidi(buf, url.split('/').pop());
+};
+window.wavInfo = async (opts) => {
+  const blob = await window.uds.renderWav(opts);
+  const b = new DataView(await blob.arrayBuffer());
+  let peak = 0;
+  for (let o = 44; o < b.byteLength; o += 2) peak = Math.max(peak, Math.abs(b.getInt16(o, true)));
+  return { size: blob.size, type: blob.type, rate: b.getUint32(24, true), samples: (b.byteLength - 44) / 2, peak };
+};
+
+// manual buttons
+document.getElementById('start').onclick = async () => { if (!window.uds) await window.createUds(); await window.uds.start(); log('started', JSON.stringify(window.uds.info)); };
+const pads = document.getElementById('pads');
+for (let ch = 0; ch < 8; ch++) { const b = document.createElement('button'); b.textContent = 'pad ' + ch; b.onclick = () => window.uds.hit(ch); pads.append(b); }
+document.getElementById('rhythm').onclick = () => window.uds.rhythmPlaying ? window.uds.stopRhythm() : window.uds.startRhythm();
+document.getElementById('demo').onclick = async () => { await window.loadMidiUrl('../../app/data/midi/demo.mid'); window.uds.playMidi(); };
+document.getElementById('stop').onclick = () => window.uds.stopAll();
+document.getElementById('wav').onclick = async () => { const i = await window.wavInfo({ what: 'rhythm', seconds: 4 }); log('wav', JSON.stringify(i)); };
+setInterval(() => { const s = rec.status.at(-1); if (s) document.title = (s.simHz / 1e6).toFixed(1) + ' MHz ' + s.realtime.toFixed(2) + 'x'; }, 500);
+window.testPageReady = true;
+</script>
+</body>
+</html>
