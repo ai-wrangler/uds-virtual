@@ -10,7 +10,7 @@
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 cd "$(dirname "$0")/.."
-REPO=https://github.com/ai-wrangler/tt-uds-1x1
+REPO=${UDS_SD2_REPO:-https://github.com/ai-wrangler/tt-uds-1x1}   # UDS_SD2_REPO: a local clone, for tests
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 git clone -q --branch sd2 --single-branch "$REPO" "$TMP/chip"
