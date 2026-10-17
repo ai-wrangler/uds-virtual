@@ -30,9 +30,10 @@ window.createUds = async (engine = q.get('engine') || 'mock', opts = {}) => {
   const uds = await UDSAudio.create({ engine, ...opts });
   window.uds = uds;
   const t = () => performance.now();
+  const ct = () => uds.ctx ? uds.ctx.currentTime * 1000 : 0;   // audio clock (ms): what the device has played
   uds.addEventListener('status', e => { rec.status.push({ t: t(), ...e.detail }); if (rec.status.length > 2000) rec.status.shift(); });
   uds.addEventListener('hit', e => rec.hit.push({ t: t(), ...e.detail }));
-  uds.addEventListener('step', e => rec.step.push({ t: t(), ...e.detail }));
+  uds.addEventListener('step', e => rec.step.push({ t: t(), ct: ct(), ...e.detail }));
   uds.addEventListener('midi', e => rec.midi.push({ t: t(), ...e.detail }));
   uds.addEventListener('error', e => { rec.error.push(e.detail); log('error', e.detail.message); });
   uds.addEventListener('state', e => rec.state.push(e.detail.state));
