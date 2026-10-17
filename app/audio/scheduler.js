@@ -53,6 +53,21 @@ export class Scheduler {
     return stepSeconds(tempo, pattern.stepsPerBeat) * this.sampleRate;
   }
 
+  // Register an extra pattern (an Autorhythm slot, see slots.js): { id, stepsPerBeat, length, steps,
+  // hits: [[{ ch, v }]] per step, barSteps }. A pattern with barSteps switches to another one at a bar line.
+  addPattern(p) {
+    this.byId.set(p.id, p);
+    if (this.pattern && this.pattern.id === p.id) this.pattern = p;
+    if (this.pendingPattern && this.pendingPattern.id === p.id) this.pendingPattern = p;
+    return p;
+  }
+  removePattern(id) {
+    if (!this.byId.has(id) || this.patterns.some(p => p.id === id)) return;
+    this.byId.delete(id);
+    if (this.pendingPattern && this.pendingPattern.id === id) this.pendingPattern = null;
+    if (this.pattern && this.pattern.id === id) { this.rhythmPlaying = false; this.pattern = this.patterns[0]; }
+  }
+
   setPattern(id) {
     const p = this.byId.get(id);
     if (!p) throw new Error('unknown pattern ' + id);
@@ -145,13 +160,27 @@ export class Scheduler {
   playStep(pos, out) {
     const exact = this.nextStepPos(pos);
     this.reanchorPending = false;
-    if (this.pendingPattern) { this.pattern = this.pendingPattern; this.pendingPattern = null; }
+    if (this.pendingPattern) {
+      const cur = this.pattern, next = this.pendingPattern;
+      const atBar = !!(cur.barSteps && next.barSteps);     // slot to slot: at the next bar line, from bar 1
+      if (!atBar || this.stepIndex < 0 || (this.stepIndex + 1) % cur.barSteps === 0 || this.stepIndex + 1 >= cur.length) {
+        this.pattern = next; this.pendingPattern = null;
+        if (atBar) this.stepIndex = -1;
+      }
+    }
     const pat = this.pattern;
     this.stepIndex = (this.stepIndex + 1) % pat.length;
     this.lastStepPos = exact;
     this.k++;
     const s = this.stepIndex;
     out.push({ pos, kind: 'step', index: s, length: pat.length, patternId: pat.id });
+    if (pat.hits) {                               // a slot: per-hit velocity
+      for (const h of pat.hits[s]) {
+        const params = this.hitParams(h.ch, h.v);
+        if (params.level > 0) out.push({ pos, kind: 'hit', ch: h.ch, params, source: 'rhythm' });
+      }
+      return;
+    }
     const bits = pat.steps[s], acc = pat.accents ? pat.accents[s] : 0;
     let accRows = 0;
     if (pat.accents) for (const a of pat.accents) accRows |= a;

@@ -9,9 +9,11 @@
 import { loadMockEngine } from './mock-engine.js';
 import { Scheduler } from './scheduler.js';
 import { encodeWav } from './wav.js';
+import { softLimit, KNEE } from './limiter.js';
 
 const CLOCK_HZ = 6000000;
 const MAKEUP_GAIN = 3;          // a full-level voice reaches about 1/6 of the pin's swing
+
 const CHUNK = 256;              // samples per chunk sent to the worklet (128..1024)
 const LEAD_DEFAULT = 60, LEAD_FLOOR = 40, LEAD_MAX = 200;   // ms; the contract allows 30..200
 const STATUS_MS = 50;
@@ -57,7 +59,8 @@ async function loadAnyEngine(kind, wasmUrl, rate) {
 
 function setDc(rate) { dcR = Math.exp(-2 * Math.PI * 10 / rate); dc = { x: 0, y: 0 }; }
 
-// Render n samples into dst at offset, with make-up gain and a 10 Hz DC blocker (the Pmod's coupling cap)
+// Render n samples into dst at offset, with make-up gain, a 10 Hz DC blocker (the Pmod's coupling cap)
+// and the soft limiter
 function renderInto(dst, off, n) {
   while (n > 0) {
     const k = Math.min(n, 8192);
@@ -73,7 +76,7 @@ function renderInto(dst, off, n) {
       const s = src[i];
       y = s - x + dcR * y; x = s;
       const v = y * MAKEUP_GAIN;
-      dst[off + i] = v > 1 ? 1 : v < -1 ? -1 : v;
+      dst[off + i] = v > KNEE || v < -KNEE ? softLimit(v) : v;
     }
     dc.x = x; dc.y = y;
     off += k; n -= k;
@@ -220,6 +223,8 @@ self.onmessage = async (e) => {
       case 'stopAll': sched.stopRhythm(); sched.stopMidi(); live = []; engine.stop(); break;
       case 'filter': engine.setFilterHz(m.hz); break;
       case 'pattern': sched.setPattern(m.id); break;
+      case 'addPattern': sched.addPattern(m.pattern); break;
+      case 'removePattern': sched.removePattern(m.id); break;
       case 'tempo': sched.setTempo(m.bpm); break;
       case 'rhythm': if (m.on) sched.startRhythm(rendered); else sched.stopRhythm(); break;
       case 'midiLoad': sched.loadMidi(m.midi); break;
@@ -241,6 +246,7 @@ self.onmessage = async (e) => {
 function restoreState(s) {
   if (!s) return;
   if (s.params) s.params.forEach((p, ch) => sched.setParams(ch, p));
+  if (s.extraPatterns) for (const p of s.extraPatterns) sched.addPattern(p);
   if (s.pattern) sched.setPattern(s.pattern);
   if (s.tempo) sched.setTempo(s.tempo);
   if (s.midi) sched.loadMidi(s.midi);

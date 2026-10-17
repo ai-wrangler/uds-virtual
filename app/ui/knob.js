@@ -10,7 +10,7 @@ function el(tag, attrs = {}, ns) {
 }
 
 /**
- * createKnob({ min, max, value, def, label, labelRu, testid, size, onChange, format, step, title })
+ * createKnob({ min, max, value, def, label, sub, testid, size, onChange, format, step, title })
  * returns { el, set(v, emit), get() }
  */
 export function createKnob(o) {
@@ -53,8 +53,8 @@ export function createKnob(o) {
   knob.appendChild(svg);
 
   const lab = el('div', { class: 'knob-lbl' });
-  if (o.labelRu) { const r = el('span', { class: 'ru' }); r.textContent = o.labelRu; lab.appendChild(r); }
-  if (o.label) { const s = el('small'); s.textContent = o.label; lab.appendChild(s); }
+  if (o.label) { const r = el('span', { class: 'lb' }); r.textContent = o.label; lab.appendChild(r); }
+  if (o.sub) { const s = el('small'); s.textContent = o.sub; lab.appendChild(s); }
   const val = el('output', { class: 'knob-val' });
 
   wrap.append(knob, val, lab);

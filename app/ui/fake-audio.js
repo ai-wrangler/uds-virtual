@@ -39,6 +39,8 @@ export class FakeUDSAudio extends EventTarget {
     this.volume = 0.8;
     this.filter = 'rc';
     this.pattern = this.patterns[0]?.id ?? 'A0';
+    this.slots = new Array(16).fill(null);
+    this.slot = null;
     this.tempo = 120;
     this.rhythmPlaying = false;
     this.midiPlaying = false;
@@ -121,11 +123,41 @@ export class FakeUDSAudio extends EventTarget {
   setVolume(v) { this.volume = Math.max(0, Math.min(1, v)); }
   setFilter(mode) { this.filter = mode; }
 
+  // --- Autorhythm slots (same conversion as the real UDSAudio: ../audio/slots.js) ---
+  _emitSlots() { this._emit('slots', { slots: this.slots.map((s) => (s ? { ...s } : null)), slot: this.slot }); }
+  async loadSlot(index, buf, name = 'file.mid') {
+    index = Number(index);
+    if (!(Number.isInteger(index) && index >= 0 && index < 16)) throw new Error('slot index must be 0..15');
+    const { midiBytesToSlot } = await import('../audio/slots.js');
+    const c = midiBytesToSlot(buf, name);
+    const slot = { index, name: c.name, bars: c.bars, steps: c.steps, stepsPerBeat: c.stepsPerBeat,
+      stepsPerBar: c.stepsPerBar, beatSteps: c.beatSteps, meter: c.meter, notes: c.notes, bpm: c.bpm,
+      truncated: c.truncated, unmapped: c.unmapped };
+    this.slots[index] = slot;
+    if (this.slot === index) this.setTempo(slot.bpm);
+    this._emitSlots();
+    return { ...slot };
+  }
+  clearSlot(index) {
+    if (!this.slots[index]) return;
+    if (this.slot === index) this.stopRhythm();
+    this.slots[index] = null;
+    this._emitSlots();
+  }
+  setSlot(index) {
+    if (index === null || index === undefined) { this.slot = null; this._emitSlots(); return; }
+    this.slot = Number(index);
+    const s = this.slots[this.slot];
+    if (s) { this._pendingSlot = true; this.setTempo(s.bpm); } else this.stopRhythm();
+    this._emitSlots();
+  }
+
   // --- rhythm ---
   setPattern(id) {
     const p = this.patterns.find((x) => x.id === id);
     if (!p) return;
     this.pattern = id;
+    this.slot = null;
     if (p.bpm) this.tempo = p.bpm;
     this._step = 0;
   }
@@ -135,23 +167,35 @@ export class FakeUDSAudio extends EventTarget {
   }
   startRhythm() {
     if (this.rhythmPlaying) return;
+    if (this.slot !== null && !this.slots[this.slot]) return;
     this.rhythmPlaying = true;
     this._step = 0;
     this._runStep();
   }
   stopRhythm() { this.rhythmPlaying = false; clearTimeout(this._rt); }
   _scheduleStep() {
-    const p = this.patterns.find((x) => x.id === this.pattern);
+    const p = this.slot !== null ? this.slots[this.slot] : this.patterns.find((x) => x.id === this.pattern);
     const ms = 60000 / (this.tempo * (p?.stepsPerBeat || 4));
     this._rt = setTimeout(() => this._runStep(), ms);
   }
   _runStep() {
     if (!this.rhythmPlaying) return;
+    if (this.slot !== null) {
+      const s = this.slots[this.slot];
+      if (!s) { this.rhythmPlaying = false; return; }
+      if (this._pendingSlot && this._step % s.stepsPerBar === 0) { this._step = 0; this._pendingSlot = false; }
+      const i = this._step % s.steps;
+      this._emit('step', { index: i, length: s.steps, patternId: 'S' + this.slot, slot: this.slot });
+      for (const n of s.notes) if (n.step === i) this._play(n.ch, n.v, 'rhythm');
+      this._step = i + 1;
+      this._scheduleStep();
+      return;
+    }
     const p = this.patterns.find((x) => x.id === this.pattern);
     const i = this._step % p.length;
     const bits = p.steps[i];
     const accented = p.accents.reduce((a, b) => a | b, 0);
-    this._emit('step', { index: i, length: p.length, patternId: p.id });
+    this._emit('step', { index: i, length: p.length, patternId: p.id, slot: null });
     for (let ch = 0; ch < 8; ch++) {
       if (bits & (1 << ch)) {
         const drop = (accented & (1 << ch)) && !(p.accents[i] & (1 << ch)) ? this.accentLevelDrop : 0;

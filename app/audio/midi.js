@@ -38,7 +38,7 @@ function readVlq(d, pos) {
 const str4 = (d, i) => String.fromCharCode(d[i], d[i + 1], d[i + 2], d[i + 3]);
 
 // Parse an SMF (format 0 or 1, PPQ division). Returns the raw note events with times in seconds.
-// -> { format, ppq, tracks, tempos: [{ tick, usPerQuarter }], notes: [{ time, tick, channel (1..16), note, velocity }],
+// -> { format, ppq, tracks, tempos: [{ tick, usPerQuarter }], timeSigs: [{ tick, num, den }], notes: [{ time, tick, channel (1..16), note, velocity }],
 //      duration }   (note-ons only; a note-on with velocity 0 is a note-off and is dropped)
 export function parseMidi(buffer) {
   const d = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer.buffer ? buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) : buffer);
@@ -52,6 +52,7 @@ export function parseMidi(buffer) {
   const ppq = division || 96;
   let p = 8 + hlen;
   const tempos = [];
+  const timeSigs = [];  // { tick, num, den }
   const raw = [];      // { tick, channel, note, velocity, order }
   let endTick = 0, order = 0, tracks = 0;
   for (let t = 0; t < ntrks && p + 8 <= d.length; t++) {
@@ -71,6 +72,7 @@ export function parseMidi(buffer) {
         const type = d[pos.i++];
         const ml = readVlq(d, pos);
         if (type === 0x51 && ml >= 3) tempos.push({ tick, usPerQuarter: d[pos.i] << 16 | d[pos.i + 1] << 8 | d[pos.i + 2] });
+        if (type === 0x58 && ml >= 2 && d[pos.i] > 0 && d[pos.i + 1] <= 6) timeSigs.push({ tick, num: d[pos.i], den: 1 << d[pos.i + 1] });
         pos.i += ml;
         if (type === 0x2f) break;
         continue;
@@ -93,10 +95,11 @@ export function parseMidi(buffer) {
     p = end;
   }
   tempos.sort((x, y) => x.tick - y.tick);
+  timeSigs.sort((x, y) => x.tick - y.tick);
   const toSec = tickToSeconds(tempos, ppq);
   raw.sort((x, y) => x.tick - y.tick || x.order - y.order);
   const notes = raw.map(e => ({ time: toSec(e.tick), tick: e.tick, channel: e.channel, note: e.note, velocity: e.velocity }));
-  return { format, ppq, tracks, tempos, notes, endTick, duration: toSec(endTick) };
+  return { format, ppq, tracks, tempos, timeSigs, notes, endTick, duration: toSec(endTick) };
 }
 
 // tick -> seconds with a tempo map (default 120 bpm until the first FF 51)
@@ -140,7 +143,7 @@ function vlq(n) {
   return out;
 }
 
-// tracks: [[{ tick, bytes: [...] } or { tick, tempo: bpm } or { tick, meta: type, data: [...] }]]
+// tracks: [[{ tick, bytes: [...] } or { tick, tempo: bpm } or { tick, timeSig: [num, den] } or { tick, meta: type, data: [...] }]]
 // options: { format: 0|1, ppq, runningStatus: true }
 export function writeMidi(tracks, { format = tracks.length > 1 ? 1 : 0, ppq = 96, runningStatus = true } = {}) {
   const out = [];
@@ -158,6 +161,9 @@ export function writeMidi(tracks, { format = tracks.length > 1 ? 1 : 0, ppq = 96
         body.push(0xff, 0x51, 3, us >> 16 & 255, us >> 8 & 255, us & 255); status = 0;
       } else if (e.meta !== undefined) {
         body.push(0xff, e.meta, ...vlq(e.data.length), ...e.data); status = 0;
+      } else if (e.timeSig) {
+        const [num, den] = e.timeSig;
+        body.push(0xff, 0x58, 4, num, Math.round(Math.log2(den)), 24, 8); status = 0;
       } else if (e.sysex) {
         body.push(0xf0, ...vlq(e.sysex.length), ...e.sysex); status = 0;
       } else {
