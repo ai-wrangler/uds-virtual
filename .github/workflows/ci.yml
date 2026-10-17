@@ -69,6 +69,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Playwright (e2e and part suites)
         run: npx playwright test
+      - name: Engine Chromium check (main thread, Worker, AudioWorklet)
+        if: hashFiles('engine/test/browser/run.cjs') != ''
+        env:
+          PLAYWRIGHT_MODULE: '@playwright/test'
+        run: node engine/test/browser/run.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

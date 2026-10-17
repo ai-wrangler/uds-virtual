@@ -36,6 +36,7 @@ export async function openApp(page, query = '') {
 
 /** Skip the current test if the panel (ui part) is not on the page yet. */
 export async function requireUI(page) {
+  await waitReady(page);
   const n = await page.getByTestId('power').count();
   test.skip(n === 0, 'ui part not merged yet: no [data-testid=power] on the page');
 }
@@ -46,16 +47,22 @@ export async function requireTestId(page, id) {
   test.skip(n === 0, `no [data-testid=${id}] on the page yet`);
 }
 
-/** Skip unless the real engine files are deployed in app/engine/. */
+/** Skip unless the real engine files are deployed in app/engine/ (checked outside the page, so no
+ * failed requests show up in the page's console). */
 export async function requireRealEngine(page) {
-  const ok = await page.evaluate(async () => {
-    try {
-      const a = await fetch('./engine/uds-engine.js', { method: 'HEAD' });
-      const b = await fetch('./engine/uds_engine.wasm', { method: 'HEAD' });
-      return a.ok && b.ok;
-    } catch { return false; }
-  });
+  let ok = false;
+  try {
+    const a = await page.request.get(new URL('engine/uds-engine.js', page.url()).href);
+    const b = await page.request.head(new URL('engine/uds_engine.wasm', page.url()).href);
+    ok = a.ok() && b.ok();
+  } catch { ok = false; }
   test.skip(!ok, 'engine part not merged yet: app/engine/uds-engine.js or uds_engine.wasm missing');
+}
+
+/** Wait until the panel is fully built (body.ready, set by the ui part) or window.uds exists. */
+export async function waitReady(page) {
+  await page.waitForFunction(() => document.body.classList.contains('ready') || !!window.uds, null, { timeout: 15_000 })
+    .catch(() => {});
 }
 
 /** Wait for window.uds, then attach an event recorder (window.__ev). */
