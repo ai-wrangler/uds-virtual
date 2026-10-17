@@ -79,7 +79,14 @@ chip/src/*.v --yosys--> netlist.json --gen.py--> gen/uds_chip_gen.h ─┐
 engine/build.sh          # gen backend -> engine/wasm/uds_engine_gen.wasm and app/engine/uds_engine.wasm
 engine/build.sh all      # also cxxrtl (needed for the cross-check); ships gen
 engine/build.sh cxxrtl   # build and ship cxxrtl instead
+engine/build.sh all sd2  # the 2nd-order DAC preview: chip-sd2/ -> engine/wasm/sd2/*.wasm, app/engine/uds_engine_sd2.wasm
 ```
+
+The second argument picks the chip variant: `base` (default, `chip/`) or `sd2` (`chip-sd2/`, the second-order
+sigma-delta from tt-uds-1x1 branch `sd2`). The sd2 variant writes `engine/gen/uds_chip_gen_sd2.h` and
+`uds_chip_cxxrtl_sd2.cc` and compiles the same harness with `-DGEN_HEADER` / `-DCXXRTL_SOURCE`; the base build
+is unchanged and still byte-identical. `app/engine/builds.json` describes each build (chip commit, backend,
+make-up gain); `node engine/test/loudness.mjs [--write]` measures the gain that matches the builds' loudness.
 
 It installs `yosys` and `verilator` with apt (Yosys 0.33) and `ziglang` with pip (zig 0.17) if they are
 missing. Then it compiles with `python3 -m ziglang c++ -target wasm32-wasi -mexec-model=reactor -O3 -flto`.

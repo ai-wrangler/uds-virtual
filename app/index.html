@@ -81,16 +81,16 @@
               <option value="off">Off</option>
             </select>
           </label>
+          <label class="ctl">
+            <span class="ctl-lbl"><span class="lb">Volume</span> <output id="volume-out">80</output></span>
+            <input type="range" data-testid="volume" id="volume" min="0" max="1" step="0.01" value="0.8">
+          </label>
           <label class="ctl ctl-wide" id="dac-ctl" title="1st order: the chip as built, quiet decay tails break into sparse clicks. 2nd order: a proposed chip change (not taped out) that shapes the noise away for smooth tails.">
             <span class="ctl-lbl"><span class="lb">DAC</span></span>
             <select data-testid="dac" id="dac">
               <option value="1st">1st order (as built)</option>
               <option value="2nd" disabled>2nd order (preview) · coming soon</option>
             </select>
-          </label>
-          <label class="ctl">
-            <span class="ctl-lbl"><span class="lb">Volume</span> <output id="volume-out">80</output></span>
-            <input type="range" data-testid="volume" id="volume" min="0" max="1" step="0.01" value="0.8">
           </label>
         </div>
         <div class="wav-row">
