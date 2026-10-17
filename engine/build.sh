@@ -28,9 +28,9 @@ CXXRTL_CC=engine/gen/uds_chip_cxxrtl$SFX.cc
 # the base build keeps the header names compiled into backend_*.h (byte-identical output)
 HDR=()
 [ -z "$SFX" ] || HDR=("-DGEN_HEADER=\"gen/uds_chip_gen$SFX.h\"" "-DCXXRTL_SOURCE=\"gen/uds_chip_cxxrtl$SFX.cc\"")
-# sd2: the 2nd-order sigma-delta's noise near multiples of the frame rate needs the sinc^3 decimator in
-# the Audio Pmod model (harness.cc, AUDIO_SINC3); the count per frame would alias it into the audio band
-[ "$VARIANT" != sd2 ] || HDR+=("-DAUDIO_SINC3")
+# UDS_SINC3=1: the Audio Pmod model uses a sinc^3 decimator instead of the count of 1s per frame
+# (harness.cc, AUDIO_SINC3; off in the shipped builds, see engine/README.md)
+[ "${UDS_SINC3:-0}" != 1 ] || HDR+=("-DAUDIO_SINC3")
 
 need() {
   if ! command -v yosys >/dev/null || ! command -v verilator >/dev/null; then

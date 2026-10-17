@@ -101,10 +101,10 @@ struct p_tt__um__ai__wrangler__uds1x1 : public module {
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:295.24-295.27
 	wire<1> p_core_2e_sq7;
 	// \hdlname: core sd_v1
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:332.15-332.20
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:333.15-333.20
 	wire<15> p_core_2e_sd__v1;
 	// \hdlname: core sd_v2
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:333.15-333.20
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:334.15-334.20
 	wire<17> p_core_2e_sd__v2;
 	// \hdlname: spi ch
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:32.24-32.26
@@ -307,44 +307,47 @@ struct p_tt__um__ai__wrangler__uds1x1 : public module {
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:312.14-312.19
 	/*outline*/ value<9> p_core_2e_metal;
 	// \hdlname: core q
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:322.15-322.16
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:323.15-323.16
 	/*outline*/ value<5> p_core_2e_q;
 	// \hdlname: core qr
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:323.15-323.17
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:324.15-324.17
 	/*outline*/ value<6> p_core_2e_qr;
 	// \hdlname: core w8
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:324.15-324.17
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:325.15-325.17
 	/*outline*/ value<1> p_core_2e_w8;
 	// \hdlname: core w1
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:325.15-325.17
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:326.15-326.17
 	/*outline*/ value<1> p_core_2e_w1;
 	// \hdlname: core sel_n
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:326.15-326.20
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:327.15-327.20
 	/*outline*/ value<1> p_core_2e_sel__n;
 	// \hdlname: core src
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:327.15-327.18
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:328.15-328.18
 	/*outline*/ value<9> p_core_2e_src;
 	// \hdlname: core x
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:328.15-328.16
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:329.15-329.16
 	/*outline*/ value<12> p_core_2e_x;
 	// \hdlname: core y
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:334.15-334.16
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:335.15-335.16
 	/*outline*/ value<1> p_core_2e_y;
 	// \hdlname: core x_fb
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:337.15-337.19
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:338.15-338.19
 	/*outline*/ value<16> p_core_2e_x__fb;
 	// \hdlname: core s1
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:338.15-338.17
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:339.15-339.17
 	/*outline*/ value<16> p_core_2e_s1;
 	// \hdlname: core ovf1
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:339.15-339.19
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:340.15-340.19
 	/*outline*/ value<1> p_core_2e_ovf1;
 	// \hdlname: core v1_n
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:340.15-340.19
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:341.15-341.19
 	/*outline*/ value<15> p_core_2e_v1__n;
 	// \hdlname: core v2_n
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:341.15-341.19
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:342.15-342.19
 	/*outline*/ value<17> p_core_2e_v2__n;
+	// \hdlname: core sd_restart
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:347.15-347.25
+	/*outline*/ value<1> p_core_2e_sd__restart;
 	// \hdlname: core g_slot[0].e
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:203.18-203.19
 	/*outline*/ value<8> p_core_2e_g__slot_5b_0_5d__2e_e;
@@ -425,7 +428,7 @@ void p_tt__um__ai__wrangler__uds1x1::reset() {
 bool p_tt__um__ai__wrangler__uds1x1::eval() {
 	bool converged = true;
 	bool posedge_p_clk = this->posedge_p_clk();
-	value<2> i_procmux_24_471__CMP;
+	value<2> i_procmux_24_479__CMP;
 	// \hdlname: core clk
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:32.24-32.27
 	value<1> p_core_2e_clk;
@@ -499,26 +502,26 @@ bool p_tt__um__ai__wrangler__uds1x1::eval() {
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:310.14-310.16
 	value<3> p_core_2e_pc;
 	// \hdlname: core q
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:322.15-322.16
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:323.15-323.16
 	value<5> p_core_2e_q;
 	// \hdlname: core w8
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:324.15-324.17
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:325.15-325.17
 	value<1> p_core_2e_w8;
 	// \hdlname: core src
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:327.15-327.18
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:328.15-328.18
 	value<9> p_core_2e_src;
 	// \hdlname: core x
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:328.15-328.16
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:329.15-329.16
 	value<12> p_core_2e_x;
 	// \hdlname: core y
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:334.15-334.16
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:335.15-335.16
 	value<1> p_core_2e_y;
 	// \hdlname: core s1
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:338.15-338.17
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:339.15-339.17
 	value<16> p_core_2e_s1;
-	// \hdlname: core v1_n
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:340.15-340.19
-	value<15> p_core_2e_v1__n;
+	// \hdlname: core sd_restart
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:347.15-347.25
+	value<1> p_core_2e_sd__restart;
 	// \hdlname: core g_slot[0].e
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:203.18-203.19
 	value<8> p_core_2e_g__slot_5b_0_5d__2e_e;
@@ -532,21 +535,19 @@ bool p_tt__um__ai__wrangler__uds1x1::eval() {
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:204.18-204.19
 	value<3> p_core_2e_g__slot_5b_1_5d__2e_c;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:111.23-111.47
-	value<9> i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_111_24_249__Y;
+	value<9> i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_111_24_253__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:304.11-304.21
-	value<1> i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_304_24_350__Y;
+	value<1> i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_304_24_354__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:305.11-305.21
-	value<1> i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_305_24_353__Y;
+	value<1> i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_305_24_357__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:306.11-306.21
-	value<1> i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_306_24_356__Y;
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:340.43-340.50
-	value<1> i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_340_24_383__Y;
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:340.23-340.64
-	value<15> i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_340_24_384__Y;
+	value<1> i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_306_24_360__Y;
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:341.43-341.50
+	value<1> i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_341_24_387__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:211.35-211.37
-	value<1> i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_389__Y;
+	value<1> i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_397__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:211.35-211.37
-	value<1> i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_396__Y;
+	value<1> i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_404__Y;
 	// \hdlname: spi clk
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:21.24-21.27
 	value<1> p_spi_2e_clk;
@@ -566,34 +567,32 @@ bool p_tt__um__ai__wrangler__uds1x1::eval() {
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:53.14-53.21
 	value<1> p_spi_2e_cmd__end;
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:84.11-84.18
-	value<1> i_flatten_5c_spi_2e__24_logic__not_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_84_24_423__Y;
+	value<1> i_flatten_5c_spi_2e__24_logic__not_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_84_24_431__Y;
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:90.13-90.27
-	value<1> i_flatten_5c_spi_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_90_24_425__Y;
+	value<1> i_flatten_5c_spi_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_90_24_433__Y;
 	// \src: chip-sd2/src/project.v:38.15-38.20
 	value<1> p_audio;
 	// \src: chip-sd2/src/project.v:34.15-34.21
 	value<3> p_hit__ch;
 	// connection
 	p_core_2e_pj = p_core_2e_t.curr.slice<3,0>().val();
-	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:310$361 $flatten\core.$add$chip-sd2/src/uds_core.v:310$360 $flatten\core.$add$chip-sd2/src/uds_core.v:310$359
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:152.24-152.55
+	// cell $flatten\core.$sub$chip-sd2/src/uds_core.v:152$277
+	p_core_2e_pk = sub_uu<5>(value<1>{0u}.concat(p_core_2e_pj).val(), value<2>{0u}.concat(p_core_2e_c__pe.curr.slice<7,5>()).val());
+	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:310$365 $flatten\core.$add$chip-sd2/src/uds_core.v:310$364 $flatten\core.$add$chip-sd2/src/uds_core.v:310$363
 	p_core_2e_pc = add_uu<3>(add_uu<3>(add_uu<3>(value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<0>()).val(), value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<1>()).val()), value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<2>()).val()), value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<3>()).val());
 	// connection
-	p_core_2e_q = p_core_2e_c__env.curr.slice<7,3>().val();
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:152.24-152.55
-	// cell $flatten\core.$sub$chip-sd2/src/uds_core.v:152$273
-	p_core_2e_pk = sub_uu<5>(value<1>{0u}.concat(p_core_2e_pj).val(), value<2>{0u}.concat(p_core_2e_c__pe.curr.slice<7,5>()).val());
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:324.23-324.36
-	// cell $flatten\core.$lt$chip-sd2/src/uds_core.v:324$369
-	p_core_2e_w8 = lt_uu<1>(p_core_2e_t.curr, value<1>{0u}.concat(p_core_2e_q).val());
-	// connection
 	p_core_2e_ej = p_core_2e_t.curr.slice<2,0>().val();
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:154$278 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$277 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:154$276 $flatten\core.$le$chip-sd2/src/uds_core.v:154$275 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:154$274
+	// connection
+	p_core_2e_q = p_core_2e_c__env.curr.slice<7,3>().val();
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:154$282 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$281 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:154$280 $flatten\core.$le$chip-sd2/src/uds_core.v:154$279 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:154$278
 	p_core_2e_inc__bit = logic_and<1>(logic_and<1>(logic_not<1>(p_core_2e_pk.slice<4>().val()), le_uu<1>(p_core_2e_pk.slice<3,0>().val(), value<4>{0x5u})), shiftx_uu<1>(value<1>{0x1u}.concat(p_core_2e_c__pe.curr.slice<4,0>()).val(), p_core_2e_pk.slice<2,0>().val()));
 	// connection
 	p_core_2e_head = p_core_2e_ring.curr.slice<95>().val();
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:327$375 $flatten\core.$lt$chip-sd2/src/uds_core.v:326$373 $flatten\core.$ternary$chip-sd2/src/uds_core.v:327$374 $flatten\core.$ternary$chip-sd2/src/uds_core.v:312$367 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$366 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$365 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$364 $flatten\core.$ternary$chip-sd2/src/uds_core.v:311$363 $flatten\core.$not$chip-sd2/src/uds_core.v:311$362
-	p_core_2e_src = (lt_uu<1>(p_core_2e_t.curr.slice<0>().concat(p_core_2e_t.curr.slice<1>()).concat(p_core_2e_t.curr.slice<2>()).concat(p_core_2e_t.curr.slice<3>()).val(), p_core_2e_c__bal.curr) ? (p_core_2e_c__metal.curr ? (xor_uu<1>(xor_uu<1>(xor_uu<1>(p_core_2e_sq3.curr, p_core_2e_sq5.curr), p_core_2e_sq7.curr), p_core_2e_frame.curr.slice<2>().val()) ? value<9>{0xffu} : value<9>{0x100u}) : (p_core_2e_pc.slice<2>().val() ? value<9>{0xffu} : not_u<1>(p_core_2e_pc.slice<1>().val()).concat(p_core_2e_pc.slice<0>()).concat(value<7>{0u}).val())) : p_core_2e_c__tri.curr);
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:155$280 $flatten\core.$eq$chip-sd2/src/uds_core.v:155$279
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:325.23-325.36
+	// cell $flatten\core.$lt$chip-sd2/src/uds_core.v:325$373
+	p_core_2e_w8 = lt_uu<1>(p_core_2e_t.curr, value<1>{0u}.concat(p_core_2e_q).val());
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:155$284 $flatten\core.$eq$chip-sd2/src/uds_core.v:155$283
 	p_core_2e_cy__in = (logic_not<1>(p_core_2e_pj) ? value<1>{0u} : p_core_2e_cy.curr);
 	// connection
 	p_core_2e_g__slot_5b_1_5d__2e_e.slice<7>() = p_core_2e_ring.curr.slice<23>().val();
@@ -627,10 +626,10 @@ bool p_tt__um__ai__wrangler__uds1x1::eval() {
 	p_core_2e_g__slot_5b_0_5d__2e_e.slice<1>() = p_core_2e_ring.curr.slice<77>().val();
 	// connection
 	p_core_2e_g__slot_5b_0_5d__2e_e.slice<0>() = p_core_2e_ring.curr.slice<78>().val();
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:146$268 $flatten\core.$eq$chip-sd2/src/uds_core.v:145$264 $flatten\core.$eq$chip-sd2/src/uds_core.v:146$265 $flatten\core.$and$chip-sd2/src/uds_core.v:146$267 $flatten\core.$le$chip-sd2/src/uds_core.v:146$266
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:146$272 $flatten\core.$eq$chip-sd2/src/uds_core.v:145$268 $flatten\core.$eq$chip-sd2/src/uds_core.v:146$269 $flatten\core.$and$chip-sd2/src/uds_core.v:146$271 $flatten\core.$le$chip-sd2/src/uds_core.v:146$270
 	p_core_2e_d__bit = (logic_not<1>(p_core_2e_c__env.curr.slice<7,3>().val()) ? logic_not<1>(p_core_2e_ej) : and_uu<1>(p_core_2e_ring.curr.slice<92>().val(), le_uu<1>(p_core_2e_ej, value<3>{0x4u})));
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:138.25-138.41
-	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:138$262
+	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:138$266
 	p_core_2e_in__env = eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x2u});
 	// connection
 	p_core_2e_envhi.slice<5,3>() = p_core_2e_g__slot_5b_1_5d__2e_e.slice<7,5>().val();
@@ -638,17 +637,17 @@ bool p_tt__um__ai__wrangler__uds1x1::eval() {
 	p_core_2e_envhi.slice<2,0>() = p_core_2e_g__slot_5b_0_5d__2e_e.slice<7,5>().val();
 	// connection
 	p_hit__ch = p_spi_2e_ch.curr;
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:147$270 $flatten\core.$eq$chip-sd2/src/uds_core.v:147$269
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:147$274 $flatten\core.$eq$chip-sd2/src/uds_core.v:147$273
 	p_core_2e_bor__in = (logic_not<1>(p_core_2e_ej) ? value<1>{0u} : p_core_2e_bor.curr);
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:169$295 $flatten\core.$eq$chip-sd2/src/uds_core.v:169$294
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:169$299 $flatten\core.$eq$chip-sd2/src/uds_core.v:169$298
 	p_core_2e_committing = logic_and<1>(p_core_2e_commit.curr, eq_uu<1>(p_core_2e_v.curr, p_core_2e_tgt.curr));
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:50.25-50.33
-	// cell $flatten\spi.$logic_not$chip-sd2/src/uds_spi.v:50$403
+	// cell $flatten\spi.$logic_not$chip-sd2/src/uds_spi.v:50$411
 	p_spi_2e_active = logic_not<1>(p_spi_2e_cs__s.curr.slice<1>().val());
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:328$379 $flatten\core.$lt$chip-sd2/src/uds_core.v:327$377 $flatten\core.$ternary$chip-sd2/src/uds_core.v:328$378 $flatten\core.$ternary$chip-sd2/src/uds_core.v:312$371 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$370 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$369 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$368 $flatten\core.$ternary$chip-sd2/src/uds_core.v:311$367 $flatten\core.$not$chip-sd2/src/uds_core.v:311$366
+	p_core_2e_src = (lt_uu<1>(p_core_2e_t.curr.slice<0>().concat(p_core_2e_t.curr.slice<1>()).concat(p_core_2e_t.curr.slice<2>()).concat(p_core_2e_t.curr.slice<3>()).val(), p_core_2e_c__bal.curr) ? (p_core_2e_c__metal.curr ? (xor_uu<1>(xor_uu<1>(xor_uu<1>(p_core_2e_sq3.curr, p_core_2e_sq5.curr), p_core_2e_sq7.curr), p_core_2e_frame.curr.slice<2>().val()) ? value<9>{0xffu} : value<9>{0x100u}) : (p_core_2e_pc.slice<2>().val() ? value<9>{0xffu} : not_u<1>(p_core_2e_pc.slice<1>().val()).concat(p_core_2e_pc.slice<0>()).concat(value<7>{0u}).val())) : p_core_2e_c__tri.curr);
 	// connection
 	p_core_2e_hit__ch = p_hit__ch;
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:328$378 $flatten\core.$ternary$chip-sd2/src/uds_core.v:329$377 $flatten\core.$ternary$chip-sd2/src/uds_core.v:330$376 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:325$372 $flatten\core.$lt$chip-sd2/src/uds_core.v:325$371 $flatten\core.$add$chip-sd2/src/uds_core.v:323$368 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:325$370
-	p_core_2e_x = (p_core_2e_clearing.curr ? value<12>{0u} : (p_core_2e_w8 ? p_core_2e_src.concat(value<3>{0u}).val() : (logic_and<1>(logic_not<1>(p_core_2e_w8), lt_uu<1>(p_core_2e_t.curr, add_uu<6>(value<1>{0u}.concat(p_core_2e_q).val(), value<3>{0u}.concat(p_core_2e_c__env.curr.slice<2,0>()).val()))) ? p_core_2e_src.slice<8>().val().repeat<3>().concat(p_core_2e_src).val() : value<12>{0u})));
 	// connection
 	p_core_2e_g__slot_5b_1_5d__2e_c.slice<2>() = p_core_2e_ring.curr.slice<16>().val();
 	// connection
@@ -661,10 +660,7 @@ bool p_tt__um__ai__wrangler__uds1x1::eval() {
 	p_core_2e_g__slot_5b_0_5d__2e_c.slice<1>() = p_core_2e_ring.curr.slice<65>().val();
 	// connection
 	p_core_2e_g__slot_5b_0_5d__2e_c.slice<0>() = p_core_2e_ring.curr.slice<66>().val();
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:334.23-334.33
-	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:334$379
-	p_core_2e_y = not_u<1>(p_core_2e_sd__v2.curr.slice<16>().val());
-	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:51$406 $flatten\spi.$logic_not$chip-sd2/src/uds_spi.v:51$405 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:51$404
+	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:51$414 $flatten\spi.$logic_not$chip-sd2/src/uds_spi.v:51$413 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:51$412
 	p_spi_2e_rise = logic_and<1>(logic_and<1>(p_spi_2e_active, p_spi_2e_sck__s.curr.slice<1>().val()), logic_not<1>(p_spi_2e_sck__s.curr.slice<2>().val()));
 	// connection
 	p_core_2e_nw.slice<47>() = p_core_2e_ring.curr.slice<47>().val();
@@ -763,74 +759,77 @@ bool p_tt__um__ai__wrangler__uds1x1::eval() {
 	// connection
 	p_core_2e_nw.slice<0>() = p_core_2e_ring.curr.slice<94>().val();
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:211.35-211.37
-	// cell $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:211$396
-	i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_396__Y = reduce_or<1>(p_core_2e_g__slot_5b_1_5d__2e_e);
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:199$315 $flatten\core.$eq$chip-sd2/src/uds_core.v:199$314
+	// cell $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:211$404
+	i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_404__Y = reduce_or<1>(p_core_2e_g__slot_5b_1_5d__2e_e);
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:199$319 $flatten\core.$eq$chip-sd2/src/uds_core.v:199$318
 	p_core_2e_hgrp = (eq_uu<1>(p_core_2e_hit__ch, value<3>{0x7u}) ? value<3>{0x6u} : p_core_2e_hit__ch);
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:211.35-211.37
-	// cell $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:211$389
-	i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_389__Y = reduce_or<1>(p_core_2e_g__slot_5b_0_5d__2e_e);
+	// cell $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:211$397
+	i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_397__Y = reduce_or<1>(p_core_2e_g__slot_5b_0_5d__2e_e);
 	// connection
 	p_spi_2e_byte__in = p_spi_2e_sr.curr.slice<6,0>().concat(p_spi_2e_mosi__s.curr).val();
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:329$382 $flatten\core.$ternary$chip-sd2/src/uds_core.v:330$381 $flatten\core.$ternary$chip-sd2/src/uds_core.v:331$380 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:326$376 $flatten\core.$lt$chip-sd2/src/uds_core.v:326$375 $flatten\core.$add$chip-sd2/src/uds_core.v:324$372 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:326$374
+	p_core_2e_x = (p_core_2e_clearing.curr ? value<12>{0u} : (p_core_2e_w8 ? p_core_2e_src.concat(value<3>{0u}).val() : (logic_and<1>(logic_not<1>(p_core_2e_w8), lt_uu<1>(p_core_2e_t.curr, add_uu<6>(value<1>{0u}.concat(p_core_2e_q).val(), value<3>{0u}.concat(p_core_2e_c__env.curr.slice<2,0>()).val()))) ? p_core_2e_src.slice<8>().val().repeat<3>().concat(p_core_2e_src).val() : value<12>{0u})));
 	// connection
 	p_core_2e_n__env = p_core_2e_nw.slice<23,16>().val();
 	// connection
-	p_core_2e_act.slice<1>() = i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_396__Y;
+	p_core_2e_act.slice<1>() = i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_404__Y;
 	// connection
-	p_core_2e_act.slice<0>() = i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_389__Y;
+	p_core_2e_act.slice<0>() = i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_397__Y;
 	// \full_case: 1
 	// \src: chip-sd2/src/uds_core.v:177.5-183.12
-	// cell $procmux$471_CMP0
-	i_procmux_24_471__CMP.slice<0>() = logic_not<1>(p_core_2e_t.curr.slice<5,3>().val());
+	// cell $procmux$479_CMP0
+	i_procmux_24_479__CMP.slice<0>() = logic_not<1>(p_core_2e_t.curr.slice<5,3>().val());
 	// \full_case: 1
 	// \src: chip-sd2/src/uds_core.v:177.5-183.12
-	// cell $procmux$471_CMP1
-	i_procmux_24_471__CMP.slice<1>() = eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x1u});
-	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:338$381 $flatten\core.$not$chip-sd2/src/uds_core.v:337$380
-	p_core_2e_s1 = add_uu<16>(p_core_2e_sd__v1.curr.slice<14>().concat(p_core_2e_sd__v1.curr).val(), p_core_2e_y.repeat<3>().concat(not_u<1>(p_core_2e_x.slice<11>().val())).concat(p_core_2e_x).val());
-	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:53$410 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:53$409 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:53$408 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:53$407
-	p_spi_2e_cmd__end = logic_and<1>(logic_and<1>(p_spi_2e_rise, eq_uu<1>(p_spi_2e_bitcnt.curr, value<3>{0x7u})), logic_not<1>(p_spi_2e_bytecnt.curr));
+	// cell $procmux$479_CMP1
+	i_procmux_24_479__CMP.slice<1>() = eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x1u});
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:62.24-62.34
-	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:62$232
+	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:62$236
 	p_core_2e_wend = eq_uu<1>(p_core_2e_t.curr, value<6>{0x2fu});
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:212$400 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$399 $flatten\core.$ternary$chip-sd2/src/uds_core.v:212$398 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$397
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:335.23-335.33
+	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:335$383
+	p_core_2e_y = not_u<1>(p_core_2e_sd__v2.curr.slice<16>().val());
+	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:53$418 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:53$417 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:53$416 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:53$415
+	p_spi_2e_cmd__end = logic_and<1>(logic_and<1>(p_spi_2e_rise, eq_uu<1>(p_spi_2e_bitcnt.curr, value<3>{0x7u})), logic_not<1>(p_spi_2e_bytecnt.curr));
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:212$408 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$407 $flatten\core.$ternary$chip-sd2/src/uds_core.v:212$406 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$405
 	p_core_2e_same.slice<1>() = logic_and<1>(p_core_2e_act.slice<1>().val(), eq_uu<1>((eq_uu<1>(p_core_2e_g__slot_5b_1_5d__2e_c, value<3>{0x7u}) ? value<3>{0x6u} : p_core_2e_g__slot_5b_1_5d__2e_c), p_core_2e_hgrp));
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:212$393 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$392 $flatten\core.$ternary$chip-sd2/src/uds_core.v:212$391 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$390
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:212$401 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$400 $flatten\core.$ternary$chip-sd2/src/uds_core.v:212$399 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$398
 	p_core_2e_same.slice<0>() = logic_and<1>(p_core_2e_act.slice<0>().val(), eq_uu<1>((eq_uu<1>(p_core_2e_g__slot_5b_0_5d__2e_c, value<3>{0x7u}) ? value<3>{0x6u} : p_core_2e_g__slot_5b_0_5d__2e_c), p_core_2e_hgrp));
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:340.43-340.50
-	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:340$383
-	i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_340_24_383__Y = not_u<1>(p_core_2e_s1.slice<15>().val());
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:63.24-63.42
+	// cell $flatten\core.$logic_and$chip-sd2/src/uds_core.v:63$238
+	p_core_2e_fend = logic_and<1>(p_core_2e_wend, p_core_2e_v.curr);
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:90.13-90.27
-	// cell $flatten\spi.$eq$chip-sd2/src/uds_spi.v:90$425
-	i_flatten_5c_spi_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_90_24_425__Y = eq_uu<1>(p_spi_2e_bitcnt.curr, value<3>{0x7u});
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:340$384 $flatten\core.$xor$chip-sd2/src/uds_core.v:339$382
-	i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_340_24_384__Y = (xor_uu<1>(p_core_2e_s1.slice<15>().val(), p_core_2e_s1.slice<14>().val()) ? p_core_2e_s1.slice<15>().concat(i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_340_24_383__Y.repeat<14>()).val() : p_core_2e_s1.slice<14,0>().val());
+	// cell $flatten\spi.$eq$chip-sd2/src/uds_spi.v:90$433
+	i_flatten_5c_spi_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_90_24_433__Y = eq_uu<1>(p_spi_2e_bitcnt.curr, value<3>{0x7u});
+	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:339$385 $flatten\core.$not$chip-sd2/src/uds_core.v:338$384
+	p_core_2e_s1 = add_uu<16>(p_core_2e_sd__v1.curr.slice<14>().concat(p_core_2e_sd__v1.curr).val(), p_core_2e_y.repeat<3>().concat(not_u<1>(p_core_2e_x.slice<11>().val())).concat(p_core_2e_x).val());
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:305.11-305.21
-	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:305$353
-	i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_305_24_353__Y = eq_uu<1>(p_core_2e_m5.curr, value<3>{0x4u});
+	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:305$357
+	i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_305_24_357__Y = eq_uu<1>(p_core_2e_m5.curr, value<3>{0x4u});
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:306.11-306.21
-	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:306$356
-	i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_306_24_356__Y = eq_uu<1>(p_core_2e_m7.curr, value<3>{0x6u});
+	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:306$360
+	i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_306_24_360__Y = eq_uu<1>(p_core_2e_m7.curr, value<3>{0x6u});
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:304.11-304.21
-	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:304$350
-	i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_304_24_350__Y = eq_uu<1>(p_core_2e_m3.curr, value<2>{0x2u});
+	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:304$354
+	i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_304_24_354__Y = eq_uu<1>(p_core_2e_m3.curr, value<2>{0x2u});
 	// connection
 	p_core_2e_n__ph = p_core_2e_nw.slice<47,38>().val();
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:63.24-63.42
-	// cell $flatten\core.$logic_and$chip-sd2/src/uds_core.v:63$234
-	p_core_2e_fend = logic_and<1>(p_core_2e_wend, p_core_2e_v.curr);
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:172$299 $flatten\core.$logic_or$chip-sd2/src/uds_core.v:172$298 $flatten\core.$eq$chip-sd2/src/uds_core.v:172$297 $flatten\core.$eq$chip-sd2/src/uds_core.v:172$296
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:172$303 $flatten\core.$logic_or$chip-sd2/src/uds_core.v:172$302 $flatten\core.$eq$chip-sd2/src/uds_core.v:172$301 $flatten\core.$eq$chip-sd2/src/uds_core.v:172$300
 	p_spi_2e_commit__shift = logic_and<1>(p_core_2e_committing, logic_or<1>(logic_not<1>(p_core_2e_t.curr.slice<5,4>().val()), eq_uu<1>(p_core_2e_t.curr.slice<5,2>().val(), value<4>{0x6u})));
 	// connection
-	p_core_2e_v1__n = i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_340_24_384__Y;
-	// connection
-	i_flatten_5c_spi_2e__24_logic__not_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_84_24_423__Y = p_spi_2e_cs__s.curr.slice<1>().val();
+	i_flatten_5c_spi_2e__24_logic__not_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_84_24_431__Y = p_spi_2e_cs__s.curr.slice<1>().val();
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:111.23-111.47
-	// cell $flatten\core.$xor$chip-sd2/src/uds_core.v:111$249
-	i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_111_24_249__Y = xor_uu<9>(p_core_2e_n__ph.slice<8,0>().val(), p_core_2e_n__ph.slice<9>().val().repeat<9>().val());
+	// cell $flatten\core.$xor$chip-sd2/src/uds_core.v:111$253
+	i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_111_24_253__Y = xor_uu<9>(p_core_2e_n__ph.slice<8,0>().val(), p_core_2e_n__ph.slice<9>().val().repeat<9>().val());
 	// connection
 	p_core_2e_n__ch = p_core_2e_nw.slice<30,28>().val();
-	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:107$247 $flatten\core.$shr$chip-sd2/src/uds_core.v:106$246 $flatten\core.$sub$chip-sd2/src/uds_core.v:106$245 $flatten\core.$ternary$chip-sd2/src/uds_core.v:105$244
+	// cells $flatten\core.$logic_or$chip-sd2/src/uds_core.v:347$395 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:347$394 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:347$393 $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:347$392 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:347$391
+	p_core_2e_sd__restart = logic_or<1>(logic_not<1>(p_rst__n), logic_and<1>(p_core_2e_fend, logic_not<1>(reduce_or<1>(p_core_2e_act))));
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:341.43-341.50
+	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:341$387
+	i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_341_24_387__Y = not_u<1>(p_core_2e_s1.slice<15>().val());
+	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:107$251 $flatten\core.$shr$chip-sd2/src/uds_core.v:106$250 $flatten\core.$sub$chip-sd2/src/uds_core.v:106$249 $flatten\core.$ternary$chip-sd2/src/uds_core.v:105$248
 	p_core_2e_pe__raw = add_uu<9>(value<1>{0u}.concat(p_core_2e_nw.slice<0>().concat(p_core_2e_nw.slice<1>()).concat(p_core_2e_nw.slice<2>()).concat(p_core_2e_nw.slice<3>()).concat(p_core_2e_nw.slice<4>()).concat(p_core_2e_nw.slice<5>()).concat(p_core_2e_nw.slice<6>()).concat(p_core_2e_nw.slice<7>())).val(), value<2>{0u}.concat(shr_uu<7>((p_core_2e_n__env.slice<7>().val() ? p_core_2e_n__env.slice<6,0>().val() : value<7>{0u}), sub_uu<3>(value<3>{0x7u}, p_core_2e_nw.slice<13>().concat(p_core_2e_nw.slice<14>()).concat(p_core_2e_nw.slice<15>()).val()))).val());
 	// connection
 	p_spi_2e_clk = p_clk;
@@ -838,165 +837,165 @@ bool p_tt__um__ai__wrangler__uds1x1::eval() {
 	p_core_2e_clk = p_clk;
 	// connection
 	p_audio = p_core_2e_y;
-	// cells $procdff$742 $procmux$691 $procmux$688 $procmux$686 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:112$436 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:54$411 $procmux$626 $procmux$627_CMP0 $procmux$628_CMP0 $procmux$629_CMP0 $procmux$681 $procmux$678
+	// cells $procdff$750 $procmux$699 $procmux$696 $procmux$694 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:112$444 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:54$419 $procmux$634 $procmux$635_CMP0 $procmux$636_CMP0 $procmux$637_CMP0 $procmux$689 $procmux$686
 	if (posedge_p_clk) {
 		p_spi_2e_sr.next = (p_spi_2e_commit__shift ? p_spi_2e_sr.curr.slice<22,7>().val() : (p_spi_2e_rise ? p_spi_2e_sr.curr.slice<22,7>().val() : p_spi_2e_sr.curr.slice<23,8>().val())).concat((p_spi_2e_commit__shift ? p_spi_2e_sr.curr.slice<6,0>().concat(value<1>{0u}).val() : (p_spi_2e_rise ? (logic_and<1>(p_spi_2e_cmd__end, eq_uu<1>(p_spi_2e_byte__in.slice<7,4>().val(), value<4>{0x3u})) ? (eq_uu<1>(p_spi_2e_byte__in.slice<1,0>().val(), value<2>{0x2u}) ? p_core_2e_status.curr : (eq_uu<1>(p_spi_2e_byte__in.slice<1,0>().val(), value<2>{0x1u}) ? value<8>{0x22u} : (logic_not<1>(p_spi_2e_byte__in.slice<1,0>().val()) ? value<8>{0xd5u} : value<8>{0u}))) : p_spi_2e_sr.curr.slice<6,0>().concat(p_spi_2e_mosi__s.curr).val()) : p_spi_2e_sr.curr.slice<7,0>().val()))).val();
 	}
-	// cells $procdff$734 $procmux$620 $flatten\core.$add$chip-sd2/src/uds_core.v:341$386 $flatten\core.$add$chip-sd2/src/uds_core.v:341$385
+	// cells $procdff$742 $procmux$628 $flatten\core.$add$chip-sd2/src/uds_core.v:342$390 $flatten\core.$add$chip-sd2/src/uds_core.v:342$389
 	if (posedge_p_clk) {
-		p_core_2e_sd__v2.next = (p_rst__n ? add_uu<17>(add_uu<17>(p_core_2e_sd__v2.curr, p_core_2e_v1__n.slice<14>().val().repeat<2>().concat(p_core_2e_v1__n).val()), p_core_2e_y.repeat<4>().concat(value<13>{0x1000u}).val()) : value<17>{0x1ffffu});
+		p_core_2e_sd__v2.next = (p_core_2e_sd__restart ? value<17>{0x1ffffu} : add_uu<17>(add_uu<17>(p_core_2e_sd__v2.curr, p_core_2e_sd__v1.curr.slice<14>().val().repeat<2>().concat(p_core_2e_sd__v1.curr).val()), p_core_2e_y.repeat<3>().concat(value<14>{0x2000u}).val()));
 	}
-	// cells $procdff$733 $procmux$623
+	// cells $procdff$741 $procmux$631 $flatten\core.$ternary$chip-sd2/src/uds_core.v:341$388 $flatten\core.$xor$chip-sd2/src/uds_core.v:340$386
 	if (posedge_p_clk) {
-		p_core_2e_sd__v1.next = (p_rst__n ? i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_340_24_384__Y : value<15>{0u});
+		p_core_2e_sd__v1.next = (p_core_2e_sd__restart ? value<15>{0u} : (xor_uu<1>(p_core_2e_s1.slice<15>().val(), p_core_2e_s1.slice<14>().val()) ? p_core_2e_s1.slice<15>().concat(i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_341_24_387__Y.repeat<14>()).val() : p_core_2e_s1.slice<14,0>().val()));
 	}
-	// cells $procdff$731 $procmux$580 $procmux$577 $procmux$575 $flatten\core.$not$chip-sd2/src/uds_core.v:305$354
+	// cells $procdff$739 $procmux$588 $procmux$585 $procmux$583 $flatten\core.$not$chip-sd2/src/uds_core.v:305$358
 	if (posedge_p_clk) {
-		p_core_2e_sq5.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_305_24_353__Y ? not_u<1>(p_core_2e_sq5.curr) : p_core_2e_sq5.curr) : p_core_2e_sq5.curr) : value<1>{0u});
+		p_core_2e_sq5.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_305_24_357__Y ? not_u<1>(p_core_2e_sq5.curr) : p_core_2e_sq5.curr) : p_core_2e_sq5.curr) : value<1>{0u});
 	}
-	// cells $procdff$732 $procmux$572 $procmux$569 $procmux$567 $flatten\core.$not$chip-sd2/src/uds_core.v:306$357
+	// cells $procdff$740 $procmux$580 $procmux$577 $procmux$575 $flatten\core.$not$chip-sd2/src/uds_core.v:306$361
 	if (posedge_p_clk) {
-		p_core_2e_sq7.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_306_24_356__Y ? not_u<1>(p_core_2e_sq7.curr) : p_core_2e_sq7.curr) : p_core_2e_sq7.curr) : value<1>{0u});
+		p_core_2e_sq7.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_306_24_360__Y ? not_u<1>(p_core_2e_sq7.curr) : p_core_2e_sq7.curr) : p_core_2e_sq7.curr) : value<1>{0u});
 	}
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:73.3-97.6
-	// cell $procdff$737
+	// cell $procdff$745
 	if (posedge_p_clk) {
 		p_spi_2e_mosi__s.next = p_uio__in.slice<1>().val();
 	}
-	// cells $procdff$738 $procmux$668 $procmux$665 $procmux$662 $flatten\spi.$add$chip-sd2/src/uds_spi.v:89$424
+	// cells $procdff$746 $procmux$676 $procmux$673 $procmux$670 $flatten\spi.$add$chip-sd2/src/uds_spi.v:89$432
 	if (posedge_p_clk) {
-		p_spi_2e_bitcnt.next = (p_rst__n ? (i_flatten_5c_spi_2e__24_logic__not_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_84_24_423__Y ? value<3>{0u} : (p_spi_2e_rise ? add_uu<3>(p_spi_2e_bitcnt.curr, value<3>{0x1u}) : p_spi_2e_bitcnt.curr)) : value<3>{0u});
+		p_spi_2e_bitcnt.next = (p_rst__n ? (i_flatten_5c_spi_2e__24_logic__not_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_84_24_431__Y ? value<3>{0u} : (p_spi_2e_rise ? add_uu<3>(p_spi_2e_bitcnt.curr, value<3>{0x1u}) : p_spi_2e_bitcnt.curr)) : value<3>{0u});
 	}
-	// cells $procdff$739 $procmux$660 $procmux$657 $procmux$654 $procmux$652 $procmux$650 $flatten\spi.$ne$chip-sd2/src/uds_spi.v:91$426 $flatten\spi.$add$chip-sd2/src/uds_spi.v:91$427
+	// cells $procdff$747 $procmux$668 $procmux$665 $procmux$662 $procmux$660 $procmux$658 $flatten\spi.$ne$chip-sd2/src/uds_spi.v:91$434 $flatten\spi.$add$chip-sd2/src/uds_spi.v:91$435
 	if (posedge_p_clk) {
-		p_spi_2e_bytecnt.next = (p_rst__n ? (i_flatten_5c_spi_2e__24_logic__not_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_84_24_423__Y ? value<2>{0u} : (p_spi_2e_rise ? (i_flatten_5c_spi_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_90_24_425__Y ? (ne_uu<1>(p_spi_2e_bytecnt.curr, value<2>{0x3u}) ? add_uu<2>(p_spi_2e_bytecnt.curr, value<2>{0x1u}) : p_spi_2e_bytecnt.curr) : p_spi_2e_bytecnt.curr) : p_spi_2e_bytecnt.curr)) : value<2>{0u});
+		p_spi_2e_bytecnt.next = (p_rst__n ? (i_flatten_5c_spi_2e__24_logic__not_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_84_24_431__Y ? value<2>{0u} : (p_spi_2e_rise ? (i_flatten_5c_spi_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_90_24_433__Y ? (ne_uu<1>(p_spi_2e_bytecnt.curr, value<2>{0x3u}) ? add_uu<2>(p_spi_2e_bytecnt.curr, value<2>{0x1u}) : p_spi_2e_bytecnt.curr) : p_spi_2e_bytecnt.curr) : p_spi_2e_bytecnt.curr)) : value<2>{0u});
 	}
-	// cells $procdff$740 $procmux$648 $procmux$645 $procmux$642 $procmux$640 $procmux$638 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:93$430 $procmux$636 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:92$428 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:92$429
+	// cells $procdff$748 $procmux$656 $procmux$653 $procmux$650 $procmux$648 $procmux$646 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:93$438 $procmux$644 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:92$436 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:92$437
 	if (posedge_p_clk) {
-		p_spi_2e_is__hit.next = (p_rst__n ? (i_flatten_5c_spi_2e__24_logic__not_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_84_24_423__Y ? value<1>{0u} : (p_spi_2e_rise ? (i_flatten_5c_spi_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_90_24_425__Y ? (eq_uu<1>(p_spi_2e_bytecnt.curr, value<2>{0x3u}) ? value<1>{0u} : (logic_not<1>(p_spi_2e_bytecnt.curr) ? eq_uu<1>(p_spi_2e_byte__in.slice<7,3>().val(), value<5>{0x3u}) : p_spi_2e_is__hit.curr)) : p_spi_2e_is__hit.curr) : p_spi_2e_is__hit.curr)) : value<1>{0u});
+		p_spi_2e_is__hit.next = (p_rst__n ? (i_flatten_5c_spi_2e__24_logic__not_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_84_24_431__Y ? value<1>{0u} : (p_spi_2e_rise ? (i_flatten_5c_spi_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__spi_2e_v_3a_90_24_433__Y ? (eq_uu<1>(p_spi_2e_bytecnt.curr, value<2>{0x3u}) ? value<1>{0u} : (logic_not<1>(p_spi_2e_bytecnt.curr) ? eq_uu<1>(p_spi_2e_byte__in.slice<7,3>().val(), value<5>{0x3u}) : p_spi_2e_is__hit.curr)) : p_spi_2e_is__hit.curr) : p_spi_2e_is__hit.curr)) : value<1>{0u});
 	}
-	// cells $procdff$728 $procmux$604 $procmux$601 $procmux$599 $flatten\core.$add$chip-sd2/src/uds_core.v:305$355
+	// cells $procdff$736 $procmux$612 $procmux$609 $procmux$607 $flatten\core.$add$chip-sd2/src/uds_core.v:305$359
 	if (posedge_p_clk) {
-		p_core_2e_m5.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_305_24_353__Y ? value<3>{0u} : add_uu<3>(p_core_2e_m5.curr, value<3>{0x1u})) : p_core_2e_m5.curr) : value<3>{0u});
+		p_core_2e_m5.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_305_24_357__Y ? value<3>{0u} : add_uu<3>(p_core_2e_m5.curr, value<3>{0x1u})) : p_core_2e_m5.curr) : value<3>{0u});
 	}
-	// cells $procdff$730 $procmux$588 $procmux$585 $procmux$583 $flatten\core.$not$chip-sd2/src/uds_core.v:304$351
+	// cells $procdff$738 $procmux$596 $procmux$593 $procmux$591 $flatten\core.$not$chip-sd2/src/uds_core.v:304$355
 	if (posedge_p_clk) {
-		p_core_2e_sq3.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_304_24_350__Y ? not_u<1>(p_core_2e_sq3.curr) : p_core_2e_sq3.curr) : p_core_2e_sq3.curr) : value<1>{0u});
+		p_core_2e_sq3.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_304_24_354__Y ? not_u<1>(p_core_2e_sq3.curr) : p_core_2e_sq3.curr) : p_core_2e_sq3.curr) : value<1>{0u});
 	}
-	// cells $procdff$741 $procmux$676 $procmux$670 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:103$434 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:103$433
+	// cells $procdff$749 $procmux$684 $procmux$678 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:103$442 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:103$441
 	if (posedge_p_clk) {
 		p_spi_2e_ch.next = (p_rst__n ? (logic_and<1>(p_spi_2e_cmd__end, eq_uu<1>(p_spi_2e_byte__in.slice<7,3>().val(), value<5>{0x3u})) ? p_spi_2e_sr.curr.slice<1,0>().concat(p_spi_2e_mosi__s.curr).val() : p_spi_2e_ch.curr) : value<3>{0u});
 	}
-	// cells $procdff$735 $procmux$634
+	// cells $procdff$743 $procmux$642
 	if (posedge_p_clk) {
 		p_spi_2e_cs__s.next = (p_rst__n ? p_spi_2e_cs__s.curr.slice<0>().concat(p_uio__in.slice<0>()).val() : value<2>{0x3u});
 	}
-	// cells $procdff$736 $procmux$631
+	// cells $procdff$744 $procmux$639
 	if (posedge_p_clk) {
 		p_spi_2e_sck__s.next = (p_rst__n ? p_spi_2e_sck__s.curr.slice<1,0>().concat(p_uio__in.slice<3>()).val() : value<3>{0u});
 	}
-	// cells $procdff$729 $procmux$596 $procmux$593 $procmux$591 $flatten\core.$add$chip-sd2/src/uds_core.v:306$358
+	// cells $procdff$737 $procmux$604 $procmux$601 $procmux$599 $flatten\core.$add$chip-sd2/src/uds_core.v:306$362
 	if (posedge_p_clk) {
-		p_core_2e_m7.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_306_24_356__Y ? value<3>{0u} : add_uu<3>(p_core_2e_m7.curr, value<3>{0x1u})) : p_core_2e_m7.curr) : value<3>{0u});
+		p_core_2e_m7.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_306_24_360__Y ? value<3>{0u} : add_uu<3>(p_core_2e_m7.curr, value<3>{0x1u})) : p_core_2e_m7.curr) : value<3>{0u});
 	}
-	// cells $procdff$705 $procmux$438 $flatten\core.$ternary$chip-sd2/src/uds_core.v:72$238 $flatten\core.$add$chip-sd2/src/uds_core.v:72$237
+	// cells $procdff$713 $procmux$446 $flatten\core.$ternary$chip-sd2/src/uds_core.v:72$242 $flatten\core.$add$chip-sd2/src/uds_core.v:72$241
 	if (posedge_p_clk) {
 		p_core_2e_t.next = (p_rst__n ? (p_core_2e_wend ? value<6>{0u} : add_uu<6>(p_core_2e_t.curr, value<6>{0x1u})) : value<6>{0u});
 	}
-	// cells $procdff$706 $procmux$453 $procmux$450 $flatten\core.$ternary$chip-sd2/src/uds_core.v:73$241 $flatten\core.$add$chip-sd2/src/uds_core.v:73$240
+	// cells $procdff$714 $procmux$461 $procmux$458 $flatten\core.$ternary$chip-sd2/src/uds_core.v:73$245 $flatten\core.$add$chip-sd2/src/uds_core.v:73$244
 	if (posedge_p_clk) {
 		p_core_2e_v.next = (p_rst__n ? (p_core_2e_wend ? (p_core_2e_v.curr ? value<1>{0u} : add_uu<1>(p_core_2e_v.curr, value<1>{0x1u})) : p_core_2e_v.curr) : value<1>{0u});
 	}
-	// cells $procdff$707 $procmux$448 $procmux$445 $flatten\core.$add$chip-sd2/src/uds_core.v:75$242
+	// cells $procdff$715 $procmux$456 $procmux$453 $flatten\core.$add$chip-sd2/src/uds_core.v:75$246
 	if (posedge_p_clk) {
 		p_core_2e_frame.next = (p_rst__n ? (p_core_2e_fend ? add_uu<13>(p_core_2e_frame.curr, value<13>{0x1u}) : p_core_2e_frame.curr) : value<13>{0u});
 	}
-	// cells $procdff$708 $procmux$443 $procmux$440
+	// cells $procdff$716 $procmux$451 $procmux$448
 	if (posedge_p_clk) {
 		p_core_2e_clearing.next = (p_rst__n ? (p_core_2e_fend ? value<1>{0u} : p_core_2e_clearing.curr) : value<1>{0x1u});
 	}
-	// cells $procdff$709 $procmux$500 $procmux$497 $procmux$494 $procmux$468 $procmux$469_CMP0 $procmux$470_CMP0 $procmux$471_ANY $flatten\core.$ternary$chip-sd2/src/uds_core.v:180$308 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:180$307 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$306 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:180$305 $flatten\core.$reduce_and$chip-sd2/src/uds_core.v:180$304 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$303 $flatten\core.$eq$chip-sd2/src/uds_core.v:182$309 $procmux$491 $procmux$488 $procmux$485 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:189$313 $flatten\core.$ternary$chip-sd2/src/uds_core.v:189$312 $flatten\core.$xor$chip-sd2/src/uds_core.v:148$272 $flatten\core.$xor$chip-sd2/src/uds_core.v:148$271 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:189$311 $procmux$482 $procmux$479 $procmux$476 $procmux$473 $flatten\core.$eq$chip-sd2/src/uds_core.v:139$263 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$282 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$281
+	// cells $procdff$717 $procmux$508 $procmux$505 $procmux$502 $procmux$476 $procmux$477_CMP0 $procmux$478_CMP0 $procmux$479_ANY $flatten\core.$ternary$chip-sd2/src/uds_core.v:180$312 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:180$311 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$310 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:180$309 $flatten\core.$reduce_and$chip-sd2/src/uds_core.v:180$308 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$307 $flatten\core.$eq$chip-sd2/src/uds_core.v:182$313 $procmux$499 $procmux$496 $procmux$493 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:189$317 $flatten\core.$ternary$chip-sd2/src/uds_core.v:189$316 $flatten\core.$xor$chip-sd2/src/uds_core.v:148$276 $flatten\core.$xor$chip-sd2/src/uds_core.v:148$275 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:189$315 $procmux$490 $procmux$487 $procmux$484 $procmux$481 $flatten\core.$eq$chip-sd2/src/uds_core.v:139$267 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$286 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$285
 	if (posedge_p_clk) {
-		p_core_2e_ring.next = p_core_2e_ring.curr.slice<94,0>().concat((p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? (eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x3u}) ? (p_core_2e_t.curr.slice<2>().val() ? logic_and<1>(logic_not<1>(reduce_and<1>(p_core_2e_t.curr.slice<1,0>().val())), shiftx_uu<1>(p_core_2e_hit__ch, p_core_2e_t.curr.slice<1,0>().val())) : p_spi_2e_sr.curr.slice<23>().val()) : (eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x2u}) ? shiftx_uu<1>(p_spi_2e_sr.curr.slice<19,16>().val(), p_core_2e_ej.slice<1,0>().val()) : (reduce_or<1>(i_procmux_24_471__CMP) ? p_spi_2e_sr.curr.slice<23>().val() : eq_uu<1>(p_core_2e_t.curr.slice<3,0>().val(), value<4>{0xeu})))) : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? value<1>{0u} : (p_core_2e_in__env ? logic_and<1>(logic_not<1>(p_core_2e_kill.curr), (p_core_2e_c__dec.curr ? xor_uu<1>(xor_uu<1>(p_core_2e_head, p_core_2e_d__bit), p_core_2e_bor__in) : p_core_2e_head)) : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? value<1>{0u} : (p_core_2e_in__env ? value<1>{0u} : (eq_uu<1>(p_core_2e_t.curr.slice<5,4>().val(), value<2>{0x2u}) ? xor_uu<1>(xor_uu<1>(p_core_2e_head, p_core_2e_inc__bit), p_core_2e_cy__in) : p_core_2e_ring.curr.slice<95>().val()))))))))))).val();
+		p_core_2e_ring.next = p_core_2e_ring.curr.slice<94,0>().concat((p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? (eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x3u}) ? (p_core_2e_t.curr.slice<2>().val() ? logic_and<1>(logic_not<1>(reduce_and<1>(p_core_2e_t.curr.slice<1,0>().val())), shiftx_uu<1>(p_core_2e_hit__ch, p_core_2e_t.curr.slice<1,0>().val())) : p_spi_2e_sr.curr.slice<23>().val()) : (eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x2u}) ? shiftx_uu<1>(p_spi_2e_sr.curr.slice<19,16>().val(), p_core_2e_ej.slice<1,0>().val()) : (reduce_or<1>(i_procmux_24_479__CMP) ? p_spi_2e_sr.curr.slice<23>().val() : eq_uu<1>(p_core_2e_t.curr.slice<3,0>().val(), value<4>{0xeu})))) : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? value<1>{0u} : (p_core_2e_in__env ? logic_and<1>(logic_not<1>(p_core_2e_kill.curr), (p_core_2e_c__dec.curr ? xor_uu<1>(xor_uu<1>(p_core_2e_head, p_core_2e_d__bit), p_core_2e_bor__in) : p_core_2e_head)) : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? value<1>{0u} : (p_core_2e_in__env ? value<1>{0u} : (eq_uu<1>(p_core_2e_t.curr.slice<5,4>().val(), value<2>{0x2u}) ? xor_uu<1>(xor_uu<1>(p_core_2e_head, p_core_2e_inc__bit), p_core_2e_cy__in) : p_core_2e_ring.curr.slice<95>().val()))))))))))).val();
 	}
-	// cells $procdff$710 $procmux$465 $flatten\core.$not$chip-sd2/src/uds_core.v:112$250
+	// cells $procdff$718 $procmux$473 $flatten\core.$not$chip-sd2/src/uds_core.v:112$254
 	if (posedge_p_clk) {
-		p_core_2e_c__tri.next = (p_core_2e_wend ? not_u<1>(i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_111_24_249__Y.slice<8>().val()).concat(i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_111_24_249__Y.slice<7,0>()).val() : p_core_2e_c__tri.curr);
+		p_core_2e_c__tri.next = (p_core_2e_wend ? not_u<1>(i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_111_24_253__Y.slice<8>().val()).concat(i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_111_24_253__Y.slice<7,0>()).val() : p_core_2e_c__tri.curr);
 	}
-	// cells $procdff$711 $procmux$463
+	// cells $procdff$719 $procmux$471
 	if (posedge_p_clk) {
 		p_core_2e_c__env.next = (p_core_2e_wend ? p_core_2e_ring.curr.slice<71>().concat(p_core_2e_ring.curr.slice<72>()).concat(p_core_2e_ring.curr.slice<73>()).concat(p_core_2e_ring.curr.slice<74>()).concat(p_core_2e_ring.curr.slice<75>()).concat(p_core_2e_ring.curr.slice<76>()).concat(p_core_2e_ring.curr.slice<77>()).concat(p_core_2e_ring.curr.slice<78>()).val() : p_core_2e_c__env.curr);
 	}
-	// cells $procdff$712 $procmux$461
+	// cells $procdff$720 $procmux$469
 	if (posedge_p_clk) {
 		p_core_2e_c__bal.next = (p_core_2e_wend ? p_core_2e_ring.curr.slice<70,67>().val() : p_core_2e_c__bal.curr);
 	}
-	// cells $procdff$713 $procmux$459 $flatten\core.$and$chip-sd2/src/uds_core.v:131$255 $flatten\core.$or$chip-sd2/src/uds_core.v:131$254
+	// cells $procdff$721 $procmux$467 $flatten\core.$and$chip-sd2/src/uds_core.v:131$259 $flatten\core.$or$chip-sd2/src/uds_core.v:131$258
 	if (posedge_p_clk) {
 		p_core_2e_c__metal.next = (p_core_2e_wend ? and_uu<1>(p_core_2e_n__ch.slice<2>().val(), or_uu<1>(p_core_2e_n__ch.slice<1>().val(), p_core_2e_n__ch.slice<0>().val())) : p_core_2e_c__metal.curr);
 	}
-	// cells $procdff$714 $procmux$457 $flatten\core.$ternary$chip-sd2/src/uds_core.v:108$248
+	// cells $procdff$722 $procmux$465 $flatten\core.$ternary$chip-sd2/src/uds_core.v:108$252
 	if (posedge_p_clk) {
 		p_core_2e_c__pe.next = (p_core_2e_wend ? (p_core_2e_pe__raw.slice<8>().val() ? value<8>{0xffu} : p_core_2e_pe__raw.slice<7,0>().val()) : p_core_2e_c__pe.curr);
 	}
-	// cells $procdff$715 $procmux$455 $flatten\core.$eq$chip-sd2/src/uds_core.v:134$256 $flatten\core.$and$chip-sd2/src/uds_core.v:134$261 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:134$260 $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:134$259 $flatten\core.$and$chip-sd2/src/uds_core.v:134$258 $flatten\core.$not$chip-sd2/src/uds_core.v:124$252 $flatten\core.$shl$chip-sd2/src/uds_core.v:124$251 $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:134$257
+	// cells $procdff$723 $procmux$463 $flatten\core.$eq$chip-sd2/src/uds_core.v:134$260 $flatten\core.$and$chip-sd2/src/uds_core.v:134$265 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:134$264 $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:134$263 $flatten\core.$and$chip-sd2/src/uds_core.v:134$262 $flatten\core.$not$chip-sd2/src/uds_core.v:124$256 $flatten\core.$shl$chip-sd2/src/uds_core.v:124$255 $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:134$261
 	if (posedge_p_clk) {
 		p_core_2e_c__dec.next = (logic_not<1>(p_core_2e_t.curr) ? and_uu<1>(reduce_or<1>(p_core_2e_c__env.curr), logic_not<1>(reduce_or<1>(and_uu<13>(p_core_2e_frame.curr, not_u<13>(shl_uu<13>(value<13>{0x1fffu}, p_core_2e_ring.curr.slice<87,84>().val())))))) : p_core_2e_c__dec.curr);
 	}
-	// cells $procdff$716 $flatten\core.$or$chip-sd2/src/uds_core.v:159$288 $flatten\core.$and$chip-sd2/src/uds_core.v:159$287 $flatten\core.$and$chip-sd2/src/uds_core.v:159$286 $flatten\core.$or$chip-sd2/src/uds_core.v:159$285 $flatten\core.$not$chip-sd2/src/uds_core.v:159$284
+	// cells $procdff$724 $flatten\core.$or$chip-sd2/src/uds_core.v:159$292 $flatten\core.$and$chip-sd2/src/uds_core.v:159$291 $flatten\core.$and$chip-sd2/src/uds_core.v:159$290 $flatten\core.$or$chip-sd2/src/uds_core.v:159$289 $flatten\core.$not$chip-sd2/src/uds_core.v:159$288
 	if (posedge_p_clk) {
 		p_core_2e_bor.next = or_uu<1>(and_uu<1>(not_u<1>(p_core_2e_head), or_uu<1>(p_core_2e_d__bit, p_core_2e_bor__in)), and_uu<1>(p_core_2e_d__bit, p_core_2e_bor__in));
 	}
-	// cells $procdff$717 $flatten\core.$or$chip-sd2/src/uds_core.v:160$293 $flatten\core.$and$chip-sd2/src/uds_core.v:160$292 $flatten\core.$or$chip-sd2/src/uds_core.v:160$291 $flatten\core.$and$chip-sd2/src/uds_core.v:160$290 $flatten\core.$and$chip-sd2/src/uds_core.v:160$289
+	// cells $procdff$725 $flatten\core.$or$chip-sd2/src/uds_core.v:160$297 $flatten\core.$and$chip-sd2/src/uds_core.v:160$296 $flatten\core.$or$chip-sd2/src/uds_core.v:160$295 $flatten\core.$and$chip-sd2/src/uds_core.v:160$294 $flatten\core.$and$chip-sd2/src/uds_core.v:160$293
 	if (posedge_p_clk) {
 		p_core_2e_cy.next = or_uu<1>(or_uu<1>(and_uu<1>(p_core_2e_head, p_core_2e_inc__bit), and_uu<1>(p_core_2e_head, p_core_2e_cy__in)), and_uu<1>(p_core_2e_inc__bit, p_core_2e_cy__in));
 	}
-	// cells $procdff$718 $procmux$564 $procmux$561
+	// cells $procdff$726 $procmux$572 $procmux$569
 	if (posedge_p_clk) {
 		p_core_2e_status.next = (p_rst__n ? (p_core_2e_fend ? value<8>{0u} : p_core_2e_status.curr) : value<8>{0u});
 	}
-	// cells $procdff$719 $procmux$547 $flatten\core.$or$chip-sd2/src/uds_core.v:280$342 $flatten\core.$and$chip-sd2/src/uds_core.v:280$341 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:280$340 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$417 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$416 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:66$415 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$414 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:66$413
+	// cells $procdff$727 $procmux$555 $flatten\core.$or$chip-sd2/src/uds_core.v:280$346 $flatten\core.$and$chip-sd2/src/uds_core.v:280$345 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:280$344 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$425 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$424 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:66$423 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$422 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:66$421
 	if (posedge_p_clk) {
 		p_core_2e_pend.next = (p_rst__n ? or_uu<1>(logic_and<1>(logic_and<1>(logic_and<1>(p_spi_2e_rise, eq_uu<1>(p_spi_2e_bitcnt.curr, value<3>{0x7u})), eq_uu<1>(p_spi_2e_bytecnt.curr, value<2>{0x3u})), p_spi_2e_is__hit.curr), and_uu<1>(p_core_2e_pend.curr, logic_not<1>(p_core_2e_fend))) : value<1>{0u});
 	}
-	// cells $procdff$720 $procmux$559 $procmux$556
+	// cells $procdff$728 $procmux$567 $procmux$564
 	if (posedge_p_clk) {
 		p_core_2e_commit.next = (p_rst__n ? (p_core_2e_fend ? p_core_2e_pend.curr : p_core_2e_commit.curr) : value<1>{0u});
 	}
-	// cells $procdff$721 $procmux$554 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:288$346 $procmux$503 $procmux$506 $procmux$509 $procmux$512 $procmux$515 $flatten\core.$lt$chip-sd2/src/uds_core.v:225$317
+	// cells $procdff$729 $procmux$562 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:288$350 $procmux$511 $procmux$514 $procmux$517 $procmux$520 $procmux$523 $flatten\core.$lt$chip-sd2/src/uds_core.v:225$321
 	if (posedge_p_clk) {
-		p_core_2e_tgt.next = (logic_and<1>(p_core_2e_fend, p_core_2e_pend.curr) ? (p_core_2e_same.slice<0>().val() ? value<1>{0u} : (p_core_2e_same.slice<1>().val() ? value<1>{0x1u} : (i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_389__Y ? (i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_396__Y ? (lt_uu<1>(p_core_2e_envhi.slice<5,3>().val(), p_core_2e_envhi.slice<2,0>().val()) ? value<1>{0x1u} : value<1>{0u}) : value<1>{0x1u}) : value<1>{0u}))) : p_core_2e_tgt.curr);
+		p_core_2e_tgt.next = (logic_and<1>(p_core_2e_fend, p_core_2e_pend.curr) ? (p_core_2e_same.slice<0>().val() ? value<1>{0u} : (p_core_2e_same.slice<1>().val() ? value<1>{0x1u} : (i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_397__Y ? (i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_404__Y ? (lt_uu<1>(p_core_2e_envhi.slice<5,3>().val(), p_core_2e_envhi.slice<2,0>().val()) ? value<1>{0x1u} : value<1>{0u}) : value<1>{0x1u}) : value<1>{0u}))) : p_core_2e_tgt.curr);
 	}
-	// cells $procdff$722 $procmux$552 $procmux$549
+	// cells $procdff$730 $procmux$560 $procmux$557
 	if (posedge_p_clk) {
 		p_core_2e_kill.next = (p_rst__n ? (p_core_2e_fend ? p_core_2e_kill__pend.curr : p_core_2e_kill.curr) : value<1>{0u});
 	}
-	// cells $procdff$723 $procmux$544 $flatten\core.$or$chip-sd2/src/uds_core.v:281$345 $flatten\core.$and$chip-sd2/src/uds_core.v:281$344 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:281$343 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:67$419 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:67$418
+	// cells $procdff$731 $procmux$552 $flatten\core.$or$chip-sd2/src/uds_core.v:281$349 $flatten\core.$and$chip-sd2/src/uds_core.v:281$348 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:281$347 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:67$427 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:67$426
 	if (posedge_p_clk) {
 		p_core_2e_kill__pend.next = (p_rst__n ? or_uu<1>(logic_and<1>(p_spi_2e_cmd__end, eq_uu<1>(p_spi_2e_byte__in, value<8>{0x40u})), and_uu<1>(p_core_2e_kill__pend.curr, logic_not<1>(p_core_2e_fend))) : value<1>{0u});
 	}
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:268.3-289.6
-	// cell $procdff$724
+	// cell $procdff$732
 	if (posedge_p_clk) {
 		p_core_2e_trig__s.next = value<8>{0u};
 	}
-	// cells $procdff$725 $procmux$539 $flatten\core.$and$chip-sd2/src/uds_core.v:279$338
+	// cells $procdff$733 $procmux$547 $flatten\core.$and$chip-sd2/src/uds_core.v:279$342
 	if (posedge_p_clk) {
 		p_core_2e_served.next = (p_rst__n ? and_uu<8>(p_core_2e_served.curr, p_core_2e_trig__s.curr) : value<8>{0u});
 	}
-	// cells $procdff$726 $procmux$617 $procmux$614 $flatten\core.$xor$chip-sd2/src/uds_core.v:303$349
+	// cells $procdff$734 $procmux$625 $procmux$622 $flatten\core.$xor$chip-sd2/src/uds_core.v:303$353
 	if (posedge_p_clk) {
 		p_core_2e_lfsr.next = (p_rst__n ? (p_core_2e_fend ? p_core_2e_lfsr.curr.slice<15,0>().concat(xor_uu<1>(p_core_2e_lfsr.curr.slice<16>().val(), p_core_2e_lfsr.curr.slice<13>().val())).val() : p_core_2e_lfsr.curr) : value<17>{0x1u});
 	}
-	// cells $procdff$727 $procmux$612 $procmux$609 $procmux$607 $flatten\core.$add$chip-sd2/src/uds_core.v:304$352
+	// cells $procdff$735 $procmux$620 $procmux$617 $procmux$615 $flatten\core.$add$chip-sd2/src/uds_core.v:304$356
 	if (posedge_p_clk) {
-		p_core_2e_m3.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_304_24_350__Y ? value<2>{0u} : add_uu<2>(p_core_2e_m3.curr, value<2>{0x1u})) : p_core_2e_m3.curr) : value<2>{0u});
+		p_core_2e_m3.next = (p_rst__n ? (p_core_2e_fend ? (i_flatten_5c_core_2e__24_eq_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_304_24_354__Y ? value<2>{0u} : add_uu<2>(p_core_2e_m3.curr, value<2>{0x1u})) : p_core_2e_m3.curr) : value<2>{0u});
 	}
 	// connection
 	p_uio__oe = value<8>{0xf4u};
-	// cells $flatten\spi.$and$chip-sd2/src/uds_spi.v:69$420 $flatten\core.$eq$chip-sd2/src/uds_core.v:174$301 $flatten\core.$or$chip-sd2/src/uds_core.v:173$300
+	// cells $flatten\spi.$and$chip-sd2/src/uds_spi.v:69$428 $flatten\core.$eq$chip-sd2/src/uds_core.v:174$305 $flatten\core.$or$chip-sd2/src/uds_core.v:173$304
 	p_uio__out = p_audio.repeat<2>().concat(or_uu<1>(p_core_2e_pend.curr, p_core_2e_commit.curr)).concat(not_u<1>(p_core_2e_v.curr)).concat(value<1>{0u}).concat(and_uu<1>(p_spi_2e_active, p_spi_2e_sr.curr.slice<7>().val())).concat(value<2>{0u}).val();
-	// cells $procmux$697 $procmux$698_CMP0 $procmux$699_CMP0 $procmux$700_CMP0 $procmux$701_CMP0 $procmux$702_CMP0 $procmux$703_CMP0 $procmux$704_CMP0
+	// cells $procmux$705 $procmux$706_CMP0 $procmux$707_CMP0 $procmux$708_CMP0 $procmux$709_CMP0 $procmux$710_CMP0 $procmux$711_CMP0 $procmux$712_CMP0
 	p_uo__out = p_audio.concat((eq_uu<1>(p_hit__ch, value<3>{0x6u}) ? value<7>{0x7du} : (eq_uu<1>(p_hit__ch, value<3>{0x5u}) ? value<7>{0x6du} : (eq_uu<1>(p_hit__ch, value<3>{0x4u}) ? value<7>{0x66u} : (eq_uu<1>(p_hit__ch, value<3>{0x3u}) ? value<7>{0x4fu} : (eq_uu<1>(p_hit__ch, value<3>{0x2u}) ? value<7>{0x5bu} : (eq_uu<1>(p_hit__ch, value<3>{0x1u}) ? value<7>{0x6u} : (logic_not<1>(p_hit__ch) ? value<7>{0x3fu} : value<7>{0x7u})))))))).val();
 	return converged;
 }
@@ -1046,64 +1045,60 @@ bool p_tt__um__ai__wrangler__uds1x1::commit() {
 }
 
 void p_tt__um__ai__wrangler__uds1x1::debug_eval() {
-	value<3> i_procmux_24_530__Y;
-	value<2> i_procmux_24_471__CMP;
+	value<3> i_procmux_24_538__Y;
+	value<2> i_procmux_24_479__CMP;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:156.24-156.46
-	value<1> i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_156_24_282__Y;
+	value<1> i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_156_24_286__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:225.11-225.33
-	value<1> i_flatten_5c_core_2e__24_lt_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_225_24_317__Y;
+	value<1> i_flatten_5c_core_2e__24_lt_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_225_24_321__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:244.3-266.6
 	value<3> i_flatten_5c_core_2e__24_1_5c_preset__ch_5b_2_3a_0_5d_;
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:340.43-340.50
-	value<1> i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_340_24_383__Y;
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:341.43-341.50
+	value<1> i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_341_24_387__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:211.35-211.37
-	value<1> i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_389__Y;
+	value<1> i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_397__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:214.35-214.63
-	value<8> i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_214_24_395__Y;
+	value<8> i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_214_24_403__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:211.35-211.37
-	value<1> i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_396__Y;
+	value<1> i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_404__Y;
 	// connection
 	p_core_2e_pj = p_core_2e_t.curr.slice<3,0>().val();
-	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:310$361 $flatten\core.$add$chip-sd2/src/uds_core.v:310$360 $flatten\core.$add$chip-sd2/src/uds_core.v:310$359
-	p_core_2e_pc = add_uu<3>(add_uu<3>(add_uu<3>(value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<0>()).val(), value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<1>()).val()), value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<2>()).val()), value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<3>()).val());
-	// connection
-	p_core_2e_q = p_core_2e_c__env.curr.slice<7,3>().val();
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:152.24-152.55
-	// cell $flatten\core.$sub$chip-sd2/src/uds_core.v:152$273
+	// cell $flatten\core.$sub$chip-sd2/src/uds_core.v:152$277
 	p_core_2e_pk = sub_uu<5>(value<1>{0u}.concat(p_core_2e_pj).val(), value<2>{0u}.concat(p_core_2e_c__pe.curr.slice<7,5>()).val());
 	// connection
 	p_core_2e_mant = value<1>{0x1u}.concat(p_core_2e_c__pe.curr.slice<4,0>()).val();
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:312$367 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$366 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$365 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$364
-	p_core_2e_metal = (xor_uu<1>(xor_uu<1>(xor_uu<1>(p_core_2e_sq3.curr, p_core_2e_sq5.curr), p_core_2e_sq7.curr), p_core_2e_frame.curr.slice<2>().val()) ? value<9>{0xffu} : value<9>{0x100u});
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:311$363 $flatten\core.$not$chip-sd2/src/uds_core.v:311$362
-	p_core_2e_drum = (p_core_2e_pc.slice<2>().val() ? value<9>{0xffu} : not_u<1>(p_core_2e_pc.slice<1>().val()).concat(p_core_2e_pc.slice<0>()).concat(value<7>{0u}).val());
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:323.23-323.55
-	// cell $flatten\core.$add$chip-sd2/src/uds_core.v:323$368
-	p_core_2e_qr = add_uu<6>(value<1>{0u}.concat(p_core_2e_q).val(), value<3>{0u}.concat(p_core_2e_c__env.curr.slice<2,0>()).val());
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:324.23-324.36
-	// cell $flatten\core.$lt$chip-sd2/src/uds_core.v:324$369
-	p_core_2e_w8 = lt_uu<1>(p_core_2e_t.curr, value<1>{0u}.concat(p_core_2e_q).val());
+	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:310$365 $flatten\core.$add$chip-sd2/src/uds_core.v:310$364 $flatten\core.$add$chip-sd2/src/uds_core.v:310$363
+	p_core_2e_pc = add_uu<3>(add_uu<3>(add_uu<3>(value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<0>()).val(), value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<1>()).val()), value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<2>()).val()), value<2>{0u}.concat(p_core_2e_lfsr.curr.slice<3>()).val());
 	// connection
 	p_core_2e_ej = p_core_2e_t.curr.slice<2,0>().val();
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:326.23-326.55
-	// cell $flatten\core.$lt$chip-sd2/src/uds_core.v:326$373
-	p_core_2e_sel__n = lt_uu<1>(p_core_2e_t.curr.slice<0>().concat(p_core_2e_t.curr.slice<1>()).concat(p_core_2e_t.curr.slice<2>()).concat(p_core_2e_t.curr.slice<3>()).val(), p_core_2e_c__bal.curr);
+	// connection
+	p_core_2e_q = p_core_2e_c__env.curr.slice<7,3>().val();
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:145.24-145.42
-	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:145$264
+	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:145$268
 	p_core_2e_env__lt8 = logic_not<1>(p_core_2e_c__env.curr.slice<7,3>().val());
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:154$278 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$277 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:154$276 $flatten\core.$le$chip-sd2/src/uds_core.v:154$275 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:154$274
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:154$282 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$281 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:154$280 $flatten\core.$le$chip-sd2/src/uds_core.v:154$279 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:154$278
 	p_core_2e_inc__bit = logic_and<1>(logic_and<1>(logic_not<1>(p_core_2e_pk.slice<4>().val()), le_uu<1>(p_core_2e_pk.slice<3,0>().val(), value<4>{0x5u})), shiftx_uu<1>(p_core_2e_mant, p_core_2e_pk.slice<2,0>().val()));
 	// connection
 	p_core_2e_head = p_core_2e_ring.curr.slice<95>().val();
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:327$375 $flatten\core.$lt$chip-sd2/src/uds_core.v:326$373 $flatten\core.$ternary$chip-sd2/src/uds_core.v:327$374 $flatten\core.$ternary$chip-sd2/src/uds_core.v:312$367 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$366 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$365 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$364 $flatten\core.$ternary$chip-sd2/src/uds_core.v:311$363 $flatten\core.$not$chip-sd2/src/uds_core.v:311$362
-	p_core_2e_src = (p_core_2e_sel__n ? (p_core_2e_c__metal.curr ? p_core_2e_metal : p_core_2e_drum) : p_core_2e_c__tri.curr);
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:325$372 $flatten\core.$lt$chip-sd2/src/uds_core.v:325$371 $flatten\core.$add$chip-sd2/src/uds_core.v:323$368 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:325$370
-	p_core_2e_w1 = logic_and<1>(logic_not<1>(p_core_2e_w8), lt_uu<1>(p_core_2e_t.curr, p_core_2e_qr));
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:155$280 $flatten\core.$eq$chip-sd2/src/uds_core.v:155$279
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:312$371 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$370 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$369 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$368
+	p_core_2e_metal = (xor_uu<1>(xor_uu<1>(xor_uu<1>(p_core_2e_sq3.curr, p_core_2e_sq5.curr), p_core_2e_sq7.curr), p_core_2e_frame.curr.slice<2>().val()) ? value<9>{0xffu} : value<9>{0x100u});
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:311$367 $flatten\core.$not$chip-sd2/src/uds_core.v:311$366
+	p_core_2e_drum = (p_core_2e_pc.slice<2>().val() ? value<9>{0xffu} : not_u<1>(p_core_2e_pc.slice<1>().val()).concat(p_core_2e_pc.slice<0>()).concat(value<7>{0u}).val());
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:324.23-324.55
+	// cell $flatten\core.$add$chip-sd2/src/uds_core.v:324$372
+	p_core_2e_qr = add_uu<6>(value<1>{0u}.concat(p_core_2e_q).val(), value<3>{0u}.concat(p_core_2e_c__env.curr.slice<2,0>()).val());
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:325.23-325.36
+	// cell $flatten\core.$lt$chip-sd2/src/uds_core.v:325$373
+	p_core_2e_w8 = lt_uu<1>(p_core_2e_t.curr, value<1>{0u}.concat(p_core_2e_q).val());
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:155$284 $flatten\core.$eq$chip-sd2/src/uds_core.v:155$283
 	p_core_2e_cy__in = (logic_not<1>(p_core_2e_pj) ? value<1>{0u} : p_core_2e_cy.curr);
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:139.25-139.40
-	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:139$263
+	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:139$267
 	p_core_2e_in__phase = eq_uu<1>(p_core_2e_t.curr.slice<5,4>().val(), value<2>{0x2u});
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:327.23-327.55
+	// cell $flatten\core.$lt$chip-sd2/src/uds_core.v:327$377
+	p_core_2e_sel__n = lt_uu<1>(p_core_2e_t.curr.slice<0>().concat(p_core_2e_t.curr.slice<1>()).concat(p_core_2e_t.curr.slice<2>()).concat(p_core_2e_t.curr.slice<3>()).val(), p_core_2e_c__bal.curr);
 	// connection
 	p_core_2e_g__slot_5b_1_5d__2e_e.slice<7>() = p_core_2e_ring.curr.slice<23>().val();
 	// connection
@@ -1136,29 +1131,31 @@ void p_tt__um__ai__wrangler__uds1x1::debug_eval() {
 	p_core_2e_g__slot_5b_0_5d__2e_e.slice<1>() = p_core_2e_ring.curr.slice<77>().val();
 	// connection
 	p_core_2e_g__slot_5b_0_5d__2e_e.slice<0>() = p_core_2e_ring.curr.slice<78>().val();
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:146$268 $flatten\core.$eq$chip-sd2/src/uds_core.v:145$264 $flatten\core.$eq$chip-sd2/src/uds_core.v:146$265 $flatten\core.$and$chip-sd2/src/uds_core.v:146$267 $flatten\core.$le$chip-sd2/src/uds_core.v:146$266
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:146$272 $flatten\core.$eq$chip-sd2/src/uds_core.v:145$268 $flatten\core.$eq$chip-sd2/src/uds_core.v:146$269 $flatten\core.$and$chip-sd2/src/uds_core.v:146$271 $flatten\core.$le$chip-sd2/src/uds_core.v:146$270
 	p_core_2e_d__bit = (p_core_2e_env__lt8 ? logic_not<1>(p_core_2e_ej) : and_uu<1>(p_core_2e_ring.curr.slice<92>().val(), le_uu<1>(p_core_2e_ej, value<3>{0x4u})));
-	// cells $flatten\core.$xor$chip-sd2/src/uds_core.v:156$282 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$281
-	i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_156_24_282__Y = xor_uu<1>(xor_uu<1>(p_core_2e_head, p_core_2e_inc__bit), p_core_2e_cy__in);
+	// cells $flatten\core.$xor$chip-sd2/src/uds_core.v:156$286 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$285
+	i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_156_24_286__Y = xor_uu<1>(xor_uu<1>(p_core_2e_head, p_core_2e_inc__bit), p_core_2e_cy__in);
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:138.25-138.41
-	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:138$262
+	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:138$266
 	p_core_2e_in__env = eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x2u});
 	// connection
 	p_core_2e_envhi.slice<5,3>() = p_core_2e_g__slot_5b_1_5d__2e_e.slice<7,5>().val();
 	// connection
 	p_core_2e_envhi.slice<2,0>() = p_core_2e_g__slot_5b_0_5d__2e_e.slice<7,5>().val();
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:147$270 $flatten\core.$eq$chip-sd2/src/uds_core.v:147$269
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:147$274 $flatten\core.$eq$chip-sd2/src/uds_core.v:147$273
 	p_core_2e_bor__in = (logic_not<1>(p_core_2e_ej) ? value<1>{0u} : p_core_2e_bor.curr);
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:169$295 $flatten\core.$eq$chip-sd2/src/uds_core.v:169$294
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:169$299 $flatten\core.$eq$chip-sd2/src/uds_core.v:169$298
 	p_core_2e_committing = logic_and<1>(p_core_2e_commit.curr, eq_uu<1>(p_core_2e_v.curr, p_core_2e_tgt.curr));
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:50.25-50.33
-	// cell $flatten\spi.$logic_not$chip-sd2/src/uds_spi.v:50$403
+	// cell $flatten\spi.$logic_not$chip-sd2/src/uds_spi.v:50$411
 	p_spi_2e_active = logic_not<1>(p_spi_2e_cs__s.curr.slice<1>().val());
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:328$379 $flatten\core.$lt$chip-sd2/src/uds_core.v:327$377 $flatten\core.$ternary$chip-sd2/src/uds_core.v:328$378 $flatten\core.$ternary$chip-sd2/src/uds_core.v:312$371 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$370 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$369 $flatten\core.$xor$chip-sd2/src/uds_core.v:312$368 $flatten\core.$ternary$chip-sd2/src/uds_core.v:311$367 $flatten\core.$not$chip-sd2/src/uds_core.v:311$366
+	p_core_2e_src = (p_core_2e_sel__n ? (p_core_2e_c__metal.curr ? p_core_2e_metal : p_core_2e_drum) : p_core_2e_c__tri.curr);
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:326$376 $flatten\core.$lt$chip-sd2/src/uds_core.v:326$375 $flatten\core.$add$chip-sd2/src/uds_core.v:324$372 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:326$374
+	p_core_2e_w1 = logic_and<1>(logic_not<1>(p_core_2e_w8), lt_uu<1>(p_core_2e_t.curr, p_core_2e_qr));
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:225.11-225.33
-	// cell $flatten\core.$lt$chip-sd2/src/uds_core.v:225$317
-	i_flatten_5c_core_2e__24_lt_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_225_24_317__Y = lt_uu<1>(p_core_2e_envhi.slice<5,3>().val(), p_core_2e_envhi.slice<2,0>().val());
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:328$378 $flatten\core.$ternary$chip-sd2/src/uds_core.v:329$377 $flatten\core.$ternary$chip-sd2/src/uds_core.v:330$376 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:325$372 $flatten\core.$lt$chip-sd2/src/uds_core.v:325$371 $flatten\core.$add$chip-sd2/src/uds_core.v:323$368 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:325$370
-	p_core_2e_x = (p_core_2e_clearing.curr ? value<12>{0u} : (p_core_2e_w8 ? p_core_2e_src.concat(value<3>{0u}).val() : (p_core_2e_w1 ? p_core_2e_src.slice<8>().val().repeat<3>().concat(p_core_2e_src).val() : value<12>{0u})));
+	// cell $flatten\core.$lt$chip-sd2/src/uds_core.v:225$321
+	i_flatten_5c_core_2e__24_lt_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_225_24_321__Y = lt_uu<1>(p_core_2e_envhi.slice<5,3>().val(), p_core_2e_envhi.slice<2,0>().val());
 	// connection
 	p_core_2e_g__slot_5b_1_5d__2e_c.slice<2>() = p_core_2e_ring.curr.slice<16>().val();
 	// connection
@@ -1171,22 +1168,16 @@ void p_tt__um__ai__wrangler__uds1x1::debug_eval() {
 	p_core_2e_g__slot_5b_0_5d__2e_c.slice<1>() = p_core_2e_ring.curr.slice<65>().val();
 	// connection
 	p_core_2e_g__slot_5b_0_5d__2e_c.slice<0>() = p_core_2e_ring.curr.slice<66>().val();
-	// cells $flatten\core.$xor$chip-sd2/src/uds_core.v:148$272 $flatten\core.$xor$chip-sd2/src/uds_core.v:148$271
+	// cells $flatten\core.$xor$chip-sd2/src/uds_core.v:148$276 $flatten\core.$xor$chip-sd2/src/uds_core.v:148$275
 	p_core_2e_env__new = xor_uu<1>(xor_uu<1>(p_core_2e_head, p_core_2e_d__bit), p_core_2e_bor__in);
 	// connection
 	p_core_2e_waiting = and_uu<8>(p_core_2e_trig__s.curr, not_u<8>(p_core_2e_served.curr));
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:334.23-334.33
-	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:334$379
-	p_core_2e_y = not_u<1>(p_core_2e_sd__v2.curr.slice<16>().val());
 	// connection
 	p_spi_2e_payload__msb = p_spi_2e_sr.curr.slice<23>().val();
 	// connection
 	p_spi_2e_level = p_spi_2e_sr.curr.slice<19,16>().val();
-	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:51$406 $flatten\spi.$logic_not$chip-sd2/src/uds_spi.v:51$405 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:51$404
+	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:51$414 $flatten\spi.$logic_not$chip-sd2/src/uds_spi.v:51$413 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:51$412
 	p_spi_2e_rise = logic_and<1>(logic_and<1>(p_spi_2e_active, p_spi_2e_sck__s.curr.slice<1>().val()), logic_not<1>(p_spi_2e_sck__s.curr.slice<2>().val()));
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:337.32-337.38
-	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:337$380
-	p_core_2e_x__fb = p_core_2e_y.repeat<3>().concat(not_u<1>(p_core_2e_x.slice<11>().val())).concat(p_core_2e_x).val();
 	// connection
 	p_core_2e_nw.slice<47>() = p_core_2e_ring.curr.slice<47>().val();
 	// connection
@@ -1284,134 +1275,144 @@ void p_tt__um__ai__wrangler__uds1x1::debug_eval() {
 	// connection
 	p_core_2e_nw.slice<0>() = p_core_2e_ring.curr.slice<94>().val();
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:211.35-211.37
-	// cell $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:211$396
-	i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_396__Y = reduce_or<1>(p_core_2e_g__slot_5b_1_5d__2e_e);
-	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:199$315 $flatten\core.$eq$chip-sd2/src/uds_core.v:199$314
+	// cell $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:211$404
+	i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_404__Y = reduce_or<1>(p_core_2e_g__slot_5b_1_5d__2e_e);
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:199$319 $flatten\core.$eq$chip-sd2/src/uds_core.v:199$318
 	p_core_2e_hgrp = (eq_uu<1>(p_spi_2e_ch.curr, value<3>{0x7u}) ? value<3>{0x6u} : p_spi_2e_ch.curr);
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:211.35-211.37
-	// cell $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:211$389
-	i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_389__Y = reduce_or<1>(p_core_2e_g__slot_5b_0_5d__2e_e);
+	// cell $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:211$397
+	i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_397__Y = reduce_or<1>(p_core_2e_g__slot_5b_0_5d__2e_e);
 	// connection
 	p_spi_2e_byte__in = p_spi_2e_sr.curr.slice<6,0>().concat(p_spi_2e_mosi__s.curr).val();
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:329$382 $flatten\core.$ternary$chip-sd2/src/uds_core.v:330$381 $flatten\core.$ternary$chip-sd2/src/uds_core.v:331$380 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:326$376 $flatten\core.$lt$chip-sd2/src/uds_core.v:326$375 $flatten\core.$add$chip-sd2/src/uds_core.v:324$372 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:326$374
+	p_core_2e_x = (p_core_2e_clearing.curr ? value<12>{0u} : (p_core_2e_w8 ? p_core_2e_src.concat(value<3>{0u}).val() : (p_core_2e_w1 ? p_core_2e_src.slice<8>().val().repeat<3>().concat(p_core_2e_src).val() : value<12>{0u})));
 	// connection
 	p_core_2e_n__env = p_core_2e_nw.slice<23,16>().val();
 	// connection
 	p_core_2e_c0__decay = p_core_2e_ring.curr.slice<87,84>().val();
 	// connection
-	p_core_2e_act.slice<1>() = i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_396__Y;
+	p_core_2e_act.slice<1>() = i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_404__Y;
 	// connection
-	p_core_2e_act.slice<0>() = i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_389__Y;
+	p_core_2e_act.slice<0>() = i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_397__Y;
 	// \full_case: 1
 	// \src: chip-sd2/src/uds_core.v:177.5-183.12
-	// cell $procmux$471_CMP0
-	i_procmux_24_471__CMP.slice<0>() = logic_not<1>(p_core_2e_t.curr.slice<5,3>().val());
+	// cell $procmux$479_CMP0
+	i_procmux_24_479__CMP.slice<0>() = logic_not<1>(p_core_2e_t.curr.slice<5,3>().val());
 	// \full_case: 1
 	// \src: chip-sd2/src/uds_core.v:177.5-183.12
-	// cell $procmux$471_CMP1
-	i_procmux_24_471__CMP.slice<1>() = eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x1u});
-	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:338$381 $flatten\core.$not$chip-sd2/src/uds_core.v:337$380
-	p_core_2e_s1 = add_uu<16>(p_core_2e_sd__v1.curr.slice<14>().concat(p_core_2e_sd__v1.curr).val(), p_core_2e_x__fb);
+	// cell $procmux$479_CMP1
+	i_procmux_24_479__CMP.slice<1>() = eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x1u});
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:62.24-62.34
+	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:62$236
+	p_core_2e_wend = eq_uu<1>(p_core_2e_t.curr, value<6>{0x2fu});
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:335.23-335.33
+	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:335$383
+	p_core_2e_y = not_u<1>(p_core_2e_sd__v2.curr.slice<16>().val());
 	// connection
 	p_core_2e_n__sweep = p_core_2e_nw.slice<12>().concat(p_core_2e_nw.slice<13>()).concat(p_core_2e_nw.slice<14>()).concat(p_core_2e_nw.slice<15>()).val();
 	// connection
 	p_core_2e_first = and_uu<8>(p_core_2e_waiting, add_uu<8>(not_u<8>(p_core_2e_waiting), value<8>{0x1u}));
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:54.25-54.45
-	// cell $flatten\spi.$eq$chip-sd2/src/uds_spi.v:54$411
+	// cell $flatten\spi.$eq$chip-sd2/src/uds_spi.v:54$419
 	p_spi_2e_read__cmd = eq_uu<1>(p_spi_2e_byte__in.slice<7,4>().val(), value<4>{0x3u});
-	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:53$410 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:53$409 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:53$408 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:53$407
+	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:53$418 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:53$417 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:53$416 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:53$415
 	p_spi_2e_cmd__end = logic_and<1>(logic_and<1>(p_spi_2e_rise, eq_uu<1>(p_spi_2e_bitcnt.curr, value<3>{0x7u})), logic_not<1>(p_spi_2e_bytecnt.curr));
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:338.32-338.38
+	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:338$384
+	p_core_2e_x__fb = p_core_2e_y.repeat<3>().concat(not_u<1>(p_core_2e_x.slice<11>().val())).concat(p_core_2e_x).val();
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:105.23-105.51
-	// cell $flatten\core.$ternary$chip-sd2/src/uds_core.v:105$244
+	// cell $flatten\core.$ternary$chip-sd2/src/uds_core.v:105$248
 	p_core_2e_up = (p_core_2e_n__env.slice<7>().val() ? p_core_2e_n__env.slice<6,0>().val() : value<7>{0u});
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:62.24-62.34
-	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:62$232
-	p_core_2e_wend = eq_uu<1>(p_core_2e_t.curr, value<6>{0x2fu});
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:212$400 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$399 $flatten\core.$ternary$chip-sd2/src/uds_core.v:212$398 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$397
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:212$408 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$407 $flatten\core.$ternary$chip-sd2/src/uds_core.v:212$406 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$405
 	p_core_2e_same.slice<1>() = logic_and<1>(p_core_2e_act.slice<1>().val(), eq_uu<1>((eq_uu<1>(p_core_2e_g__slot_5b_1_5d__2e_c, value<3>{0x7u}) ? value<3>{0x6u} : p_core_2e_g__slot_5b_1_5d__2e_c), p_core_2e_hgrp));
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:212$393 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$392 $flatten\core.$ternary$chip-sd2/src/uds_core.v:212$391 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$390
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:212$401 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$400 $flatten\core.$ternary$chip-sd2/src/uds_core.v:212$399 $flatten\core.$eq$chip-sd2/src/uds_core.v:212$398
 	p_core_2e_same.slice<0>() = logic_and<1>(p_core_2e_act.slice<0>().val(), eq_uu<1>((eq_uu<1>(p_core_2e_g__slot_5b_0_5d__2e_c, value<3>{0x7u}) ? value<3>{0x6u} : p_core_2e_g__slot_5b_0_5d__2e_c), p_core_2e_hgrp));
-	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:172$299 $flatten\core.$logic_or$chip-sd2/src/uds_core.v:172$298 $flatten\core.$eq$chip-sd2/src/uds_core.v:172$297 $flatten\core.$eq$chip-sd2/src/uds_core.v:172$296
+	// cells $flatten\core.$logic_and$chip-sd2/src/uds_core.v:172$303 $flatten\core.$logic_or$chip-sd2/src/uds_core.v:172$302 $flatten\core.$eq$chip-sd2/src/uds_core.v:172$301 $flatten\core.$eq$chip-sd2/src/uds_core.v:172$300
 	p_core_2e_commit__shift = logic_and<1>(p_core_2e_committing, logic_or<1>(logic_not<1>(p_core_2e_t.curr.slice<5,4>().val()), eq_uu<1>(p_core_2e_t.curr.slice<5,2>().val(), value<4>{0x6u})));
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:340.43-340.50
-	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:340$383
-	i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_340_24_383__Y = not_u<1>(p_core_2e_s1.slice<15>().val());
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:339.23-339.38
-	// cell $flatten\core.$xor$chip-sd2/src/uds_core.v:339$382
-	p_core_2e_ovf1 = xor_uu<1>(p_core_2e_s1.slice<15>().val(), p_core_2e_s1.slice<14>().val());
-	// cells $flatten\core.$not$chip-sd2/src/uds_core.v:124$252 $flatten\core.$shl$chip-sd2/src/uds_core.v:124$251
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:63.24-63.42
+	// cell $flatten\core.$logic_and$chip-sd2/src/uds_core.v:63$238
+	p_core_2e_fend = logic_and<1>(p_core_2e_wend, p_core_2e_v.curr);
+	// cells $flatten\core.$not$chip-sd2/src/uds_core.v:124$256 $flatten\core.$shl$chip-sd2/src/uds_core.v:124$255
 	p_core_2e_dmask = not_u<13>(shl_uu<13>(value<13>{0x1fffu}, p_core_2e_c0__decay));
-	// cells $procmux$468 $procmux$469_CMP0 $procmux$470_CMP0 $procmux$471_ANY $flatten\core.$ternary$chip-sd2/src/uds_core.v:180$308 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:180$307 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$306 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:180$305 $flatten\core.$reduce_and$chip-sd2/src/uds_core.v:180$304 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$303 $flatten\core.$eq$chip-sd2/src/uds_core.v:182$309
-	p_core_2e_tail__commit = (eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x3u}) ? (p_core_2e_t.curr.slice<2>().val() ? logic_and<1>(logic_not<1>(reduce_and<1>(p_core_2e_t.curr.slice<1,0>().val())), shiftx_uu<1>(p_spi_2e_ch.curr, p_core_2e_t.curr.slice<1,0>().val())) : p_spi_2e_payload__msb) : (eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x2u}) ? shiftx_uu<1>(p_spi_2e_level, p_core_2e_ej.slice<1,0>().val()) : (reduce_or<1>(i_procmux_24_471__CMP) ? p_spi_2e_sr.curr.slice<23>().val() : eq_uu<1>(p_core_2e_t.curr.slice<3,0>().val(), value<4>{0xeu}))));
+	// cells $procmux$476 $procmux$477_CMP0 $procmux$478_CMP0 $procmux$479_ANY $flatten\core.$ternary$chip-sd2/src/uds_core.v:180$312 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:180$311 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$310 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:180$309 $flatten\core.$reduce_and$chip-sd2/src/uds_core.v:180$308 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$307 $flatten\core.$eq$chip-sd2/src/uds_core.v:182$313
+	p_core_2e_tail__commit = (eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x3u}) ? (p_core_2e_t.curr.slice<2>().val() ? logic_and<1>(logic_not<1>(reduce_and<1>(p_core_2e_t.curr.slice<1,0>().val())), shiftx_uu<1>(p_spi_2e_ch.curr, p_core_2e_t.curr.slice<1,0>().val())) : p_spi_2e_payload__msb) : (eq_uu<1>(p_core_2e_t.curr.slice<5,3>().val(), value<3>{0x2u}) ? shiftx_uu<1>(p_spi_2e_level, p_core_2e_ej.slice<1,0>().val()) : (reduce_or<1>(i_procmux_24_479__CMP) ? p_spi_2e_sr.curr.slice<23>().val() : eq_uu<1>(p_core_2e_t.curr.slice<3,0>().val(), value<4>{0xeu}))));
 	// \full_case: 1
 	// \src: chip-sd2/src/uds_core.v:245.5-254.12
-	// cell $procmux$530
-	i_procmux_24_530__Y = (eq_uu<1>(p_core_2e_first, value<8>{0x40u}) ? value<3>{0x6u} : (eq_uu<1>(p_core_2e_first, value<8>{0x20u}) ? value<3>{0x5u} : (eq_uu<1>(p_core_2e_first, value<8>{0x10u}) ? value<3>{0x4u} : (eq_uu<1>(p_core_2e_first, value<8>{0x8u}) ? value<3>{0x3u} : (eq_uu<1>(p_core_2e_first, value<8>{0x4u}) ? value<3>{0x2u} : (eq_uu<1>(p_core_2e_first, value<8>{0x2u}) ? value<3>{0x1u} : (eq_uu<1>(p_core_2e_first, value<8>{0x1u}) ? value<3>{0u} : value<3>{0x7u})))))));
-	// cells $procmux$626 $procmux$627_CMP0 $procmux$628_CMP0 $procmux$629_CMP0
+	// cell $procmux$538
+	i_procmux_24_538__Y = (eq_uu<1>(p_core_2e_first, value<8>{0x40u}) ? value<3>{0x6u} : (eq_uu<1>(p_core_2e_first, value<8>{0x20u}) ? value<3>{0x5u} : (eq_uu<1>(p_core_2e_first, value<8>{0x10u}) ? value<3>{0x4u} : (eq_uu<1>(p_core_2e_first, value<8>{0x8u}) ? value<3>{0x3u} : (eq_uu<1>(p_core_2e_first, value<8>{0x4u}) ? value<3>{0x2u} : (eq_uu<1>(p_core_2e_first, value<8>{0x2u}) ? value<3>{0x1u} : (eq_uu<1>(p_core_2e_first, value<8>{0x1u}) ? value<3>{0u} : value<3>{0x7u})))))));
+	// cells $procmux$634 $procmux$635_CMP0 $procmux$636_CMP0 $procmux$637_CMP0
 	p_spi_2e_read__value = (eq_uu<1>(p_spi_2e_byte__in.slice<1,0>().val(), value<2>{0x2u}) ? p_core_2e_status.curr : (eq_uu<1>(p_spi_2e_byte__in.slice<1,0>().val(), value<2>{0x1u}) ? value<8>{0x22u} : (logic_not<1>(p_spi_2e_byte__in.slice<1,0>().val()) ? value<8>{0xd5u} : value<8>{0u})));
+	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:339$385 $flatten\core.$not$chip-sd2/src/uds_core.v:338$384
+	p_core_2e_s1 = add_uu<16>(p_core_2e_sd__v1.curr.slice<14>().concat(p_core_2e_sd__v1.curr).val(), p_core_2e_x__fb);
 	// connection
 	p_core_2e_n__ph = p_core_2e_nw.slice<47,38>().val();
-	// cells $flatten\core.$shr$chip-sd2/src/uds_core.v:106$246 $flatten\core.$sub$chip-sd2/src/uds_core.v:106$245 $flatten\core.$ternary$chip-sd2/src/uds_core.v:105$244
+	// cells $flatten\core.$shr$chip-sd2/src/uds_core.v:106$250 $flatten\core.$sub$chip-sd2/src/uds_core.v:106$249 $flatten\core.$ternary$chip-sd2/src/uds_core.v:105$248
 	p_core_2e_off = shr_uu<7>(p_core_2e_up, sub_uu<3>(value<3>{0x7u}, p_core_2e_n__sweep.slice<2,0>().val()));
 	// connection
 	p_core_2e_n__pitch = p_core_2e_nw.slice<0>().concat(p_core_2e_nw.slice<1>()).concat(p_core_2e_nw.slice<2>()).concat(p_core_2e_nw.slice<3>()).concat(p_core_2e_nw.slice<4>()).concat(p_core_2e_nw.slice<5>()).concat(p_core_2e_nw.slice<6>()).concat(p_core_2e_nw.slice<7>()).val();
-	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:63.24-63.42
-	// cell $flatten\core.$logic_and$chip-sd2/src/uds_core.v:63$234
-	p_core_2e_fend = logic_and<1>(p_core_2e_wend, p_core_2e_v.curr);
-	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:67$419 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:67$418
+	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:67$427 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:67$426
 	p_spi_2e_stop = logic_and<1>(p_spi_2e_cmd__end, eq_uu<1>(p_spi_2e_byte__in, value<8>{0x40u}));
 	// connection
-	i_flatten_5c_core_2e__24_1_5c_preset__ch_5b_2_3a_0_5d_ = i_procmux_24_530__Y;
-	// connection
-	p_core_2e_v1__n = (p_core_2e_ovf1 ? p_core_2e_s1.slice<15>().concat(i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_340_24_383__Y.repeat<14>()).val() : p_core_2e_s1.slice<14,0>().val());
+	i_flatten_5c_core_2e__24_1_5c_preset__ch_5b_2_3a_0_5d_ = i_procmux_24_538__Y;
 	// connection
 	p_core_2e_n__ch = p_core_2e_nw.slice<30,28>().val();
+	// cells $flatten\core.$logic_or$chip-sd2/src/uds_core.v:347$395 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:347$394 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:347$393 $flatten\core.$reduce_or$chip-sd2/src/uds_core.v:347$392 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:347$391
+	p_core_2e_sd__restart = logic_or<1>(logic_not<1>(p_rst__n), logic_and<1>(p_core_2e_fend, logic_not<1>(reduce_or<1>(p_core_2e_act))));
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:341.43-341.50
+	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:341$387
+	i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_341_24_387__Y = not_u<1>(p_core_2e_s1.slice<15>().val());
+	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:340.23-340.38
+	// cell $flatten\core.$xor$chip-sd2/src/uds_core.v:340$386
+	p_core_2e_ovf1 = xor_uu<1>(p_core_2e_s1.slice<15>().val(), p_core_2e_s1.slice<14>().val());
 	// connection
 	p_core_2e_fold = xor_uu<9>(p_core_2e_n__ph.slice<8,0>().val(), p_core_2e_n__ph.slice<9>().val().repeat<9>().val());
-	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:107$247 $flatten\core.$shr$chip-sd2/src/uds_core.v:106$246 $flatten\core.$sub$chip-sd2/src/uds_core.v:106$245 $flatten\core.$ternary$chip-sd2/src/uds_core.v:105$244
+	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:107$251 $flatten\core.$shr$chip-sd2/src/uds_core.v:106$250 $flatten\core.$sub$chip-sd2/src/uds_core.v:106$249 $flatten\core.$ternary$chip-sd2/src/uds_core.v:105$248
 	p_core_2e_pe__raw = add_uu<9>(value<1>{0u}.concat(p_core_2e_n__pitch).val(), value<2>{0u}.concat(p_core_2e_off).val());
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:214.35-214.63
-	// cell $flatten\core.$ternary$chip-sd2/src/uds_core.v:214$395
-	i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_214_24_395__Y = (p_core_2e_act.slice<0>().val() ? shl_uu<8>(value<8>{0x1u}, p_core_2e_g__slot_5b_0_5d__2e_c) : value<8>{0u});
-	// cells $procmux$503 $procmux$506 $procmux$509 $procmux$512 $procmux$515 $flatten\core.$lt$chip-sd2/src/uds_core.v:225$317
-	p_core_2e_choice = (p_core_2e_same.slice<0>().val() ? value<1>{0u} : (p_core_2e_same.slice<1>().val() ? value<1>{0x1u} : (i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_389__Y ? (i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_396__Y ? (i_flatten_5c_core_2e__24_lt_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_225_24_317__Y ? value<1>{0x1u} : value<1>{0u}) : value<1>{0x1u}) : value<1>{0u})));
+	// cell $flatten\core.$ternary$chip-sd2/src/uds_core.v:214$403
+	i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_214_24_403__Y = (p_core_2e_act.slice<0>().val() ? shl_uu<8>(value<8>{0x1u}, p_core_2e_g__slot_5b_0_5d__2e_c) : value<8>{0u});
+	// cells $procmux$511 $procmux$514 $procmux$517 $procmux$520 $procmux$523 $flatten\core.$lt$chip-sd2/src/uds_core.v:225$321
+	p_core_2e_choice = (p_core_2e_same.slice<0>().val() ? value<1>{0u} : (p_core_2e_same.slice<1>().val() ? value<1>{0x1u} : (i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_397__Y ? (i_flatten_5c_core_2e__24_reduce__or_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_211_24_404__Y ? (i_flatten_5c_core_2e__24_lt_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_225_24_321__Y ? value<1>{0x1u} : value<1>{0u}) : value<1>{0x1u}) : value<1>{0u})));
 	// connection
 	p_core_2e_chbits.slice<15,8>() = (p_core_2e_act.slice<1>().val() ? shl_uu<8>(value<8>{0x1u}, p_core_2e_g__slot_5b_1_5d__2e_c) : value<8>{0u});
 	// connection
-	p_core_2e_chbits.slice<7,0>() = i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_214_24_395__Y;
-	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$417 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$416 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:66$415 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$414 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:66$413
+	p_core_2e_chbits.slice<7,0>() = i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_214_24_403__Y;
+	// cells $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$425 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$424 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:66$423 $flatten\spi.$logic_and$chip-sd2/src/uds_spi.v:66$422 $flatten\spi.$eq$chip-sd2/src/uds_spi.v:66$421
 	p_spi_2e_hit__done = logic_and<1>(logic_and<1>(logic_and<1>(p_spi_2e_rise, eq_uu<1>(p_spi_2e_bitcnt.curr, value<3>{0x7u})), eq_uu<1>(p_spi_2e_bytecnt.curr, value<2>{0x3u})), p_spi_2e_is__hit.curr);
 	// connection
 	p_spi_2e_idle = p_spi_2e_cs__s.curr.slice<1>().val();
 	// connection
-	p_core_2e_preset__ch = i_procmux_24_530__Y;
+	p_core_2e_preset__ch = i_procmux_24_538__Y;
 	// connection
 	p_core_2e_preset = (eq_uu<1>(i_flatten_5c_core_2e__24_1_5c_preset__ch_5b_2_3a_0_5d_, value<3>{0x6u}) ? value<24>{0xff60fau} : (eq_uu<1>(i_flatten_5c_core_2e__24_1_5c_preset__ch_5b_2_3a_0_5d_, value<3>{0x5u}) ? value<24>{0xffb0fbu} : (eq_uu<1>(i_flatten_5c_core_2e__24_1_5c_preset__ch_5b_2_3a_0_5d_, value<3>{0x4u}) ? value<24>{0x14961fu} : (eq_uu<1>(i_flatten_5c_core_2e__24_1_5c_preset__ch_5b_2_3a_0_5d_, value<3>{0x3u}) ? value<24>{0x38952cu} : (eq_uu<1>(i_flatten_5c_core_2e__24_1_5c_preset__ch_5b_2_3a_0_5d_, value<3>{0x2u}) ? value<24>{0x46852cu} : (eq_uu<1>(i_flatten_5c_core_2e__24_1_5c_preset__ch_5b_2_3a_0_5d_, value<3>{0x1u}) ? value<24>{0x54852cu} : (logic_not<1>(i_flatten_5c_core_2e__24_1_5c_preset__ch_5b_2_3a_0_5d_) ? value<24>{0x5074bdu} : value<24>{0xff90fau})))))));
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:173.25-173.38
-	// cell $flatten\core.$or$chip-sd2/src/uds_core.v:173$300
+	// cell $flatten\core.$or$chip-sd2/src/uds_core.v:173$304
 	p_core_2e_busy = or_uu<1>(p_core_2e_pend.curr, p_core_2e_commit.curr);
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:174.25-174.40
-	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:174$301
+	// cell $flatten\core.$eq$chip-sd2/src/uds_core.v:174$305
 	p_core_2e_frame__sync = not_u<1>(p_core_2e_v.curr);
 	// \src: chip-sd2/src/project.v:43.5-61.4|chip-sd2/src/uds_spi.v:69.24-69.38
-	// cell $flatten\spi.$and$chip-sd2/src/uds_spi.v:69$420
+	// cell $flatten\spi.$and$chip-sd2/src/uds_spi.v:69$428
 	p_spi_2e_miso = and_uu<1>(p_spi_2e_active, p_spi_2e_sr.curr.slice<7>().val());
-	// cells $procmux$500 $procmux$497 $procmux$494 $procmux$468 $procmux$469_CMP0 $procmux$470_CMP0 $procmux$471_ANY $flatten\core.$ternary$chip-sd2/src/uds_core.v:180$308 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:180$307 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$306 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:180$305 $flatten\core.$reduce_and$chip-sd2/src/uds_core.v:180$304 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$303 $flatten\core.$eq$chip-sd2/src/uds_core.v:182$309 $procmux$491 $procmux$488 $procmux$485 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:189$313 $flatten\core.$ternary$chip-sd2/src/uds_core.v:189$312 $flatten\core.$xor$chip-sd2/src/uds_core.v:148$272 $flatten\core.$xor$chip-sd2/src/uds_core.v:148$271 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:189$311 $procmux$482 $procmux$479 $procmux$476 $procmux$473 $flatten\core.$eq$chip-sd2/src/uds_core.v:139$263 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$282 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$281
-	p_core_2e_tail = (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? p_core_2e_tail__commit : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? value<1>{0u} : (p_core_2e_in__env ? logic_and<1>(logic_not<1>(p_core_2e_kill.curr), (p_core_2e_c__dec.curr ? p_core_2e_env__new : p_core_2e_head)) : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? value<1>{0u} : (p_core_2e_in__env ? value<1>{0u} : (p_core_2e_in__phase ? i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_156_24_282__Y : p_core_2e_ring.curr.slice<95>().val()))))))))));
-	// cells $procmux$697 $procmux$698_CMP0 $procmux$699_CMP0 $procmux$700_CMP0 $procmux$701_CMP0 $procmux$702_CMP0 $procmux$703_CMP0 $procmux$704_CMP0
+	// cells $procmux$508 $procmux$505 $procmux$502 $procmux$476 $procmux$477_CMP0 $procmux$478_CMP0 $procmux$479_ANY $flatten\core.$ternary$chip-sd2/src/uds_core.v:180$312 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:180$311 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$310 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:180$309 $flatten\core.$reduce_and$chip-sd2/src/uds_core.v:180$308 $flatten\core.$shiftx$chip-sd2/src/uds_core.v:0$307 $flatten\core.$eq$chip-sd2/src/uds_core.v:182$313 $procmux$499 $procmux$496 $procmux$493 $flatten\core.$logic_and$chip-sd2/src/uds_core.v:189$317 $flatten\core.$ternary$chip-sd2/src/uds_core.v:189$316 $flatten\core.$xor$chip-sd2/src/uds_core.v:148$276 $flatten\core.$xor$chip-sd2/src/uds_core.v:148$275 $flatten\core.$logic_not$chip-sd2/src/uds_core.v:189$315 $procmux$490 $procmux$487 $procmux$484 $procmux$481 $flatten\core.$eq$chip-sd2/src/uds_core.v:139$267 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$286 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$285
+	p_core_2e_tail = (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? p_core_2e_tail__commit : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? value<1>{0u} : (p_core_2e_in__env ? logic_and<1>(logic_not<1>(p_core_2e_kill.curr), (p_core_2e_c__dec.curr ? p_core_2e_env__new : p_core_2e_head)) : (p_core_2e_clearing.curr ? value<1>{0u} : (p_core_2e_committing ? value<1>{0u} : (p_core_2e_in__env ? value<1>{0u} : (p_core_2e_in__phase ? i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_156_24_286__Y : p_core_2e_ring.curr.slice<95>().val()))))))))));
+	// cells $procmux$705 $procmux$706_CMP0 $procmux$707_CMP0 $procmux$708_CMP0 $procmux$709_CMP0 $procmux$710_CMP0 $procmux$711_CMP0 $procmux$712_CMP0
 	p_digit = (eq_uu<1>(p_spi_2e_ch.curr, value<3>{0x6u}) ? value<7>{0x7du} : (eq_uu<1>(p_spi_2e_ch.curr, value<3>{0x5u}) ? value<7>{0x6du} : (eq_uu<1>(p_spi_2e_ch.curr, value<3>{0x4u}) ? value<7>{0x66u} : (eq_uu<1>(p_spi_2e_ch.curr, value<3>{0x3u}) ? value<7>{0x4fu} : (eq_uu<1>(p_spi_2e_ch.curr, value<3>{0x2u}) ? value<7>{0x5bu} : (eq_uu<1>(p_spi_2e_ch.curr, value<3>{0x1u}) ? value<7>{0x6u} : (logic_not<1>(p_spi_2e_ch.curr) ? value<7>{0x3fu} : value<7>{0x7u})))))));
 	// connection
-	p_core_2e_status__next = or_uu<8>(i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_214_24_395__Y, p_core_2e_chbits.slice<15,8>().val());
+	p_core_2e_status__next = or_uu<8>(i_flatten_5c_core_2e__24_ternary_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_214_24_403__Y, p_core_2e_chbits.slice<15,8>().val());
 	// connection
-	p_core_2e_best = (i_flatten_5c_core_2e__24_lt_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_225_24_317__Y ? p_core_2e_ring.curr.slice<23>().concat(p_core_2e_ring.curr.slice<24>()).concat(p_core_2e_ring.curr.slice<25>()).val() : p_core_2e_ring.curr.slice<71>().concat(p_core_2e_ring.curr.slice<72>()).concat(p_core_2e_ring.curr.slice<73>()).val());
-	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:341$386 $flatten\core.$add$chip-sd2/src/uds_core.v:341$385
-	p_core_2e_v2__n = add_uu<17>(add_uu<17>(p_core_2e_sd__v2.curr, p_core_2e_v1__n.slice<14>().val().repeat<2>().concat(p_core_2e_v1__n).val()), p_core_2e_y.repeat<4>().concat(value<13>{0x1000u}).val());
-	// cells $flatten\core.$xor$chip-sd2/src/uds_core.v:156$282 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$281
-	p_core_2e_ph__new = i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_156_24_282__Y;
+	p_core_2e_best = (i_flatten_5c_core_2e__24_lt_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_225_24_321__Y ? p_core_2e_ring.curr.slice<23>().concat(p_core_2e_ring.curr.slice<24>()).concat(p_core_2e_ring.curr.slice<25>()).val() : p_core_2e_ring.curr.slice<71>().concat(p_core_2e_ring.curr.slice<72>()).concat(p_core_2e_ring.curr.slice<73>()).val());
+	// cells $flatten\core.$add$chip-sd2/src/uds_core.v:342$390 $flatten\core.$add$chip-sd2/src/uds_core.v:342$389
+	p_core_2e_v2__n = add_uu<17>(add_uu<17>(p_core_2e_sd__v2.curr, p_core_2e_sd__v1.curr.slice<14>().val().repeat<2>().concat(p_core_2e_sd__v1.curr).val()), p_core_2e_y.repeat<3>().concat(value<14>{0x2000u}).val());
+	// cells $flatten\core.$ternary$chip-sd2/src/uds_core.v:341$388 $flatten\core.$xor$chip-sd2/src/uds_core.v:340$386
+	p_core_2e_v1__n = (p_core_2e_ovf1 ? p_core_2e_s1.slice<15>().concat(i_flatten_5c_core_2e__24_not_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_341_24_387__Y.repeat<14>()).val() : p_core_2e_s1.slice<14,0>().val());
+	// cells $flatten\core.$xor$chip-sd2/src/uds_core.v:156$286 $flatten\core.$xor$chip-sd2/src/uds_core.v:156$285
+	p_core_2e_ph__new = i_flatten_5c_core_2e__24_xor_24_chip_2d_sd2_2f_src_2f_uds__core_2e_v_3a_156_24_286__Y;
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:112.24-112.32
-	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:112$250
+	// cell $flatten\core.$not$chip-sd2/src/uds_core.v:112$254
 	p_core_2e_n__tri = not_u<1>(p_core_2e_fold.slice<8>().val()).concat(p_core_2e_fold.slice<7,0>()).val();
 	// \src: chip-sd2/src/project.v:67.5-85.4|chip-sd2/src/uds_core.v:108.23-108.55
-	// cell $flatten\core.$ternary$chip-sd2/src/uds_core.v:108$248
+	// cell $flatten\core.$ternary$chip-sd2/src/uds_core.v:108$252
 	p_core_2e_n__pe = (p_core_2e_pe__raw.slice<8>().val() ? value<8>{0xffu} : p_core_2e_pe__raw.slice<7,0>().val());
 	// connection
 	p_core_2e_n__bal = p_core_2e_nw.slice<24>().concat(p_core_2e_nw.slice<25>()).concat(p_core_2e_nw.slice<26>()).concat(p_core_2e_nw.slice<27>()).val();
@@ -1535,6 +1536,7 @@ void p_tt__um__ai__wrangler__uds1x1::debug_info(debug_items &items, std::string 
 	items.add(path + "core ovf1", debug_item(debug_eval_outline, p_core_2e_ovf1, 0));
 	items.add(path + "core v1_n", debug_item(debug_eval_outline, p_core_2e_v1__n, 0));
 	items.add(path + "core v2_n", debug_item(debug_eval_outline, p_core_2e_v2__n, 0));
+	items.add(path + "core sd_restart", debug_item(debug_eval_outline, p_core_2e_sd__restart, 0));
 	items.add(path + "core g_slot[0].e", debug_item(debug_eval_outline, p_core_2e_g__slot_5b_0_5d__2e_e, 0));
 	items.add(path + "core g_slot[0].c", debug_item(debug_eval_outline, p_core_2e_g__slot_5b_0_5d__2e_c, 0));
 	items.add(path + "core g_slot[1].e", debug_item(debug_eval_outline, p_core_2e_g__slot_5b_1_5d__2e_e, 0));

@@ -23,9 +23,9 @@ from the setup session.
 ### The 2nd-order DAC preview (`uds_engine_sd2.wasm`)
 
 The same test in the same sandbox, run back to back (`node engine/test/bench.mjs app/engine/*.wasm`): the as-built
-engine 64 to 68 MHz, the sd2 engine 51 MHz (8.5x real time; about 22 % slower, with a wider DAC loop in the
-netlist). That sandbox was about 2.3x slower than the one in the table, so on Juris's machine the sd2 build
-should run at about 120 MHz (20x real time). Chromium truth test: 17.8 to 31.5 MHz on `runFrames(1)` per frame
+engine 64 to 68 MHz, the sd2 engine (`c85a310`) 45 to 49 MHz (7.5x to 8.2x real time; about 27 % slower, with a
+wider DAC loop in the netlist). That sandbox was about 2.3x slower than the one in the table, so on Juris's
+machine the sd2 build should run at about 110 MHz (18x real time). Chromium truth test: 17.8 to 31.5 MHz on `runFrames(1)` per frame
 (the as-built engine ran 22.9 to 25.3 MHz the same way).
 
 ## How it works
@@ -140,16 +140,19 @@ Run `node --test engine/test/*.test.mjs`. It needs `python3`, and takes about 5 
   - **Fixture.** `fixtures/model_frames_sd2.json` replays in Node, and in Chromium (`tests/e2e/dac.spec.mjs`).
   - **READ VERSION.** It answers 0x22.
 
-  `tools/vendor_sd2.sh` vendors, builds and verifies a new commit of branch `sd2`. `audio_sd2.test.mjs` checks the
-  silence after a sound (below -80 dBFS; it is -92 dBFS) and the loudness match.
+  `tools/vendor_sd2.sh` vendors, builds and verifies a new commit of branch `sd2`. `audio_sd2.test.mjs` checks
+  the silence after a sound and after STOP (below -80 dBFS; it is exact silence) and the loudness match.
 - **Pin truth (`pin_truth.mjs`, needs numpy).** It records the raw audio pin clock by clock for 3 s of hits, then
   band-limits it to 20 Hz..20 kHz, which is what an ideal analog filter passes. It compares that with
   `render()`:
-  - as built (count of 1s): error -41 dB overall and -77 dB in the quiet tail, where the pin is at -65 dB;
-  - sd2 (sinc³): error -45 dB overall and -79 dB in the tail, where the pin is at -71 dB.
+  - as built: error -41.2 dB overall and -76.9 dB in the quiet tail, where the pin is at -65.4 dB;
+  - sd2: error -45.8 dB overall and -82.6 dB in the tail, where the pin is at -71.4 dB.
 
-  With the count of 1s, the sd2 build's tail error was -42 dB, 34 dB above the pin's own tail. That aliasing is
-  why the sd2 build uses sinc³.
+  The first sd2 commit (`48eb2d1`) left its loop wandering after a sound. With the count of 1s that came out as
+  a -30 dBFS tone near 14.7 kHz, with a tail error of -42 dB. A sinc³ decimator in the harness (`AUDIO_SINC3`,
+  build with `UDS_SINC3=1`) removed it. The chip's next commit (`a37080c`) restarts the loop in silent frames,
+  so the shipped sd2 build uses the same count of 1s as the as-built engine. The sinc³ option is kept, but no
+  shipped build uses it.
 - **Fixture (`fixture.test.mjs`).** `fixtures/model_frames.json` has 22 019 frames. Its `events` are
   `{frame, bytes}` messages to queue before `runFrames(1)` runs frame `frame`, and `counts` are the model's
   1s per frame. It replays with the contract API alone. `tests/e2e/truth.spec.mjs` runs it in Chromium.

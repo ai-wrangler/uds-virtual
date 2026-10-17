@@ -1,6 +1,6 @@
-// Audio model of the 2nd-order DAC build: the sinc^3 decimator keeps the modulator's idle pattern (which
-// is not frame-periodic after a sound) out of the audio band. With the plain count of 1s per frame that
-// pattern aliased into a -30 dBFS tone near 14.7 kHz that the real pin (RC-filtered) does not have.
+// Audio of the 2nd-order DAC build. Its first version (tt-uds-1x1@48eb2d1) left the loop wandering after a
+// sound; the count of 1s per frame aliased that into a -30 dBFS tone near 14.7 kHz. Since a37080c the chip
+// restarts the loop in silent frames, so silence is exactly 48 ones per frame again. This guards it.
 // SPDX-License-Identifier: Apache-2.0
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -20,9 +20,9 @@ function idleDb(e, g) {
   return 20 * Math.log10(Math.sqrt(q / s.length) * g + 1e-12);
 }
 
-test('audio models: the as-built engine counts 1s per frame, the sd2 build uses sinc^3', { skip: !existsSync(sd2.wasm) && 'sd2 not built' }, async () => {
+test('both builds use the same Audio Pmod model (count of 1s per frame)', { skip: !existsSync(sd2.wasm) && 'sd2 not built' }, async () => {
   assert.equal((await loadEngine(readFileSync(base.wasm))).audioModel, 'count');
-  assert.equal((await loadEngine(readFileSync(sd2.wasm))).audioModel, 'sinc3');
+  assert.equal((await loadEngine(readFileSync(sd2.wasm))).audioModel, 'count');
 });
 
 test('sd2: silence after a hit and after STOP stays below -80 dBFS (after make-up gain)', { skip: !existsSync(sd2.wasm) && 'sd2 not built' }, async () => {

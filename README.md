@@ -66,8 +66,8 @@ The 2nd-order DAC is **not taped out**. It lives on branch [`sd2` of ai-wrangler
 on 18 October 2026, 01:00 Riga time). It is vendored read-only in `chip-sd2/`; `chip-sd2/README.md` names the commit.
 Whether it goes into the chip is Juris's call, after listening.
 
-- **Loudness.** The new DAC's input scaling is about 6 dB quieter. Its make-up gain is 6.3 instead of 3, so both
-  match within 0.01 dB on a reference pattern (`engine/test/loudness.mjs`) and within 0.3 dB on the demo groove.
+- **Loudness.** The new DAC's input scaling is about 6 dB quieter. Its make-up gain is 5.95 instead of 3, so both
+  match within 0.01 dB on a reference pattern (`engine/test/loudness.mjs`) and within 0.1 dB on the demo groove.
 - **While playing.** Switching works mid-groove. The chip restarts from reset with a 20 ms crossfade, and the
   rhythm and MIDI file keep going.
 - **Saved choice.** It is kept in localStorage. `?dac=1st` or `?dac=2nd` overrides it.
@@ -75,11 +75,11 @@ Whether it goes into the chip is Juris's call, after listening.
 - **Listening without the site.** The same 8 bars of the demo groove (slot 1, `demo.mid`) with each DAC:
   [dac1.wav](docs/audio/dac1.wav) / [dac1.mp3](docs/audio/dac1.mp3) (1st order) and
   [dac2.wav](docs/audio/dac2.wav) / [dac2.mp3](docs/audio/dac2.mp3) (2nd order).
-- **Audio model.** The 2nd-order build turns the pin into samples with a sinc³ decimator (three 96-clock
-  boxcars) instead of the count of 1s per frame. Its idle pattern after a sound is not frame-periodic, and the
-  plain count aliased it into a -30 dBFS tone near 14.7 kHz. The real pin has nothing there (checked against
-  the band-limited raw pin: `engine/test/pin_truth.mjs`). With sinc³ the silence after a sound is below
-  -90 dBFS. The as-built engine keeps its count of 1s.
+- **Audio model.** Both builds use the same Audio Pmod model: the count of 1s per 96-clock frame. The first
+  sd2 commit left the loop wandering after a sound, and the frame count aliased that into a -30 dBFS tone near
+  14.7 kHz. The chip's next commit (`a37080c`) restarts the loop in silent frames, and silence is exact again.
+  `engine/test/pin_truth.mjs` checks `render()` against the raw pin band-limited to 20 kHz. The error is
+  -45.8 dB overall and -82.6 dB in quiet tails, against -41.2 and -76.9 dB for the as-built engine.
 
 ## How to use it
 
