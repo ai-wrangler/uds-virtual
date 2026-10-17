@@ -5,7 +5,7 @@
 // Replay with the contract API only (all messages start on a frame boundary):
 //   engine.reset();
 //   for (let f = 0; f < fx.frames; f++) {
-//     for (const a of actionsAt[f]) for (const m of a.msgs) engine.send(m);
+//     for (const e of eventsAt[f]) engine.send(e.bytes);
 //     counts[f] = engine.runFrames(1);      // must equal fx.counts[f]
 //   }
 // SPDX-License-Identifier: Apache-2.0
@@ -37,10 +37,11 @@ const want = modelCounts(events, frames);
 for (let i = 0; i < frames; i++) if (counts[i] !== want[i]) throw new Error(`engine differs from model at frame ${i}`);
 mkdirSync(new URL('./fixtures/', import.meta.url), { recursive: true });
 writeFileSync(new URL('./fixtures/model_frames.json', import.meta.url), JSON.stringify({
-  description: 'UDS-1x1 engine fixture: queue each action\'s msgs (engine.send) just before engine.runFrames(1) ' +
-    'runs frame `frame`; the returned 1s must equal counts[frame]. counts come from chip/model/uds_model.py; ' +
-    'events are what the model was fed (frame = before which step).',
-  frameClocks: 96, frames, actions: actions.map(({ frame, msgs }) => ({ frame, msgs })),
-  events, counts: Array.from(want),
+  description: 'UDS-1x1 engine fixture: the 1s returned by engine.runFrames(1) for frame f must equal counts[f]. ' +
+    'events: SPI messages to queue (engine.send(bytes)) just before engine.runFrames(1) runs frame `frame`. ' +
+    'modelEvents: what chip/model/uds_model.py was fed (before stepping frame `frame`).',
+  frameClocks: 96, frames,
+  events: actions.flatMap(({ frame, msgs }) => msgs.map((bytes) => ({ frame, bytes }))),
+  modelEvents: events, counts: Array.from(want),
 }));
 console.log(`fixtures/model_frames.json: ${frames} frames, ${actions.length} actions, ${events.length} model events`);

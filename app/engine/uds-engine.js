@@ -211,8 +211,12 @@ export class UDSEngine {
  * @returns {Promise<UDSEngine>}
  */
 export async function loadEngine(source, { sampleRate = 48000 } = {}) {
-  const module = await toModule(source);
-  const instance = await WebAssembly.instantiate(module, stubImports(module));
+  // Synchronous compile and instantiate where async WebAssembly can stall
+  // (AudioWorkletGlobalScope) and whenever a Module is given: the module is small.
+  const worklet = typeof AudioWorkletGlobalScope !== 'undefined';
+  const module = worklet && (source instanceof ArrayBuffer || ArrayBuffer.isView(source))
+    ? new WebAssembly.Module(source) : await toModule(source);
+  const instance = new WebAssembly.Instance(module, stubImports(module));
   if (instance.exports._initialize) instance.exports._initialize();
   return new UDSEngine(instance, sampleRate);
 }

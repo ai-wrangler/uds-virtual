@@ -11,7 +11,7 @@ test('fixture replays with send() + runFrames(1)', async () => {
   engine.reset();
   let a = 0, bad = 0;
   for (let f = 0; f < fx.frames; f++) {
-    while (a < fx.actions.length && fx.actions[a].frame === f) { for (const m of fx.actions[a].msgs) engine.send(m); a++; }
+    while (a < fx.events.length && fx.events[a].frame <= f) assert.ok(engine.send(fx.events[a++].bytes));
     if (engine.runFrames(1) !== fx.counts[f]) bad++;
   }
   assert.equal(bad, 0);
