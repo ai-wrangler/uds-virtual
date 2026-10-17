@@ -377,7 +377,7 @@ async function main() {
   }
   function updateWavLabel() {
     const o = $('wav-what').querySelector('option[value=rhythm]');
-    o.textContent = `Ритм ${uds.pattern} · 8 bars · ${wavSeconds().toFixed(1)} s`;
+    o.textContent = `${uds.pattern} · 8 тактов/bars · ${wavSeconds().toFixed(1)} s`;
   }
   $('wav-what').addEventListener('change', updateWavLabel);
   $('wav-export').addEventListener('click', async () => {
