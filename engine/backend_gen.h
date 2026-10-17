@@ -6,7 +6,10 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
 #include <utility>
-#include "gen/uds_chip_gen.h"
+#ifndef GEN_HEADER
+#define GEN_HEADER "gen/uds_chip_gen.h"   // GEN_HEADER: another chip variant (build.sh sd2)
+#endif
+#include GEN_HEADER
 
 #define BACKEND_NAME "gen"
 #define BACKEND_ID 3

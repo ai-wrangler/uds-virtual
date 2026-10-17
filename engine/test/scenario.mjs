@@ -142,11 +142,35 @@ export function modelEvents(log) {
 }
 
 /** Per-frame 1s from chip/model/uds_model.py for these events. */
-export function modelCounts(events, frames) {
+// chipDir: the chip folder whose model/uds_model.py to run (default chip/)
+export function modelCounts(events, frames, chipDir) {
   const py = fileURLToPath(new URL('./model_ref.py', import.meta.url));
+  const env = { ...process.env };
+  if (chipDir) env.UDS_CHIP_DIR = chipDir;
   const res = spawnSync('python3', [py], {
-    input: JSON.stringify({ frames, events }), maxBuffer: 1 << 28, encoding: 'utf8',
+    input: JSON.stringify({ frames, events }), maxBuffer: 1 << 28, encoding: 'utf8', env,
   });
   if (res.status !== 0) throw new Error('model_ref.py failed: ' + res.stderr);
   return Uint8Array.from(JSON.parse(res.stdout).counts);
 }
+
+// READ ID and VERSION answers expected by the model in chipDir (default chip/)
+export function modelRegs(chipDir) {
+  const py = fileURLToPath(new URL('./model_ref.py', import.meta.url));
+  const env = { ...process.env };
+  if (chipDir) env.UDS_CHIP_DIR = chipDir;
+  const res = spawnSync('python3', [py, '--regs'], { encoding: 'utf8', env });
+  if (res.status !== 0) throw new Error('model_ref.py --regs failed: ' + res.stderr);
+  return JSON.parse(res.stdout);
+}
+
+// Chip variants with their shipped .wasm and chip folder. sd2 (2nd-order DAC preview) exists once
+// chip-sd2/ is vendored and built.
+export const VARIANTS = [
+  { name: 'base', wasm: fileURLToPath(new URL('../../app/engine/uds_engine.wasm', import.meta.url)),
+    chip: fileURLToPath(new URL('../../chip/', import.meta.url)),
+    fixture: fileURLToPath(new URL('./fixtures/model_frames.json', import.meta.url)) },
+  { name: 'sd2', wasm: fileURLToPath(new URL('../../app/engine/uds_engine_sd2.wasm', import.meta.url)),
+    chip: fileURLToPath(new URL('../../chip-sd2/', import.meta.url)),
+    fixture: fileURLToPath(new URL('./fixtures/model_frames_sd2.json', import.meta.url)) },
+];

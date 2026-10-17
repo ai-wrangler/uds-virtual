@@ -8,6 +8,13 @@ const SEG = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 // pad labels by chip channel: snare, small (high) tom, middle tom, big (low) tom, bass drum, cymbal, hats
 const PAD_SHORT = ['SD', 'HT', 'MT', 'LT', 'BD', 'CY', 'CH', 'OH'];
 const SLOTS = 16;
+const DAC_KEY = 'uds-virtual.dac.v1';   // the DAC choice ('1st' | '2nd')
+function storedDac() {
+  try { return localStorage.getItem(DAC_KEY); } catch { return null; }
+}
+function storeDac(v) {
+  try { localStorage.setItem(DAC_KEY, v); } catch { /* storage blocked: the choice lasts for this page */ }
+}
 
 function h(tag, cls, text) {
   const e = document.createElement(tag);
@@ -40,6 +47,9 @@ function toast(msg, kind = '') {
 async function loadAudio() {
   const opts = {};
   if (params.get('engine') === 'mock') opts.engine = 'mock';
+  // ?dac=1st|2nd overrides the stored choice
+  const dac = params.get('dac') || storedDac();
+  if (dac === '1st' || dac === '2nd') opts.dac = dac;
   if (params.get('fake') === '1') {
     const { FakeUDSAudio } = await import('./fake-audio.js');
     return { uds: await FakeUDSAudio.create(opts), fake: true, why: '?fake=1' };
@@ -538,6 +548,35 @@ async function main() {
   uds.addEventListener('midi-input', (e) => showInputs(e.detail.inputs));
 
   // ---------------- output ----------------
+  // DAC switch: one option per engine build (app/engine/builds.json); builds not made yet stay disabled
+  const dacSel = $('dac');
+  const builds = uds.builds?.length ? uds.builds : [{ id: '1st', name: '1st order (as built)', available: true }];
+  dacSel.textContent = '';
+  for (const b of builds) {
+    const o = h('option', null, b.available ? b.name : `${b.name} · coming soon`);
+    o.value = b.id;
+    o.disabled = !b.available;
+    dacSel.append(o);
+  }
+  const showDac = () => { dacSel.value = uds.dac || '1st'; body.dataset.dac = dacSel.value; };
+  showDac();
+  dacSel.addEventListener('change', async () => {
+    const v = dacSel.value;
+    dacSel.disabled = true;
+    try {
+      await uds.setDac(v);
+      storeDac(v);
+      toast(`DAC: ${builds.find((b) => b.id === v)?.name || v}`);
+    } catch (err) {
+      console.warn(err);
+      toast('DAC switch failed: ' + (err?.message || err), 'bad');
+    } finally {
+      dacSel.disabled = false;
+      showDac();
+    }
+  });
+  uds.addEventListener('dac', showDac);
+
   $('filter').value = 'rc';
   $('filter').addEventListener('change', (e) => uds.setFilter(e.target.value));
   $('volume').addEventListener('input', (e) => {
@@ -584,13 +623,14 @@ async function main() {
     btn.textContent = '';
     btn.append(lbl('Rendering…'));
     try {
+      const dacTag = `dac${(uds.dac || '1st')[0]}`;   // renderWav uses the DAC selected now
       const blob = await uds.renderWav({ what, seconds });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const slotName = (curSlot()?.name || '').replace(/\.midi?$/i, '').replace(/[^\w.-]+/g, '_').slice(0, 40);
       const base = what === 'midi' ? (midiInfo?.name || 'midi').replace(/\.midi?$/i, '') : `slot${uds.slot + 1}-${slotName}-${uds.tempo}bpm`;
       a.href = url;
-      a.download = `uds-1x1-${base}.wav`;
+      a.download = `uds-1x1-${base}-${dacTag}.wav`;
       document.body.appendChild(a);
       a.click();
       a.remove();

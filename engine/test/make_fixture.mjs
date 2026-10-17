@@ -1,6 +1,6 @@
 // Writes fixtures/model_frames.json: a HIT schedule and the per-frame 1s the
 // Python model expects, for the browser test (integrate session).
-// Run: node engine/test/make_fixture.mjs
+// Run: node engine/test/make_fixture.mjs [base|sd2]   (sd2: fixtures/model_frames_sd2.json from chip-sd2/)
 //
 // Replay with the contract API only (all messages start on a frame boundary):
 //   engine.reset();
@@ -11,7 +11,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { loadEngine } from '../../app/engine/uds-engine.js';
-import { rng, hitMsg, runScript, modelEvents, modelCounts } from './scenario.mjs';
+import { rng, hitMsg, runScript, modelEvents, modelCounts, VARIANTS } from './scenario.mjs';
+
+const V = VARIANTS.find((v) => v.name === (process.argv[2] || 'base'));
+if (!V) throw new Error('variant must be base or sd2');
 
 const r = rng(7);
 const ri = (n) => Math.floor(r() * n);
@@ -30,13 +33,14 @@ while (f < 20000) {
   at(msgs, [1, 3, 20, 100, 400][ri(5)]);
 }
 const frames = f + 2000;
-const engine = await loadEngine(readFileSync(new URL('../../app/engine/uds_engine.wasm', import.meta.url)));
+const engine = await loadEngine(readFileSync(V.wasm));
 const { counts, log } = runScript(engine, { actions, frames });
 const events = modelEvents(log);
-const want = modelCounts(events, frames);
+const want = modelCounts(events, frames, V.chip);
 for (let i = 0; i < frames; i++) if (counts[i] !== want[i]) throw new Error(`engine differs from model at frame ${i}`);
 mkdirSync(new URL('./fixtures/', import.meta.url), { recursive: true });
-writeFileSync(new URL('./fixtures/model_frames.json', import.meta.url), JSON.stringify({
+writeFileSync(V.fixture, JSON.stringify({
+  ...(V.name === 'base' ? {} : { variant: V.name }),
   description: 'UDS-1x1 engine fixture: the 1s returned by engine.runFrames(1) for frame f must equal counts[f]. ' +
     'events: SPI messages to queue (engine.send(bytes)) just before engine.runFrames(1) runs frame `frame`. ' +
     'modelEvents: what chip/model/uds_model.py was fed (before stepping frame `frame`).',
@@ -44,4 +48,4 @@ writeFileSync(new URL('./fixtures/model_frames.json', import.meta.url), JSON.str
   events: actions.flatMap(({ frame, msgs }) => msgs.map((bytes) => ({ frame, bytes }))),
   modelEvents: events, counts: Array.from(want),
 }));
-console.log(`fixtures/model_frames.json: ${frames} frames, ${actions.length} actions, ${events.length} model events`);
+console.log(`${V.fixture.split('/').pop()} (${V.name}): ${frames} frames, ${actions.length} actions, ${events.length} model events`);

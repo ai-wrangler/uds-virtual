@@ -16,11 +16,12 @@ for (const [notes, ch] of [
 export class FakeUDSAudio extends EventTarget {
   static async create(opts = {}) {
     const base = new URL('../data/', import.meta.url);
-    const [cj, pj] = await Promise.all([
+    const [cj, pj, bj] = await Promise.all([
       fetch(new URL('channels.json', base)).then((r) => r.json()),
       fetch(new URL('patterns.json', base)).then((r) => r.json()),
+      fetch(new URL('../engine/builds.json', import.meta.url)).then((r) => r.json()).catch(() => null),
     ]);
-    return new FakeUDSAudio(cj, pj, opts);
+    return new FakeUDSAudio(cj, pj, { ...opts, builds: bj });
   }
 
   constructor(cj, pj, opts) {
@@ -34,7 +35,11 @@ export class FakeUDSAudio extends EventTarget {
     this._defaults = cj.channels.map((c) => ({ ...c.params }));
     this._params = cj.channels.map((c) => ({ ...c.params }));
     this.state = 'idle';
-    this.info = { backend: 'fake', mock: true, clockHz: CLOCK_HZ, voices: 2, frameRate: FRAME_RATE, sampleRate: 48000 };
+    this.info = { backend: 'fake', mock: true, clockHz: CLOCK_HZ, voices: 2, frameRate: FRAME_RATE, sampleRate: 48000, dac: '1st' };
+    // DAC builds as listed in app/engine/builds.json (the fake makes no sound with either)
+    this.builds = (opts.builds?.builds || [{ id: '1st', name: '1st order (as built)', available: true }]).map((b) => ({ ...b }));
+    const want = this.builds.find((b) => b.id === opts.dac && b.available);
+    this.dac = this.info.dac = want ? want.id : '1st';
     this.analyser = null;
     this.volume = 0.8;
     this.filter = 'rc';
@@ -89,7 +94,7 @@ export class FakeUDSAudio extends EventTarget {
       simHz: CLOCK_HZ * realtime, realtime, cycles: this._cycles, frames: this._frames,
       uoOut: (this._uoOut & 0x7f) | audio,
       uioOut: frame | (busy ? 0x20 : 0) | (audio ? 0xc0 : 0),
-      busy, cs: busy, queue: 0, leadMs: 80, underruns: 0,
+      busy, cs: busy, queue: 0, leadMs: 80, underruns: 0, dac: this.dac,
     });
     if (this._midi && this.midiPlaying) this._midiTick();
   }
@@ -122,6 +127,14 @@ export class FakeUDSAudio extends EventTarget {
   stopAll() { this.stopRhythm(); this.stopMidi(); }
   setVolume(v) { this.volume = Math.max(0, Math.min(1, v)); }
   setFilter(mode) { this.filter = mode; }
+  async setDac(id) {
+    const b = this.builds.find((x) => x.id === id);
+    if (!b) throw new Error('unknown DAC ' + id);
+    if (!b.available) throw new Error('the ' + b.name + ' DAC is not available yet');
+    this.dac = this.info.dac = id;
+    this._emit('dac', { dac: id, name: b.name });
+    return id;
+  }
 
   // --- Autorhythm slots (same conversion as the real UDSAudio: ../audio/slots.js) ---
   _emitSlots() { this._emit('slots', { slots: this.slots.map((s) => (s ? { ...s } : null)), slot: this.slot }); }

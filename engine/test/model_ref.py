@@ -16,7 +16,9 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "..", "chip", "model"))
+# UDS_CHIP_DIR: another chip folder (chip-sd2 for the 2nd-order DAC preview)
+CHIP = os.environ.get("UDS_CHIP_DIR") or os.path.join(HERE, "..", "..", "chip")
+sys.path.insert(0, os.path.join(os.path.abspath(CHIP), "model"))
 import uds_model as M  # noqa: E402
 
 FRAME = M.frame_clks(2)
@@ -44,5 +46,8 @@ def run(sched):
 
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--regs"]:          # what READ ID / VERSION must answer
+        json.dump({"id": M.CHIP_ID, "version": (M.VERSION << 4) | 2}, sys.stdout)
+        sys.exit(0)
     sched = json.load(sys.stdin)
     json.dump({"counts": run(sched)}, sys.stdout)

@@ -11,6 +11,8 @@ import { SLOT_COUNT, midiBytesToSlot, slotToPattern, slotPatternId, slotIndexOf 
 
 const HERE = import.meta.url;
 const FILTER_HZ = { rc: 15900, warm: 4000, off: 0 };
+// Used when app/engine/builds.json is missing: only the chip as built
+const BUILDS_FALLBACK = { default: '1st', builds: [{ id: '1st', name: '1st order (as built)', wasm: 'uds_engine.wasm', gain: 3, available: true }] };
 
 async function fetchJson(url) {
   const r = await fetch(url);
@@ -22,6 +24,7 @@ function workerCall(worker, msg, transfer, expect) {
   return new Promise((resolve, reject) => {
     const on = (e) => {
       const m = e.data;
+      if (msg.id !== undefined && m.id !== undefined && m.id !== msg.id) return;   // another call's reply
       if (m.type === expect || (m.type === 'error' && m.id === msg.id)) {
         worker.removeEventListener('message', on);
         if (m.type === 'error') reject(new Error(m.message)); else resolve(m);
@@ -39,14 +42,19 @@ export class UDSAudio extends EventTarget {
     return u;
   }
 
-  constructor({ engine = 'wasm', wasmUrl = null, dataUrl = null, slowdown = 0 } = {}) {
+  constructor({ engine = 'wasm', wasmUrl = null, dataUrl = null, slowdown = 0, dac = null, buildsUrl = null } = {}) {
     super();
+    // DAC builds (app/engine/builds.json): '1st' = the chip as built, '2nd' = the 2nd-order DAC preview
+    this.buildsUrl = buildsUrl || new URL('../engine/builds.json', HERE).href;
+    this.builds = [];
+    this.dac = '1st';
+    this._dacWanted = dac;
     this._slowdown = slowdown;   // test hook: pretend the engine runs at this many times real time
     this.engineKind = engine === 'mock' ? 'mock' : 'wasm';
     this.wasmUrl = wasmUrl;
     this.dataUrl = dataUrl || new URL('../data/', HERE).href;
     this.state = 'idle';
-    this.info = { backend: null, mock: this.engineKind === 'mock', clockHz: 6000000, voices: 2, frameRate: 62500, sampleRate: null };
+    this.info = { backend: null, mock: this.engineKind === 'mock', clockHz: 6000000, voices: 2, frameRate: 62500, sampleRate: null, dac: '1st' };
     this.analyser = null;
     this.ctx = null; this.node = null; this.gain = null;
     this.channels = []; this.knobs = []; this.patterns = [];
@@ -71,10 +79,14 @@ export class UDSAudio extends EventTarget {
   }
 
   async _init() {
-    const [ch, pt] = await Promise.all([
+    const [ch, pt, bl] = await Promise.all([
       fetchJson(new URL('channels.json', this.dataUrl)),
       fetchJson(new URL('patterns.json', this.dataUrl)),
+      fetchJson(this.buildsUrl).catch(() => BUILDS_FALLBACK),
     ]);
+    this.builds = bl.builds.map(b => ({ ...b, url: new URL(b.wasm, this.buildsUrl).href }));
+    const want = this._build(this._dacWanted);
+    this.dac = want && want.available ? want.id : (this._build(bl.default) || this.builds[0]).id;
     this.accentLevelDrop = ch.accentLevelDrop ?? 4;
     this.channels = ch.channels;
     this.knobs = ch.knobs;
@@ -88,11 +100,13 @@ export class UDSAudio extends EventTarget {
     this.worker = this._spawn();
     this.worker.addEventListener('message', (e) => this._onWorker(e.data));
     const ready = await workerCall(this.worker, {
-      type: 'init', engine: this.engineKind, wasmUrl: this.wasmUrl, sampleRate: 48000, slowdown: this._slowdown,
+      type: 'init', engine: this.engineKind, ...this._dacInit(this.dac), sampleRate: 48000, slowdown: this._slowdown,
+      prefetch: this.builds.filter(b => b.available && b.id !== this.dac).map(b => this._dacInit(b.id).wasmUrl),
       channels: this.channels, patterns: this._patternsFull, accentLevelDrop: this.accentLevelDrop,
     }, null, 'ready');
     this.info.backend = ready.info.backend;
     this.info.mock = ready.info.mock;
+    this.dac = this.info.dac = ready.info.dac || '1st';
     if (ready.error) {
       // Delivered after create() resolves, to the first 'error' listener (the page adds it after create)
       this.lastError = ready.error;
@@ -112,6 +126,33 @@ export class UDSAudio extends EventTarget {
   }
 
   _spawn() { return new Worker(new URL('./engine-worker.js', HERE), { type: 'module' }); }
+
+  // ---- DAC (engine build) ----
+  _build(id) { return this.builds.find(b => b.id === id) || null; }
+  // worker fields for a build: the wasmUrl option replaces the first build's file (tests)
+  _dacInit(id) {
+    const b = this._build(id) || this.builds[0];
+    const wasmUrl = this.wasmUrl && b === this.builds[0] ? this.wasmUrl : b.url;
+    return { dac: b.id, wasmUrl, gain: b.gain };
+  }
+  /** Select the audio DAC: '1st' (the chip as built) or '2nd' (2nd-order preview). Works while playing. */
+  async setDac(id) {
+    const b = this._build(id);
+    if (!b) throw new Error('unknown DAC ' + id + ' (expected ' + this.builds.map(x => x.id).join(' or ') + ')');
+    if (!b.available) throw new Error('the ' + b.name + ' DAC is not available yet');
+    if (id === this.dac && !this._dacBusy) return this.dac;
+    const seq = (this._dacSeq = (this._dacSeq || 0) + 1);
+    this._dacBusy = true;
+    try {
+      const r = await workerCall(this.worker, { type: 'dac', id: 'dac' + seq, ...this._dacInit(id) }, null, 'dac');
+      this.dac = this.info.dac = r.dac;
+      if (!this.info.mock) this.info.backend = r.backend;
+    } finally {
+      if (seq === this._dacSeq) this._dacBusy = false;
+    }
+    this._emit('dac', { dac: this.dac, name: this._build(this.dac).name });
+    return this.dac;
+  }
 
   _emit(type, detail) { this.dispatchEvent(new CustomEvent(type, { detail })); }
   _setState(s) { if (this.state !== s) { this.state = s; this._emit('state', { state: s }); } }
@@ -333,7 +374,7 @@ export class UDSAudio extends EventTarget {
     const w = this._spawn();
     try {
       await workerCall(w, {
-        type: 'init', engine: this.info.mock ? 'mock' : 'wasm', wasmUrl: this.wasmUrl, sampleRate,
+        type: 'init', engine: this.info.mock ? 'mock' : 'wasm', ...this._dacInit(this.dac), sampleRate,
         channels: this.channels, patterns: this._patternsFull, accentLevelDrop: this.accentLevelDrop,
       }, null, 'ready');
       const res = await workerCall(w, {
