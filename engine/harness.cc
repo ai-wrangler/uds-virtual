@@ -247,6 +247,21 @@ void run_to_frame_end() {
   if (cycles == 0) cycle_spi();
   for (;;) {
     if (spi_idle()) {
+#ifdef BACKEND_HAS_FRAME_IDLE
+      // a whole frame from its first cycle (cycle number = 1 mod FRAME)
+      if (fpos == 0) {
+        int n = 0;
+        uint8_t o = uio_or;
+        if (backend::frame_idle(uio_in, n, o)) {
+          uio_or = o;
+          seen_uio = backend::uio;
+          cycles += FRAME;
+          ones = 0;
+          frame_done(n);
+          return;
+        }
+      }
+#endif
       int left = FRAME - fpos;
       int n = ones;
       uint8_t o = uio_or;

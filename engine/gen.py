@@ -18,9 +18,13 @@ initial state; registers start at 0.
 SPDX-License-Identifier: Apache-2.0
 """
 import json
+import re
 import sys
 
 TOP = "tt_um_ai_wrangler_uds1x1"
+FRAME = 96
+# t counts 0..47 within a voice window, v the window; both from 0 at cycle 0
+PHASE_NETS = {"core.t": "uint64_t(P % 48)", "core.v": "uint64_t((P / 48) % 2)"}
 
 
 def pint(v):
@@ -44,7 +48,8 @@ def main(path):
                     src[b] = (v, i)
     names = {}
     for k, (cname, c) in enumerate(cells.items()):
-        names[cname] = "c%d" % k
+        ff = c["type"] in ("$dff", "$dffe", "$sdff", "$sdffe", "$sdffce")
+        names[cname] = ("s.c%d" if ff else "c%d") % k     # registers live in State s
         for port, d in c["port_directions"].items():
             if d != "output":
                 continue
@@ -159,13 +164,29 @@ def main(path):
     for pname, p in ports.items():
         if p["direction"] == "input":
             w("uint64_t in_%s = 0;" % pname)
-        else:
-            w("uint64_t out_%s = 0;" % pname)
+    w("struct State {")
+    for pname, p in ports.items():
+        if p["direction"] == "output":
+            w("  uint64_t out_%s = 0;" % pname)
+    netname = {}
+    for nn, x in mod["netnames"].items():
+        if not x["hide_name"]:
+            netname.setdefault(tuple(x["bits"]), nn)
     for cname in ffs:
         n = names[cname]
-        w("%s %s = 0;  // %s %s" % (ctype(var_width[n]), n, cells[cname]["type"], cname.split("$")[-1][:60]))
+        w("  %s %s = 0;  // %s %s" % (ctype(var_width[n]), n[2:], cells[cname]["type"],
+                                     netname.get(tuple(cells[cname]["connections"]["Q"]), "")))
+    w("};")
+    w("State S;")
+    # registers that are known per clock of the frame (the window counters)
+    phase_regs = {}
+    for nn, x in mod["netnames"].items():
+        for cname in ffs:
+            if x["bits"] == cells[cname]["connections"]["Q"] and nn in PHASE_NETS:
+                phase_regs[names[cname]] = PHASE_NETS[nn]
     w("")
-    w("__attribute__((always_inline)) inline void step() {")
+    body_start = len(out)
+    w("__attribute__((always_inline)) inline void step(State &s) {")
     for cname in order:
         c = cells[cname]
         t = c["type"]
@@ -231,7 +252,7 @@ def main(path):
         w("  const %s %s = %s;" % (T, n, e))
     for pname, p in ports.items():
         if p["direction"] == "output":
-            w("  out_%s = %s;" % (pname, expr(p["bits"], 64)))
+            w("  s.out_%s = %s;" % (pname, expr(p["bits"], 64)))
     nxt = []
     for cname in ffs:
         c = cells[cname]
@@ -259,10 +280,33 @@ def main(path):
                 e = "%s ? (%s ? %s : %s) : %s" % (en, sr, rve, d, n)
         elif en:
             e = "%s ? %s : %s" % (en, d, n)
-        w("  const %s %s_next = %s;" % (T, n, e))
+        w("  const %s %s_next = %s;" % (T, n[2:], e))
         nxt.append(n)
     for n in nxt:
-        w("  %s = %s_next;" % (n, n))
+        w("  %s = %s_next;" % (n, n[2:]))
+    w("}")
+    w("inline void step() { step(S); }")
+    body = out[body_start + 1:-2]
+    # step_at<P, UIO>(): the same clock with the inputs of an idle SPI bus
+    # (rst_n = 1, ui_in = 0, uio_in = UIO) and the window counters known:
+    # P is the cycle number mod one frame. Only valid while the counters run
+    # freely (any time after reset), which the harness guarantees.
+    w("")
+    w("// Window counters as functions of P = cycle mod %d: %s" % (FRAME, ", ".join(
+        "%s = %s" % (k, v) for k, v in sorted(phase_regs.items()))))
+    w("template <int P, int UIO> __attribute__((always_inline)) inline void step_at(State &s) {")
+    w("  constexpr uint64_t in_rst_n = 1, in_ena = 1, in_ui_in = 0, in_clk = 1, in_uio_in = UIO;")
+    w("  (void)in_rst_n; (void)in_ena; (void)in_ui_in; (void)in_clk; (void)in_uio_in;")
+    for k, v in sorted(phase_regs.items()):
+        w("  constexpr uint64_t %s_k = %s;" % (k[2:], v))
+    for line in body:
+        skip = False
+        for k in phase_regs:
+            if line.startswith("  const uint64_t %s_next =" % k[2:]) or line.startswith("  %s = %s_next;" % (k, k[2:])):
+                skip = True
+            line = re.sub(r"\bs\.%s\b" % k[2:], k[2:] + "_k", line)
+        if not skip:
+            w(line)
     w("}")
     w("}  // namespace gen")
     print("\n".join(out))

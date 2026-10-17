@@ -47,3 +47,32 @@ test(`backends agree on every clock (${files.join(', ')})`, { skip: files.length
   }
   console.log(`# cross-check: ${files.length} backends, ${clocks} clocks, ${msgs} messages, audio pin high on ${active} clocks: identical`);
 });
+
+test('backends agree frame by frame on the fast (idle) path and in render()', { skip: files.length < 2 }, async () => {
+  const engines = await Promise.all(files.map((f) => loadEngine(readFileSync(new URL(f, DIR)))));
+  const r = rng(777);
+  const ri = (n) => Math.floor(r() * n);
+  let frames = 0;
+  while (frames * 96 < CLOCKS) {
+    for (let i = 0, k = ri(3); i < k; i++) {
+      const m = [0x18 | ri(8), ri(256), ri(256), ri(256)];
+      for (const e of engines) e.send(m);
+    }
+    if (ri(4) === 0) {
+      // split render at an arbitrary sample: messages start mid-frame
+      const n = 1 + ri(700);
+      const a = Float32Array.from(engines[0].render(n));
+      for (let e = 1; e < engines.length; e++) assert.deepEqual(engines[e].render(n), a);
+    }
+    const n = 1 + ri(2000);
+    const c0 = engines[0].runCounts(n);
+    for (let e = 1; e < engines.length; e++) {
+      assert.deepEqual(engines[e].runCounts(n), c0, `${files[e]} frames ${frames}..${frames + n}`);
+      assert.equal(engines[e].uoOut, engines[0].uoOut);
+      assert.equal(engines[e].uioOut, engines[0].uioOut);
+      assert.equal(engines[e].cycles, engines[0].cycles);
+    }
+    frames += n;
+  }
+  console.log(`# cross-check (frames): ${frames} frames identical`);
+});

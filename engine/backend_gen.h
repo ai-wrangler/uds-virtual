@@ -5,6 +5,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
+#include <utility>
 #include "gen/uds_chip_gen.h"
 
 #define BACKEND_NAME "gen"
@@ -24,8 +25,34 @@ inline void set_rst_n(bool v) { gen::in_rst_n = v; }
 __attribute__((always_inline)) inline void clock(uint8_t uio_in) {
   gen::in_uio_in = uio_in;
   gen::step();
-  uo = uint8_t(gen::out_uo_out);
-  uio = uint8_t(gen::out_uio_out);
+  uo = uint8_t(gen::S.out_uo_out);
+  uio = uint8_t(gen::S.out_uio_out);
+}
+
+// One whole frame on an idle SPI bus, cycles 96k+1 .. 96k+96, with the
+// window counters folded into the code (gen::step_at). Adds the frame's 1s
+// on the audio pin to ones and ORs uio_out into uio_or.
+#define BACKEND_HAS_FRAME_IDLE 1
+template <int UIO, int... I>
+__attribute__((always_inline)) inline void frame_idle_seq(std::integer_sequence<int, I...>, int &ones,
+                                                          uint8_t &uio_or) {
+  int n = 0;
+  uint64_t o = 0;
+  gen::State s = gen::S;           // a local copy the compiler keeps in registers
+  ((gen::step_at<(I + 1) % 96, UIO>(s), n += int(s.out_uo_out >> 7), o |= s.out_uio_out), ...);
+  gen::S = s;
+  ones += n;
+  uio_or |= uint8_t(o);
+  uo = uint8_t(s.out_uo_out);
+  uio = uint8_t(s.out_uio_out);
+}
+// Returns false if these inputs have no specialised version.
+inline bool frame_idle(uint8_t uio_in, int &ones, uint8_t &uio_or) {
+  gen::in_uio_in = uio_in;
+  if (uio_in == 0x01) frame_idle_seq<0x01>(std::make_integer_sequence<int, 96>{}, ones, uio_or);
+  else if (uio_in == 0x03) frame_idle_seq<0x03>(std::make_integer_sequence<int, 96>{}, ones, uio_or);
+  else return false;
+  return true;
 }
 
 }  // namespace backend
