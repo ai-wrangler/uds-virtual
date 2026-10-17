@@ -1,0 +1,49 @@
+// Cross-check: every backend in engine/wasm/ against the others, cycle by cycle
+// (uo_out and uio_out on every clock), for 10 M clocks of random SPI traffic.
+// UDS_CROSS_CLOCKS overrides the length.
+// SPDX-License-Identifier: Apache-2.0
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { loadEngine } from '../../app/engine/uds-engine.js';
+import { rng } from './scenario.mjs';
+
+const DIR = new URL('../wasm/', import.meta.url);
+const files = readdirSync(DIR).filter((f) => f.endsWith('.wasm')).sort();
+const CLOCKS = +(process.env.UDS_CROSS_CLOCKS || 10_000_000);
+
+test(`backends agree on every clock (${files.join(', ')})`, { skip: files.length < 2 }, async () => {
+  const engines = await Promise.all(files.map((f) => loadEngine(readFileSync(new URL(f, DIR)))));
+  const r = rng(12345);
+  const ri = (n) => Math.floor(r() * n);
+  let clocks = 0, msgs = 0, active = 0;
+  while (clocks < CLOCKS) {
+    // random messages: HITs, STOPs, READs of any register, unknown commands, odd lengths
+    const k = [0, 0, 0, 1, 1, 2, 4][ri(7)];
+    for (let i = 0; i < k; i++) {
+      const x = r();
+      let m;
+      if (x < 0.55) m = [0x18 | ri(8), ri(256), ri(256), ri(256)];
+      else if (x < 0.65) m = [0x40];
+      else if (x < 0.8) m = [0x30 | ri(16), ri(256)];
+      else { m = []; for (let j = 0, n = 1 + ri(4); j < n; j++) m.push(ri(256)); }
+      const ok = engines.map((e) => e.send(m));
+      assert.ok(ok.every((v) => v === ok[0]));
+      msgs++;
+    }
+    const n = 1 + ri([50, 500, 8192][ri(3)]);
+    const t0 = engines[0].runTrace(n).slice();
+    for (let j = 0; j < t0.length; j++) if (t0[j] & 0x80) active++;
+    for (let e = 1; e < engines.length; e++) {
+      const t = engines[e].runTrace(n);
+      for (let j = 0; j < n; j++) {
+        if (t[j] !== t0[j]) {
+          assert.fail(`${files[e]} differs from ${files[0]} at clock ${clocks + j}: ` +
+            `${t[j].toString(16)} vs ${t0[j].toString(16)}`);
+        }
+      }
+    }
+    clocks += n;
+  }
+  console.log(`# cross-check: ${files.length} backends, ${clocks} clocks, ${msgs} messages, audio pin high on ${active} clocks: identical`);
+});
