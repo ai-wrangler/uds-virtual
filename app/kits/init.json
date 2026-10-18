@@ -3,7 +3,7 @@
   "name": "Init",
   "inspiredBy": "",
   "description": "V3-WEB's starter kit for the editor: one plain sound per channel on the default GM note map. V3-SOUND's kits replace it as the default when they land.",
-  "contract": 0,
+  "contract": 1,
   "tempo": 120,
   "channels": [
     {
@@ -11,15 +11,16 @@
       "name": "Snare",
       "patch": {
         "pitch": 92,
-        "decay": 7,
-        "level": 13,
-        "bend": 3,
-        "bendtime": 0,
-        "mix": 5,
+        "decay": 8,
         "wave": 0,
         "color": 2,
-        "clap": 0,
-        "snap": 4
+        "bend": 1,
+        "res": 0,
+        "bendtime": 2,
+        "mode": 1,
+        "mix": 5,
+        "level": 13,
+        "click": 1
       }
     },
     {
@@ -28,14 +29,15 @@
       "patch": {
         "pitch": 104,
         "decay": 8,
-        "level": 12,
-        "bend": 3,
-        "bendtime": 1,
-        "mix": 1,
         "wave": 0,
         "color": 0,
-        "clap": 0,
-        "snap": 1
+        "bend": 1,
+        "res": 0,
+        "bendtime": 4,
+        "mode": 0,
+        "mix": 1,
+        "level": 12,
+        "click": 0
       }
     },
     {
@@ -44,14 +46,15 @@
       "patch": {
         "pitch": 88,
         "decay": 8,
-        "level": 12,
-        "bend": 3,
-        "bendtime": 1,
-        "mix": 1,
         "wave": 0,
         "color": 0,
-        "clap": 0,
-        "snap": 1
+        "bend": 1,
+        "res": 0,
+        "bendtime": 4,
+        "mode": 0,
+        "mix": 1,
+        "level": 12,
+        "click": 0
       }
     },
     {
@@ -60,14 +63,15 @@
       "patch": {
         "pitch": 72,
         "decay": 9,
-        "level": 12,
-        "bend": 3,
-        "bendtime": 1,
-        "mix": 1,
         "wave": 0,
         "color": 0,
-        "clap": 0,
-        "snap": 1
+        "bend": 1,
+        "res": 0,
+        "bendtime": 4,
+        "mode": 0,
+        "mix": 1,
+        "level": 12,
+        "click": 0
       }
     },
     {
@@ -76,14 +80,15 @@
       "patch": {
         "pitch": 30,
         "decay": 9,
-        "level": 15,
-        "bend": 6,
-        "bendtime": 1,
-        "mix": 0,
         "wave": 1,
         "color": 0,
-        "clap": 0,
-        "snap": 3
+        "bend": 3,
+        "res": 0,
+        "bendtime": 3,
+        "mode": 2,
+        "mix": 1,
+        "level": 15,
+        "click": 1
       }
     },
     {
@@ -92,14 +97,15 @@
       "patch": {
         "pitch": 232,
         "decay": 11,
-        "level": 10,
-        "bend": 0,
-        "bendtime": 0,
-        "mix": 6,
         "wave": 3,
         "color": 3,
-        "clap": 0,
-        "snap": 0
+        "bend": 0,
+        "res": 0,
+        "bendtime": 0,
+        "mode": 0,
+        "mix": 6,
+        "level": 10,
+        "click": 0
       }
     },
     {
@@ -108,14 +114,15 @@
       "patch": {
         "pitch": 250,
         "decay": 5,
-        "level": 10,
-        "bend": 0,
-        "bendtime": 0,
-        "mix": 7,
         "wave": 3,
         "color": 2,
-        "clap": 0,
-        "snap": 1
+        "bend": 0,
+        "res": 0,
+        "bendtime": 0,
+        "mode": 0,
+        "mix": 7,
+        "level": 10,
+        "click": 0
       }
     },
     {
@@ -124,14 +131,15 @@
       "patch": {
         "pitch": 250,
         "decay": 9,
-        "level": 10,
-        "bend": 0,
-        "bendtime": 0,
-        "mix": 7,
         "wave": 3,
         "color": 2,
-        "clap": 0,
-        "snap": 0
+        "bend": 0,
+        "res": 0,
+        "bendtime": 0,
+        "mode": 0,
+        "mix": 7,
+        "level": 10,
+        "click": 0
       }
     }
   ]

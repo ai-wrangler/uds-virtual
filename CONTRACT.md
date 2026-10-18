@@ -113,11 +113,14 @@ The Chip selector offers one entry per build: `1st` = **v1** (the chip as built)
 
 `available: false` keeps an entry "coming soon". **v3 becomes available only with the real engine**
 (`uds_engine_v3.wasm`, built by `engine/build.sh all v3` from `chip-v3/`). Until then the page plays v3 only
-with `?v3=mock` (or `?engine=mock`), the mock v3 synth in `app/audio/mock-engine-v3.js`, which is not the chip.
+with `?v3=mock` (or `?engine=mock`): `app/audio/mock-engine-v3.js`, a JavaScript port of V3-CHIP's golden model
+(`chip-v3/model/uds3_model.py`), bit-exact with it on `engine/test/fixtures/model_frames_v3.json`, but not the
+chip's Verilog.
 
 Engine builds with another shape export `sim_clock_hz`, `sim_frame_clocks`, `sim_msg_max`; `UDSEngine` then has
 `clockHz`, `frameClocks`, `frameRate` and `maxMessage` (6 MHz, 96, 4 for v1/v2), and `send()` takes up to
-`maxMessage` bytes (v3: 5-byte HITs).
+`maxMessage` bytes (v3: 5-byte HITs). The v3 build's virtual controller is the model's standard host
+(`UDS_HOST_WINDOW`): one byte per 64-clock window, a BUSY wait after every byte of a HIT (CONTRACT 1).
 
 Kits (v3): `app/kits/index.json` = `{ default, kits: [{ id, file, name, inspiredBy, source }] }`; each
 `kits/<id>.json` = `{ id, name, inspiredBy, description, contract, tempo, channels: [8 x { ch, name, notes?,

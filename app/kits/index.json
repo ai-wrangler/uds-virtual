@@ -7,7 +7,7 @@
       "file": "default.json",
       "name": "Default",
       "inspiredBy": "",
-      "source": "tt-uds-v3 sound@f82c1b6",
+      "source": "tt-uds-v3 sound@dd7d2d2",
       "pattern": "patterns/default.mid"
     },
     {
@@ -15,7 +15,7 @@
       "file": "copenhagen.json",
       "name": "Copenhagen Night",
       "inspiredBy": "Trentemøller",
-      "source": "tt-uds-v3 sound@f82c1b6",
+      "source": "tt-uds-v3 sound@dd7d2d2",
       "pattern": "patterns/copenhagen.mid"
     },
     {
@@ -23,7 +23,7 @@
       "file": "reykjavik.json",
       "name": "Reykjavík",
       "inspiredBy": "GusGus",
-      "source": "tt-uds-v3 sound@f82c1b6",
+      "source": "tt-uds-v3 sound@dd7d2d2",
       "pattern": "patterns/reykjavik.mid"
     },
     {
@@ -31,7 +31,7 @@
       "file": "shoreditch.json",
       "name": "Shoreditch",
       "inspiredBy": "Simian Mobile Disco",
-      "source": "tt-uds-v3 sound@f82c1b6",
+      "source": "tt-uds-v3 sound@dd7d2d2",
       "pattern": "patterns/shoreditch.mid"
     },
     {
@@ -39,7 +39,7 @@
       "file": "tromso.json",
       "name": "Tromsø",
       "inspiredBy": "Röyksopp",
-      "source": "tt-uds-v3 sound@f82c1b6",
+      "source": "tt-uds-v3 sound@dd7d2d2",
       "pattern": "patterns/tromso.mid"
     },
     {

@@ -1,32 +1,19 @@
-# v3 truth fixtures (requested from V3-CHIP)
+# v3 truth fixture
 
-`model_frames_v3.json` here is the v3 truth fixture: what V3-CHIP's bit-exact Python model
-(`tt-uds-v3/model/uds3_*.py`) says the chip puts on its audio pin, frame by frame, for a schedule of SPI
-messages. `engine/test/v3_truth.test.mjs` (Node) and `tests/e2e/v3-truth.spec.mjs` (Chromium) replay it on
-`app/engine/uds_engine_v3.wasm` and require 0 mismatches. Both skip while the file or the engine is missing.
+`model_frames_v3.json` is what V3-CHIP's bit-exact golden model (`chip-v3/model/uds3_model.py`, CONTRACT 1)
+puts on the audio pin, frame by frame, for a schedule of HITs and STOPs. It is made here from the vendored model:
 
-Format (the same as `model_frames.json` for v1, with v3's frame):
-
-```json
-{
-  "chip": "tt-uds-v3@<commit>", "contract": 1, "clockHz": 12000000, "frameClocks": 192,
-  "frames": 20000,
-  "events": [{ "frame": 2, "bytes": [24, 64, 140, 9, 0] }],
-  "counts": [96, 96, 97, ...],
-  "regs": { "id": 213, "version": 50 }
-}
+```sh
+python3 engine/test/make_fixture_v3.py            # chip-v3/ -> engine/test/fixtures/model_frames_v3.json
 ```
 
-- `counts[k]`: the number of 1s on `uo_out[7]` in frame k, where frame k is the pins during cycles
-  `192k+1 .. 192k+192` and cycle 0 is the cycle that ends with the first rising edge after reset (rst_n low for
-  4 clocks), as in `test/tb.v`.
-- `events`: messages to queue before frame `frame` runs. The engine's virtual controller sends a queued
-  message from the next clock: CS low, SPI mode 0, MSB first, SCK = clk/8 (4 clocks low, 4 high), CS high
-  4 clocks after the last bit, and before each message it waits until BUSY (uio[5]) is low. So a message
-  queued at the start of frame f has its last SCK rising edge at cycle `192f + 1 + 3 + 8*(8*len - 1) + 4`
-  when the bus is free (`engine.takeLog()` reports the exact cycle). The model must see the message at
-  the frame the RTL acts on it; `engine/test/model_ref.py` shows how v1 does this.
-- `regs`: READ ID and READ VERSION answers.
+Format: `{ chip, contract, clockHz, frameClocks, frames, events: [{ frame, bytes }], counts, crc, regs }`.
+`events` are messages queued at the start of frame `frame`; `counts[k]` is the number of 1s on `uo_out[7]` in
+frame k (128 clocks). The model's own `run()` sends them with its standard host (one SPI byte per 64-clock
+window, a BUSY wait after every HIT byte), the host the engine's harness implements for v3 (`UDS_HOST_WINDOW`).
 
-If the model has the same shape as v1's `uds_model.Engine` (`hit(ch, bytes)`, `stop()`, `step()` -> count),
-`node engine/test/make_fixture_v3.mjs` can make this file here instead.
+Checks that use it:
+
+- `tests/audio/v3.test.mjs`: the mock v3 engine (a JavaScript port of the model) gives the same counts;
+- `engine/test/v3_truth.test.mjs` (Node) and `tests/e2e/v3-truth.spec.mjs` (Chromium): the v3 engine built from
+  V3-CHIP's RTL gives the same counts, 0 mismatches. They skip until `app/engine/uds_engine_v3.wasm` exists.

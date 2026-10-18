@@ -172,8 +172,8 @@
       "backend": "gen",
       "gain": 3,
       "available": false,
-      "clockHz": 12000000,
-      "frameClocks": 192,
+      "clockHz": 8000000,
+      "frameClocks": 128,
       "voices": 2,
       "patchSet": "v3",
       "paramsUrl": "params_v3.json",
@@ -187,7 +187,7 @@
       ],
       "kits": "../kits/index.json",
       "mockEngine": "mock-engine-v3.js",
-      "mockGain": 4.46
+      "mockGain": 7.45
     }
   ]
 }

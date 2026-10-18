@@ -97,6 +97,9 @@ export function gmNotes(ch) {
 export function validateKit(kit, build) {
   if (!kit || typeof kit !== 'object' || Array.isArray(kit)) throw new Error('a kit is a JSON object');
   if (!Array.isArray(kit.channels)) throw new Error('the kit has no "channels" list');
+  if (kit.contract !== undefined && kit.contract !== null && build.contract !== undefined && build.contract !== null && kit.contract !== build.contract) {
+    throw new Error(`the kit is for contract ${kit.contract}, this chip is contract ${build.contract}`);
+  }
   const params = paramList(build);
   const byCh = new Map();
   for (const c of kit.channels) {
@@ -114,7 +117,9 @@ export function validateKit(kit, build) {
       if (!Array.isArray(c.notes) || c.notes.some((n) => !(Number.isInteger(n) && n >= 0 && n <= 127))) throw new Error('channel ' + ch + ': notes must be MIDI note numbers 0..127');
       notes = [...c.notes];
     }
-    byCh.set(ch, { ch, name: String(c.name || `Ch ${ch}`).slice(0, 24), notes, patch: clampPatch(params, c.patch) });
+    // CONTRACT 1: a field the kit leaves out is 0
+    const zero = Object.fromEntries(params.map((p) => [p.id, Math.max(p.min, 0)]));
+    byCh.set(ch, { ch, name: String(c.name || `Ch ${ch}`).slice(0, 24), notes, patch: clampPatch(params, { ...zero, ...c.patch }) });
   }
   if (byCh.size !== 8) throw new Error('a kit needs all 8 channels (0..7), this one has ' + byCh.size);
   const contract = kit.contract ?? null;

@@ -12,7 +12,7 @@ import { encodeWav } from './wav.js';
 import { softLimit, KNEE } from './limiter.js';
 import { packHit, paramList, defaultPatch } from './patch.js';
 
-// Chip clock of the selected build (6 MHz for v1/v2, 12 MHz for v3): status.realtime = simHz / clockHz
+// Chip clock of the selected build (6 MHz for v1/v2, 8 MHz for v3): status.realtime = simHz / clockHz
 let clockHz = 6000000;
 // Make-up gain of the selected engine build (app/engine/builds.json): 3 for the chip as built (a full-level
 // voice reaches about 1/6 of the pin's swing); the 2nd-order DAC preview is about 6 dB quieter.

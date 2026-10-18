@@ -1,52 +1,95 @@
 // SPDX-License-Identifier: Apache-2.0
-// Mock UDS v3 engine: the interface of app/engine/uds-engine.js (CONTRACT.md section 3) in plain JS, for the
-// v3 panel before the real v3 Verilog exists. It is NOT the chip: it is a float synthesizer that follows the
-// meaning of the patch fields in params.json (DRAFT 0 of tt-uds-v3 docs/v3/CONTRACT.md), so the editor, the
-// kits and the tests have something to play. The live site never offers it: the page only uses it with
-// ?v3=mock (or ?engine=mock), and the v3 entry of the Chip selector stays "coming soon" until the real
-// engine is built from V3-CHIP's RTL.
+// Mock UDS v3 engine: a JavaScript port of V3-CHIP's golden model (tt-uds-v3 model/uds3_model.py, CONTRACT 1),
+// with the interface of app/engine/uds-engine.js (CONTRACT.md section 3).
 //
-// Shape: 12 MHz, 192 clocks per frame (62.5 kHz), 2 voices, 5-byte HITs (0x18|ch + the bytes of the
-// build's hit packing), READ/STOP as v1. Voice choice as v1: same channel (hats 6 and 7 as one), a free
-// voice, then the quieter one.
+// It runs the model at window granularity (2 voices x 64-clock windows = one 128-clock frame at 8 MHz), with the
+// model's standard host (one SPI byte per window, a BUSY wait after every byte of a HIT), and turns the number
+// of 1s per frame into sound like the real engine's Audio Pmod model (AC coupling, RC low-pass, resampling).
+// tests/audio/v3.test.mjs checks its frame counts against the Python model's on engine/test/fixtures/
+// model_frames_v3.json.
+//
+// It is NOT the chip's Verilog. The live site never offers it: the page uses it only with ?v3=mock (or
+// ?engine=mock), and the v3 entry of the Chip selector stays "coming soon" until the real engine is built from
+// V3-CHIP's RTL.
 
 import { paramList, unpackHit } from './patch.js';
 
 const DIGITS = [0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07];
 const QUEUE_MAX = 255;
-const BEND_MS = [5, 15, 40, 120];
+const L = 64;                 // clocks per window
+const DAC_FB = 256;
 
-// DRAFT 0 packing, used when the build gives none (tests that load the mock directly)
-export const DRAFT0_BUILD = {
-  version: 'v3',
+// CONTRACT 1 packing, used when the loader gives no build (tests that load the mock directly)
+export const CONTRACT1_BUILD = {
+  version: 'v3', contract: 1, clockHz: 8000000, frameClocks: 128,
   params: [
-    { id: 'pitch', bits: 8, default: 64 }, { id: 'decay', bits: 4, default: 8 }, { id: 'level', bits: 4, default: 12 },
-    { id: 'bend', bits: 3, default: 0 }, { id: 'bendtime', bits: 2, default: 1 }, { id: 'mix', bits: 3, default: 0 },
-    { id: 'wave', bits: 2, default: 0 }, { id: 'color', bits: 2, default: 1 }, { id: 'clap', bits: 1, default: 0 },
-    { id: 'snap', bits: 3, default: 0 },
+    { id: 'pitch', bits: 8, default: 64 }, { id: 'decay', bits: 4, default: 8 }, { id: 'wave', bits: 2, default: 0 },
+    { id: 'color', bits: 2, default: 1 }, { id: 'bend', bits: 2, default: 0 }, { id: 'res', bits: 1, default: 0 },
+    { id: 'bendtime', bits: 3, default: 3 }, { id: 'mode', bits: 2, default: 0 }, { id: 'mix', bits: 3, default: 0 },
+    { id: 'level', bits: 4, default: 12 }, { id: 'click', bits: 1, default: 0 },
   ],
-  hit: { opcode: '0x18|ch', bytes: [['pitch'], ['decay', 'level'], ['bend', 'bendtime', 'mix'], ['wave', 'color', 'clap', 'snap']] },
+  hit: { opcode: '0x18|ch', bytes: [['pitch'], ['decay', 'wave', 'color'], ['bend', 'res', 'bendtime', 'mode'], ['mix', 'level', 'click']] },
 };
 
+// ---- voice math (model/uds3_model.py) ----
+const s8 = (v) => { v &= 0xff; return v & 0x80 ? v - 256 : v; };
+const increment = (pe) => (32 + (pe & 31)) << (pe >> 5);
+const bendoff = (aux, bend) => (((bend & 2) ? aux >> 1 : 0) + ((bend & 1) ? aux >> 2 : 0)) >> 1;
+const effPitch = (pitch, aux, bend) => Math.min(255, pitch + bendoff(aux, bend));
+function triangle(ph) {
+  const fold = ((ph >> 7) & 0xff) ^ (ph & 0x8000 ? 0xff : 0);
+  return s8((((~fold >> 7) & 1) << 7) | (fold & 0x7f));
+}
+function waveform(ph, wave, frame) {
+  const tri = triangle(ph);
+  if (wave === 0) return tri;
+  if (wave === 1) return Math.max(-128, Math.min(127, 2 * tri));
+  let sq = (ph >> 15) & 1;
+  if (wave === 3) sq ^= (frame & 1) ^ ((frame >> 2) & 1);
+  return sq ? -128 : 127;
+}
+function amplitudes(env, aux, mode) {
+  const cmp = mode === 3 ? (((aux & 63) << 2) | 3) : aux;
+  const mn = Math.min(env, cmp);
+  return [mode === 1 ? mn : env, (mode === 2 || (mode === 3 && (aux >> 6))) ? mn : env];
+}
+const POP4 = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
+function noise(color, lfsr, frame) {
+  if (color === 0) { const pc = POP4[lfsr & 15]; return pc === 4 ? 127 : pc * 64 - 128; }
+  if (color === 1) return lfsr & 1 ? 127 : -128;
+  if (color === 2) { const a = lfsr & 1, b = (lfsr >> 1) & 1; return a === b ? 0 : (a ? 127 : -128); }
+  return ((frame >> 1) ^ (frame >> 3) ^ (frame >> 4)) & 1 ? 127 : -128;
+}
+function tz13(frame) {
+  let f = frame & 0x1fff;
+  if (f === 0) return 13;
+  let n = 0;
+  while (!(f & 1)) { f >>= 1; n++; }
+  return n;
+}
+// noise slots of a window per mix value: SEL[mix][t]
+const SEL = Array.from({ length: 8 }, (_, mix) => Array.from({ length: L }, (_, t) => {
+  if (mix === 7) return true;
+  const r = ((t & 1) << 2) | (t & 2) | ((t >> 2) & 1);
+  return r < mix;
+}));
 const group = (ch) => (ch === 7 ? 6 : ch);
-const v = (patch, id, d = 0) => (patch[id] ?? d);
 
 class Voice {
-  constructor() { this.on = false; this.ch = 0; this.p = {}; this.age = 0; this.amp = 0; this.phase = 0; this.lp = 0; this.lp2 = 0; }
+  constructor() { this.pitch = 0; this.decay = 0; this.wave = 0; this.color = 0; this.bend = 0; this.res = 0; this.btime = 0; this.mode = 0; this.mix = 0; this.ch = 0; this.env = 0; this.aux = 0; this.phase = 0; }
 }
 
 class MockV3Engine {
   constructor(sampleRate, build) {
     this.backend = 'mock';
     this.mockOf = 'v3';
-    this.build = build && build.hit ? build : DRAFT0_BUILD;
+    this.build = build && build.hit ? build : CONTRACT1_BUILD;
     this.params = paramList(this.build);
-    this.hitLen = 1 + this.build.hit.bytes.length;
-    this.clockHz = build?.clockHz || 12000000;
-    this.frameClocks = build?.frameClocks || 192;
+    this.clockHz = this.build.clockHz || 8000000;
+    this.frameClocks = this.build.frameClocks || 128;
     this.frameRate = this.clockHz / this.frameClocks;
     this.maxMessage = 8;
-    this.audioModel = 'mock';
+    this.audioModel = 'count';
     this.out = new Float32Array(8192);
     this.reset(sampleRate);
   }
@@ -55,14 +98,20 @@ class MockV3Engine {
 
   reset(sampleRate) {
     if (sampleRate) this._rate = sampleRate;
-    this.voices = [new Voice(), new Voice()];
-    this.queue = []; this.current = null; this.msgFrames = 0; this.pending = null; this.kill = false;
+    // model Engine
+    this.v = [new Voice(), new Voice()];
+    this.n = 0; this.frame = 0; this.lfsr = 1; this.d1 = 0; this.d2 = -1;
+    this.pend = false; this.tgt = 0; this.hv = false; this.cb = 0; this.rx = 0; this.ch = 0;
+    this.con = false; this.killPend = false; this.kill = false;
+    // model Host
+    this.queue = []; this.cur = null; this.ci = 0;
     this.lastCh = 0; this.cycles = 0; this.frames = 0; this.lastOnes = this.frameClocks / 2;
-    this.seed = 0x1ace1; this.metal = [0, 0, 0]; this.metalCnt = [0, 0, 0];
     this.act = { busy: false, cs: false, hits: 0 };
-    this.framePos = 0; this.prev = 0; this.cur = 0; this.lpf = 0;
+    // Audio Pmod (as the harness: count of 1s per frame, 5 Hz AC coupling, RC, linear resampling)
+    this.dc = 0; this.lp = 0; this.prev = 0; this.cur0 = 0; this.framePos = 0;
     if (this.filterHz === undefined) this.filterHz = 15900;
     this.setFilterHz(this.filterHz);
+    this.dcAlpha = 2 * Math.PI * 5 / this.frameRate;
     this.step = this.frameRate / this._rate;
   }
 
@@ -77,109 +126,137 @@ class MockV3Engine {
     return true;
   }
   stop() { return this.send([0x40]); }
-  queueLength() { return this.queue.length + (this.current ? 1 : 0); }
+  queueLength() { return this.queue.length + (this.cur ? 1 : 0); }
   get uoOut() { return DIGITS[this.lastCh] | (this.lastOnes > this.frameClocks / 2 ? 0x80 : 0); }
-  get uioOut() { return (this.pending ? 0x20 : 0) | ((this.frames & 1) ? 0x10 : 0); }
+  get uioOut() { return (this.busy() ? 0x20 : 0) | ((this.n & 1) ? 0 : 0x10); }
   takeActivity() { const a = this.act; this.act = { busy: false, cs: false, hits: 0 }; return a; }
+  busy() { return this.pend || this.hv; }
 
-  // the virtual controller: SCK = clk/8, so 64 clocks per byte, then wait for BUSY low
-  controller() {
-    if (!this.current) {
-      if (!this.queue.length || this.pending) return;
-      this.current = this.queue.shift();
-      this.msgFrames = Math.ceil((this.current.length * 64 + 16) / this.frameClocks);
+  // the model's Host.next_event, at each window start. READ messages go out byte by byte but do nothing here.
+  nextEvent() {
+    if (this.busy()) return null;
+    if (!this.cur) {
+      if (!this.queue.length) return null;
+      this.cur = this.queue.shift(); this.ci = 0;
     }
+    const msg = this.cur, i = this.ci, c0 = msg[0];
+    let ev = null;
+    if (i === 0) {
+      if (c0 === 0x40) ev = { kind: 'stop' };
+      else if ((c0 & 0xf8) === 0x18) ev = { kind: 'hit', ch: c0 & 7 };
+    } else if ((c0 & 0xf8) === 0x18) ev = { kind: 'byte', k: i, b: msg[i] };
     this.act.cs = true;
-    if (--this.msgFrames > 0) return;
-    const m = this.current; this.current = null;
-    const cmd = m[0];
-    if ((cmd & 0xf8) === 0x18 && m.length >= this.hitLen) {
-      this.pending = { ch: cmd & 7, patch: unpackHit(this.build, m.subarray(1)) };
-      this.act.hits++; this.act.busy = true; this.lastCh = cmd & 7;
-    } else if (cmd === 0x40) this.kill = true;
+    if (++this.ci >= msg.length) {
+      this.cur = null;
+      if ((c0 & 0xf8) === 0x18 && msg.length >= 5) { this.act.hits++; this.lastCh = c0 & 7; }
+    }
+    return ev;
   }
 
-  choose(ch) {
-    const g = group(ch), vs = this.voices;
-    for (let i = 0; i < vs.length; i++) if (vs[i].on && group(vs[i].ch) === g) return i;
-    for (let i = 0; i < vs.length; i++) if (!vs[i].on) return i;
-    return vs[0].amp <= vs[1].amp ? 0 : 1;
+  // the model's Engine.step_window: one 64-clock window; returns its number of 1s on the audio pin
+  stepWindow(ev) {
+    const n = this.n, vi = n & 1, clearing = (n >> 1) === 0;
+    const voc = this.v[vi];
+    const capFrame = vi === 1 ? this.frame : (this.frame - 1) & 0x1fff;
+    const pe = effPitch(voc.pitch, voc.aux, voc.bend);
+    const tone = waveform(voc.phase, voc.wave, capFrame);
+    const [at, an] = amplitudes(voc.env, voc.aux, voc.mode);
+    const mix = voc.mix, color = voc.color;
+    const tz = tz13(this.frame);
+    const dec = voc.env !== 0 && (tz >= voc.decay || tz === 13);
+    const lin = voc.mode === 3;
+    const ad = lin ? voc.btime : voc.btime + 3;
+    const adec = voc.aux !== 0 && tz >= ad;
+    // output through the 2nd-order sigma-delta
+    let ones = 0, v1 = this.d1, v2 = this.d2;
+    if (clearing) {
+      for (let t = 0; t < L; t++) { const y = v2 >= 0 ? 1 : 0, fb = y ? DAC_FB : -DAC_FB; ones += y; const nv1 = v1 - fb; v2 = v2 + v1 - 2 * fb; v1 = nv1; }
+    } else {
+      const nz = noise(color, this.lfsr, this.frame), sel = SEL[mix];
+      for (let t = 0; t < L; t++) {
+        const sn = sel[t], a = sn ? an : at, src = sn ? nz : tone, q = a >> 3;
+        const x = t < q ? src : (t < q + (a & 7) ? src >> 3 : 0);
+        const y = v2 >= 0 ? 1 : 0, fb = y ? DAC_FB : -DAC_FB;
+        ones += y;
+        const nv1 = v1 + x - fb; v2 = v2 + v1 - 2 * fb; v1 = nv1;
+      }
+    }
+    this.d1 = v1; this.d2 = v2;
+    if (ev) {
+      if (ev.kind === 'hit') { this.pend = true; this.ch = ev.ch & 7; this.act.busy = true; }
+      else if (ev.kind === 'byte') { this.hv = true; this.cb = ev.k; this.rx = ev.b & 255; this.act.busy = true; }
+      else if (ev.kind === 'stop') this.killPend = true;
+    }
+    if (clearing) this.v[vi] = new Voice();
+    else {
+      if (dec) voc.env -= voc.env < 8 ? 1 : voc.env >> 3;
+      if (this.kill) voc.env = 0;
+      if (adec) voc.aux -= (voc.aux < 8 || lin) ? 1 : voc.aux >> 3;
+      voc.phase = (voc.phase + increment(pe)) & 0xffff;
+      if (this.con) this.commit(voc);
+    }
+    if (this.hv && !this.pend && (1 - vi) === this.tgt) this.con = true;
+    else if (this.con) { this.con = false; this.hv = false; }
+    if (vi === 1) {
+      const a0 = this.v[0].env !== 0, a1 = this.v[1].env !== 0;
+      this.kill = this.killPend; this.killPend = false;
+      if (this.pend) { this.tgt = this.choose(a0, a1); this.pend = false; }
+      if (!a0 && !a1) { this.d1 = 0; this.d2 = -1; }
+      const l = this.lfsr;
+      this.lfsr = ((l << 1) | (((l >> 16) ^ (l >> 13)) & 1)) & 0x1ffff;
+      this.frame = (this.frame + 1) & 0x1fff;
+    }
+    this.n++;
+    return ones;
   }
 
-  rnd() {   // 17-bit LFSR, as the v1 drum noise
-    const s = this.seed, fb = ((s >> 16) ^ (s >> 13)) & 1;
-    this.seed = ((s << 1) | fb) & 0x1ffff;
-    return (s & 1) ? 1 : -1;
+  choose(a0, a1) {
+    const hg = group(this.ch), [v0, v1] = this.v;
+    if (a0 && group(v0.ch) === hg) return 0;
+    if (a1 && group(v1.ch) === hg) return 1;
+    if (!a0) return 0;
+    if (!a1) return 1;
+    return (v1.env >> 5) < (v0.env >> 5) ? 1 : 0;
   }
 
+  commit(voc) {
+    const b = this.rx, k = this.cb;
+    if (k === 1) { voc.pitch = b; voc.env = 0; }
+    else if (k === 2) { voc.decay = b >> 4; voc.wave = (b >> 2) & 3; voc.color = b & 3; }
+    else if (k === 3) { voc.bend = b >> 6; voc.res = (b >> 5) & 1; voc.btime = (b >> 2) & 7; voc.mode = b & 3; }
+    else if (k === 4) {
+      voc.mix = b >> 5; voc.ch = this.ch; voc.env = ((b >> 1) & 15) * 17; voc.aux = 255;
+      voc.phase = b & 1 ? 0x8000 : 0x4000;
+    }
+  }
+
+  /** One frame: two windows. Returns its 1s (0..128). */
   stepFrame() {
-    const FR = this.frameRate;
-    if (this.pending) {
-      const i = this.choose(this.pending.ch), vo = this.voices[i];
-      vo.on = true; vo.ch = this.pending.ch; vo.p = this.pending.patch; vo.age = 0; vo.phase = 0; vo.lp = 0; vo.lp2 = 0;
-      this.pending = null;
-    }
-    if (this.kill) { for (const vo of this.voices) vo.on = false; this.kill = false; }
-    // the fixed "metal" source: squares at fs/6, fs/10, fs/14, XORed
-    const halves = [3, 5, 7];
-    for (let k = 0; k < 3; k++) if (++this.metalCnt[k] >= halves[k]) { this.metalCnt[k] = 0; this.metal[k] ^= 1; }
-    const metalFix = this.metal[0] ^ this.metal[1] ^ this.metal[2];
-    const white = this.rnd();
-    let total = 0;
-    for (const vo of this.voices) {
-      if (!vo.on) continue;
-      const p = vo.p, t = vo.age / FR;
-      const decay = v(p, 'decay', 8), level = v(p, 'level', 12);
-      const env = Math.exp(-t / (8 * 2 ** decay / 62500));
-      vo.amp = env * level / 15;
-      if (vo.amp < 2e-4 || level === 0) { vo.on = false; continue; }
-      // pitch: exponential, 32 steps per octave, as v1; the bend starts up to 3 octaves higher
-      const pe = v(p, 'pitch', 64);
-      const base = (32 + (pe & 31)) * 2 ** (pe >> 5) * 62500 / 65536;
-      const bend = v(p, 'bend', 0) * 3 / 7 * Math.exp(-t * 1000 / BEND_MS[v(p, 'bendtime', 1) & 3]);
-      vo.phase = (vo.phase + Math.min(0.45, base * 2 ** bend / FR)) % 1;
-      const ph = vo.phase, tri = 1 - 4 * Math.abs(ph - 0.5);
-      let tone;
-      switch (v(p, 'wave', 0)) {
-        case 1: tone = Math.max(-1, Math.min(1, tri * 3)); break;            // driven (clipped) triangle
-        case 2: tone = ph < 0.5 ? 1 : -1; break;                              // square
-        case 3: tone = ((ph < 0.5 ? 1 : 0) ^ metalFix) ? 1 : -1; break;       // metal: square XOR fixed squares
-        default: tone = tri;
-      }
-      // noise colour
-      vo.lp += 0.18 * (white - vo.lp);
-      let noise;
-      switch (v(p, 'color', 1)) {
-        case 0: vo.lp2 += 0.25 * (vo.lp - vo.lp2); noise = vo.lp2 * 2.2; break;   // dark
-        case 2: noise = (white - vo.lp) * 0.9; break;                             // bright (high-passed)
-        case 3: noise = (metalFix ? 0.75 : -0.75) + 0.25 * white; break;           // metallic
-        default: noise = white;
-      }
-      if (v(p, 'clap', 0)) {   // 4 bursts 10 ms apart, then the tail
-        const ms = t * 1000;
-        noise *= ms < 40 ? 0.25 + 0.75 * Math.exp(-(ms % 10) / 2.2) : 1;
-      }
-      const m = v(p, 'mix', 0) / 7;
-      let s = tone * (1 - m) + noise * m;
-      const snap = v(p, 'snap', 0);
-      if (snap && t < 0.004) s += (snap / 7) * 1.5 * Math.exp(-t / 0.0007) * (t < 0.0003 ? 1 : white);
-      total += s * vo.amp;
-      vo.age++;
-    }
-    // a full-level voice reaches about 1/6 of the pin's swing, as on v1 (the worker's gain 3 makes up for it)
-    const x = Math.max(-1, Math.min(1, total / 6));
-    this.lastOnes = Math.round((x + 1) * this.frameClocks / 2);
-    this.frames++; this.cycles += this.frameClocks;
-    this.controller();
-    if (this.pending) this.act.busy = true;
-    return x;
+    let ones = 0;
+    for (let w = 0; w < 2; w++) ones += this.stepWindow(this.nextEvent());
+    this.lastOnes = ones; this.frames++; this.cycles += this.frameClocks;
+    return ones;
   }
 
-  advance(x) { this.lpf += this.alpha * (x - this.lpf); this.prev = this.cur; this.cur = this.lpf; }
+  advance(ones) {
+    const h = this.frameClocks / 2;
+    let x = (ones - h) / h;
+    this.dc += (x - this.dc) * this.dcAlpha;
+    x -= this.dc;
+    this.lp += this.alpha * (x - this.lp);
+    this.prev = this.cur0; this.cur0 = this.lp;
+  }
 
   runFrames(n) {
     for (let i = 0; i < n; i++) this.advance(this.stepFrame());
     return this.lastOnes;
+  }
+
+  /** Frame counts of n frames (tests). */
+  runCounts(n) {
+    const c = new Uint8Array(n);
+    for (let i = 0; i < n; i++) { c[i] = this.stepFrame(); this.advance(c[i]); }
+    return c;
   }
 
   render(n) {
@@ -188,7 +265,7 @@ class MockV3Engine {
     for (let i = 0; i < n; i++) {
       this.framePos += this.step;
       while (this.framePos >= 1) { this.framePos -= 1; this.advance(this.stepFrame()); }
-      out[i] = this.prev + (this.cur - this.prev) * this.framePos;
+      out[i] = this.prev + (this.cur0 - this.prev) * this.framePos;
     }
     return out.subarray(0, n);
   }
@@ -198,3 +275,5 @@ class MockV3Engine {
 export async function loadMockV3Engine({ sampleRate = 48000, build = null } = {}) {
   return new MockV3Engine(sampleRate, build);
 }
+
+export { unpackHit };

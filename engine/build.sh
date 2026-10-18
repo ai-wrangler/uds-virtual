@@ -70,7 +70,7 @@ PY
 )"
   export UDS_TOP=$TOP UDS_FRAME=$V3_FRAME
   HDR=("-DGEN_HEADER=\"gen/uds_chip_gen$SFX.h\"" "-DCXXRTL_SOURCE=\"gen/uds_chip_cxxrtl$SFX.cc\""
-       "-DUDS_FRAME=$V3_FRAME" "-DUDS_CLOCK_HZ=$V3_CLOCK.0" "-DUDS_MSG_MAX=8" "-DUDS_EXPORT_SHAPE"
+       "-DUDS_FRAME=$V3_FRAME" "-DUDS_CLOCK_HZ=$V3_CLOCK.0" "-DUDS_MSG_MAX=8" "-DUDS_EXPORT_SHAPE" "-DUDS_HOST_WINDOW"
        "-DCXXRTL_TOP=p_$(echo "$TOP" | sed 's/_/__/g')")
   echo "v3: top $TOP, $V3_CLOCK Hz, $V3_FRAME clocks per frame, sources: $SRC"
 fi

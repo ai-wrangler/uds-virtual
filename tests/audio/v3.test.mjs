@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { packHit, unpackHit, paramList, clampPatch, defaultPatch, validateKit, kitNoteMap, gmNotes } from '../../app/audio/patch.js';
-import { loadMockV3Engine, DRAFT0_BUILD } from '../../app/audio/mock-engine-v3.js';
+import { loadMockV3Engine, CONTRACT1_BUILD } from '../../app/audio/mock-engine-v3.js';
 import { mapNote, setNoteMap, GM_MAP } from '../../app/audio/midi.js';
 import { Scheduler } from '../../app/audio/scheduler.js';
 import { loadEngine } from '../../app/engine/uds-engine.js';
@@ -69,9 +69,11 @@ test('v1 packing: packHit gives exactly the bytes UDSEngine.hit sends', async ()
   }
 });
 
-test('v3 packing: DRAFT 0 layout, MSB first, and unpack is its inverse', () => {
-  const b = packHit(V3, 4, { pitch: 0x9a, decay: 0xc, level: 0x5, bend: 6, bendtime: 2, mix: 3, wave: 2, color: 1, clap: 1, snap: 5 });
-  assert.deepEqual(b, [0x1c, 0x9a, 0xc5, (6 << 5) | (2 << 3) | 3, (2 << 6) | (1 << 4) | (1 << 3) | 5]);
+test('v3 packing: CONTRACT 1 layout, MSB first, and unpack is its inverse', () => {
+  assert.equal(pj.contract, 1);
+  const b = packHit(V3, 4, { pitch: 0x9a, decay: 0xc, wave: 2, color: 1, bend: 3, res: 0, bendtime: 5, mode: 2, mix: 3, level: 9, click: 1 });
+  // P1 = decay<<4 | wave<<2 | color; P2 = bend<<6 | res<<5 | btime<<2 | mode; P3 = mix<<5 | level<<1 | click
+  assert.deepEqual(b, [0x1c, 0x9a, (0xc << 4) | (2 << 2) | 1, (3 << 6) | (5 << 2) | 2, (3 << 5) | (9 << 1) | 1]);
   const r = lcg(3);
   for (let i = 0; i < 500; i++) {
     const p = randomPatch(V3, r);
@@ -86,7 +88,7 @@ test('v3 packing: DRAFT 0 layout, MSB first, and unpack is its inverse', () => {
 
 test('mock v3: a hit makes sound, silence stays silent, STOP cuts, the display shows the channel', async () => {
   const e = await loadMockV3Engine({ sampleRate: 48000, build: V3 });
-  assert.equal(e.clockHz, 12000000); assert.equal(e.frameClocks, 192); assert.equal(e.maxMessage, 8);
+  assert.equal(e.clockHz, pj.clockHz); assert.equal(e.frameClocks, pj.frameClocks); assert.equal(e.maxMessage, 8);
   assert.ok(rms(e.render(4800)) < 1e-6, 'silence');
   const kit = read('app/kits/init.json');
   for (const c of kit.channels) {
@@ -98,10 +100,10 @@ test('mock v3: a hit makes sound, silence stays silent, STOP cuts, the display s
   }
   e.reset();
   e.send(packHit(V3, 4, { ...kit.channels[4].patch, decay: 15 }));
-  e.render(2400);
+  assert.ok(Array.from(e.runCounts(60)).some((c) => c !== 64), 'the kick sounds');
   e.stop();
-  e.render(480);
-  assert.ok(rms(e.render(2400)) < 1e-4, 'STOP silences');
+  const after = Array.from(e.runCounts(40));
+  assert.deepEqual(after.slice(4), new Array(36).fill(64), 'STOP: the pin idles at 64 ones per frame (0110...)');
   // level 0 is silent
   e.reset();
   e.send(packHit(V3, 4, { ...kit.channels[4].patch, level: 0 }));
@@ -110,10 +112,10 @@ test('mock v3: a hit makes sound, silence stays silent, STOP cuts, the display s
 
 test('mock v3: every parameter changes the sound', async () => {
   const e = await loadMockV3Engine({ sampleRate: 48000, build: V3 });
-  const base = { pitch: 60, decay: 9, level: 12, bend: 3, bendtime: 1, mix: 3, wave: 0, color: 1, clap: 0, snap: 2 };
+  const base = { pitch: 60, decay: 9, wave: 0, color: 1, bend: 2, res: 0, bendtime: 4, mode: 0, mix: 3, level: 12, click: 0 };
   const render = (p) => { e.reset(); e.send(packHit(V3, 0, p)); return e.render(9600).slice(); };
   const ref = render(base);
-  for (const q of paramList(V3)) {
+  for (const q of paramList(V3).filter((p) => p.id !== 'res')) {   // res is reserved: it does nothing
     const alt = { ...base, [q.id]: base[q.id] === q.max ? q.min : q.max };
     const out = render(alt);
     let diff = 0;
@@ -122,16 +124,31 @@ test('mock v3: every parameter changes the sound', async () => {
   }
 });
 
-test('mock v3: two voices, same channel retriggers, hats 6 and 7 choke each other', async () => {
+test('mock v3 is a bit-exact port of the v3 model: frame counts equal fixtures/model_frames_v3.json', async () => {
+  const fx = read('engine/test/fixtures/model_frames_v3.json');
+  assert.equal(fx.contract, pj.contract, 'the fixture was made from the same contract as params_v3.json');
   const e = await loadMockV3Engine({ sampleRate: 48000, build: V3 });
-  const long = { pitch: 80, decay: 14, level: 12, bend: 0, bendtime: 0, mix: 0, wave: 0, color: 1, clap: 0, snap: 0 };
-  e.send(packHit(V3, 6, long)); e.render(960);
-  e.send(packHit(V3, 7, long)); e.render(960);
-  assert.equal(e.voices.filter((v) => v.on).length, 1, 'open hat cut the closed one');
-  e.send(packHit(V3, 4, long)); e.render(960);
-  assert.equal(e.voices.filter((v) => v.on).length, 2);
-  e.send(packHit(V3, 0, long)); e.render(960);
-  assert.equal(e.voices.filter((v) => v.on).length, 2, 'a third hit steals a voice');
+  let a = 0, bad = 0, first = -1;
+  for (let f = 0; f < fx.counts.length; f++) {
+    while (a < fx.events.length && fx.events[a].frame <= f) assert.ok(e.send(fx.events[a++].bytes));
+    if (e.stepFrame() !== fx.counts[f]) { bad++; if (first < 0) first = f; }
+  }
+  assert.ok(fx.events.length > 300 && fx.counts.length > 40000);
+  assert.equal(bad, 0, 'first mismatch at frame ' + first);
+});
+
+test('mock v3: two voices, the hi-hats choke each other, a third hit steals a voice', async () => {
+  const e = await loadMockV3Engine({ sampleRate: 48000, build: V3 });
+  const long = { pitch: 80, decay: 13, wave: 0, color: 1, bend: 0, res: 0, bendtime: 3, mode: 0, mix: 0, level: 12, click: 0 };
+  const playing = () => e.v.filter((x) => x.env > 0).map((x) => x.ch).sort();
+  e.send(packHit(V3, 6, long)); e.runFrames(40);
+  e.send(packHit(V3, 7, long)); e.runFrames(40);
+  assert.deepEqual(playing(), [7], 'the open hat took the closed hat\'s voice');
+  e.send(packHit(V3, 4, long)); e.runFrames(40);
+  assert.deepEqual(playing(), [4, 7]);
+  e.send(packHit(V3, 0, long)); e.runFrames(40);
+  assert.equal(playing().length, 2);
+  assert.ok(playing().includes(0), 'a third hit steals a voice');
 });
 
 test('kits: every kit in app/kits validates against params_v3.json; bad kits are refused with a reason', () => {
@@ -149,12 +166,14 @@ test('kits: every kit in app/kits validates against params_v3.json; bad kits are
   bad((k) => { k.channels[1].ch = 0; }, /twice/);
   bad((k) => { k.channels[0].patch.pitch = 300; }, /outside 0\.\.255/);
   bad((k) => { k.channels[0].patch.sweep = 1; }, /not a v3 parameter/);
+  bad((k) => { k.channels[0].patch.snap = 1; }, /not a v3 parameter/);
   bad((k) => { k.channels[0].notes = [200]; }, /0\.\.127/);
   assert.throws(() => validateKit([], V3), /JSON object/);
   // missing fields take the defaults
   const k = JSON.parse(JSON.stringify(good));
-  delete k.channels[2].patch.snap;
-  assert.equal(validateKit(k, V3).channels[2].patch.snap, defaultPatch(paramList(V3)).snap);
+  delete k.channels[2].patch.click;
+  assert.equal(validateKit(k, V3).channels[2].patch.click, 0, 'CONTRACT 1: a missing id is 0');
+  bad((k) => { k.contract = 0; }, /contract 0, this chip is contract 1/);
 });
 
 test('note maps: a kit may bring its own notes; channels without notes keep their GM notes', () => {
@@ -180,7 +199,7 @@ test('the scheduler plays v3 patches with velocity on the level field', () => {
   assert.equal(p.level, Math.round(kit.channels[4].patch.level * 0.5));
   assert.equal(p.wave, kit.channels[4].patch.wave);
   assert.deepEqual(packHit(V3, 4, p).length, 5);
-  assert.ok(DRAFT0_BUILD.hit.bytes.length === 4);
+  assert.deepEqual(CONTRACT1_BUILD.hit.bytes, pj.hit.bytes);
 });
 
 test('v3 loudness matches v1 within 1 dB on the reference groove (real engine, or the mock until it is built)', async () => {

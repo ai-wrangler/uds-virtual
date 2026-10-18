@@ -68,7 +68,7 @@ The Output section has a **Chip** selector (it replaced the DAC switch; `?dac=1s
 
 - **Sound editor.** On v3 the strips show Pitch, Decay, Tone/noise and Level; click a channel's name (or 1–8 in
   the editor) to edit every parameter of its sound below the strips: knobs, option selectors (wave, noise
-  colour) and switches (clap), generated from the chip's `params.json`. **Play** auditions it, **Reset
+  colour, envelope mode) and switches (click), generated from the chip's `params.json`. **Play** auditions it, **Reset
   channel** brings back the kit's sound.
 - **Kits.** The kit selector loads `app/kits/<id>.json` (V3-SOUND's kits from tt-uds-v3, with their note maps:
   a kit can say which GM notes play which channel, for MIDI files, slots and live MIDI). **Export kit**
@@ -76,8 +76,9 @@ The Output section has a **Chip** selector (it replaced the DAC switch; `?dac=1s
 - **Saved.** The patches are kept per chip version in this browser (v1 and v2 share theirs: they differ only
   in the DAC).
 - **The engine.** v3 runs its own Verilog the same way as v1: `chip-v3/` → Yosys → `gen.py` → zig wasm32, at
-  12 MHz with 192-clock frames, its 5-byte HITs sent by the same virtual RP2040. Until that engine is built
-  from V3-CHIP's RTL, v3 is "coming soon" on the site; `?v3=mock` plays a mock v3 synth for development.
+  8 MHz with 128-clock frames (CONTRACT 1), its 5-byte HITs sent by the virtual RP2040 with a BUSY wait after
+  every byte. Until that engine is built from V3-CHIP's RTL, v3 is "coming soon" on the site; `?v3=mock` plays
+  the mock v3 engine, a JavaScript port of V3-CHIP's golden model (bit-exact with it on the truth fixture).
 
 The 2nd-order DAC is **not taped out**. It lives on branch [`sd2` of ai-wrangler/tt-uds-1x1](https://github.com/ai-wrangler/tt-uds-1x1/tree/sd2)
 ([changes against main](https://github.com/ai-wrangler/tt-uds-1x1/compare/main...sd2); no pull request was open

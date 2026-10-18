@@ -57,9 +57,10 @@ async function hitSpectrum(page, ch) {
     else { const m = await import('./engine/uds-engine.js'); e = await m.loadEngine(b.url, { sampleRate: 48000 }); }
     e.send(packHit(b, ch, u.getParams(ch)));
     const x = e.render(8192).slice();
-    let s = 0, zc = 0;
-    for (let i = 1; i < x.length; i++) { s += x[i] * x[i]; if ((x[i - 1] < 0) !== (x[i] < 0)) zc++; }
-    return { rms: Math.sqrt(s / x.length), zc };
+    // brightness: energy of the first difference over the energy (high for a high pitch)
+    let s = 0, d = 0;
+    for (let i = 1; i < x.length; i++) { s += x[i] * x[i]; d += (x[i] - x[i - 1]) ** 2; }
+    return { rms: Math.sqrt(s / x.length), bright: d / Math.max(s, 1e-12) };
   }, ch);
 }
 
@@ -67,15 +68,16 @@ test('v3: the Chip selector switches to v3; the strips and the editor come from 
   const errors = await openV3(page);
   const info = await page.evaluate(() => ({ chip: window.uds.chip, clockHz: window.uds.info.clockHz, knobs: window.uds.knobs.map((k) => k.key), strip: window.uds.currentBuild.strip }));
   expect(info.chip).toBe('v3');
-  expect(info.clockHz).toBe(12000000);
   const pj = JSON.parse(fs.readFileSync(path.join(ROOT, 'app/engine/params_v3.json'), 'utf8'));
+  expect(info.clockHz).toBe(pj.clockHz);
   expect(info.knobs).toEqual(pj.params.map((p) => p.id));
   // strips: the build's strip parameters, 8 channels
   for (let ch = 0; ch < 8; ch++) for (const k of info.strip) await expect(page.getByTestId(`knob-${ch}-${k}`)).toHaveCount(1);
   await expect(page.getByTestId('knob-0-sweep')).toHaveCount(0);
   // editor: one control per parameter, option lists as selects, 1-bit fields as switches
   await expect(page.getByTestId('editor')).toBeVisible();
-  for (const p of pj.params) {
+  await expect(page.getByTestId('edit-res')).toHaveCount(0);   // reserved bits get no control
+  for (const p of pj.params.filter((q) => q.group !== 'hidden')) {
     const el = page.getByTestId(`edit-${p.id}`);
     await expect(el).toHaveCount(1);
     const tag = await el.evaluate((e) => (e.tagName === 'INPUT' ? 'input:' + e.type : e.tagName.toLowerCase()));
@@ -130,12 +132,14 @@ test('v3: the editor changes the sound (pitch, noise mix) and keeps the strip in
   expect(await page.evaluate(() => window.uds.getParams(1).pitch)).toBe(255);
   await expect(page.getByTestId('knob-1-pitch')).toHaveAttribute('aria-valuenow', '255');
   const high = await hitSpectrum(page, 1);
-  expect(high.zc).toBeGreaterThan(low.zc * 4);
-  // the noise switch: wave select and the clap switch change the patch
+  expect(high.bright, JSON.stringify({ low, high })).toBeGreaterThan(low.bright * 4);
+  // the option selectors and the click switch change the patch
   await page.getByTestId('edit-wave').selectOption({ label: 'Square' });
   expect(await page.evaluate(() => window.uds.getParams(1).wave)).toBe(2);
-  await page.getByTestId('edit-clap').check();
-  expect(await page.evaluate(() => window.uds.getParams(1).clap)).toBe(1);
+  await page.getByTestId('edit-mode').selectOption({ label: 'Clap' });
+  expect(await page.evaluate(() => window.uds.getParams(1).mode)).toBe(3);
+  await page.getByTestId('edit-click').check();
+  expect(await page.evaluate(() => window.uds.getParams(1).click)).toBe(1);
   // a strip knob updates the editor
   await page.getByTestId('knob-1-level').focus();
   await page.getByTestId('knob-1-level').press('Home');
@@ -209,11 +213,11 @@ test('v3: kits load from app/kits, with names and note maps', async ({ page }) =
 test('v3: export a kit, change it, import it back', async ({ page }, testInfo) => {
   const errors = await openV3(page);
   await page.getByTestId('strip-sel-2').click();
-  await page.getByTestId('edit-snap').focus();
-  await page.getByTestId('edit-snap').press('End');
+  await page.getByTestId('edit-bendtime').focus();
+  await page.getByTestId('edit-bendtime').press('End');
   await page.getByTestId('edit-color').selectOption({ index: 3 });
   const edited = await page.evaluate(() => window.uds.getParams(2));
-  expect(edited.snap).toBe(7);
+  expect(edited.bendtime).toBe(7);
   const dl = page.waitForEvent('download');
   await page.getByTestId('kit-export').click();
   const d = await dl;
@@ -225,10 +229,10 @@ test('v3: export a kit, change it, import it back', async ({ page }, testInfo) =
   expect(kit.channels[2].patch).toEqual(edited);
   // change it, then import the file: the edit is back
   await page.getByTestId('channel-reset').click();
-  expect(await page.evaluate(() => window.uds.getParams(2).snap)).not.toBe(7);
+  expect(await page.evaluate(() => window.uds.getParams(2))).not.toEqual(edited);
   await page.getByTestId('kit-import').setInputFiles(file);
   await expect.poll(() => page.evaluate(() => window.uds.getParams(2))).toEqual(edited);
-  await expect(page.getByTestId('edit-snap')).toHaveAttribute('aria-valuenow', '7');
+  await expect(page.getByTestId('edit-bendtime')).toHaveAttribute('aria-valuenow', '7');
   // a broken file is refused with a message, nothing changes
   await page.getByTestId('kit-import').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{"channels": []}') });
   await expect(page.locator('#toast')).toContainText('Kit import failed');
@@ -294,9 +298,9 @@ test('v3: the panel works on a phone (390 x 844)', async ({ page }) => {
   expect(sw).toBeLessThanOrEqual(390);
   await page.getByTestId('edit-ch-6').click();
   await expect(page.getByTestId('editor-name')).toContainText('ch 6');
-  for (const id of ['edit-pitch', 'edit-wave', 'edit-clap', 'kit', 'kit-export', 'channel-reset', 'pad-6']) {
+  for (const id of ['edit-pitch', 'edit-wave', 'edit-mode', 'edit-click', 'kit', 'kit-export', 'channel-reset', 'pad-6']) {
     const box = await page.getByTestId(id).boundingBox();
-    if (id !== 'edit-clap') expect(box, id).not.toBeNull();
+    if (id !== 'edit-click') expect(box, id).not.toBeNull();
     if (box) { expect(box.x, id).toBeGreaterThanOrEqual(0); expect(box.x + box.width, id).toBeLessThanOrEqual(391); }
   }
   await powerOn(page);

@@ -1,5 +1,5 @@
 // v3 truth test: the v3 engine (app/engine/uds_engine_v3.wasm, built from tt-uds-v3 RTL) replays the frame
-// counts of V3-CHIP's bit-exact model (fixtures/model_frames_v3.json, see fixtures/V3_FIXTURES.md) with
+// counts of V3-CHIP's bit-exact model (fixtures/model_frames_v3.json, made by make_fixture_v3.py; see fixtures/V3_FIXTURES.md) with
 // 0 mismatches. Skips while the engine or the fixture is missing.
 // SPDX-License-Identifier: Apache-2.0
 import test from 'node:test';
@@ -10,9 +10,9 @@ import { loadEngine } from '../../app/engine/uds-engine.js';
 
 const WASM = fileURLToPath(new URL('../../app/engine/uds_engine_v3.wasm', import.meta.url));
 const FIX = fileURLToPath(new URL('./fixtures/model_frames_v3.json', import.meta.url));
-const skip = !existsSync(WASM) ? 'v3 engine not built yet' : !existsSync(FIX) ? 'v3 fixture not delivered yet (fixtures/V3_FIXTURES.md)' : false;
+const skip = !existsSync(WASM) ? 'v3 engine not built yet' : !existsSync(FIX) ? 'v3 fixture missing: python3 engine/test/make_fixture_v3.py' : false;
 
-test('v3 engine: shape of the build (12 MHz, 192-clock frames, 5-byte HITs)', { skip: !existsSync(WASM) && 'v3 engine not built yet' }, async () => {
+test('v3 engine: shape of the build (clock, frame and HIT length of params.json)', { skip: !existsSync(WASM) && 'v3 engine not built yet' }, async () => {
   const e = await loadEngine(readFileSync(WASM));
   const pj = JSON.parse(readFileSync(new URL('../../app/engine/params_v3.json', import.meta.url)));
   assert.equal(e.clockHz, pj.clockHz);

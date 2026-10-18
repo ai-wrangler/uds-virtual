@@ -11,7 +11,8 @@ export function createEditor({ root, uds, h, lbl, toast, onChange, onKit, onSele
   let built = false;
   let nameEl, descEl, kitSel, patBtn, chBtns = [];
 
-  function params() { return uds.knobs; }
+  // parameters in group "hidden" (reserved bits) get no control; they keep their value (0)
+  function params() { return uds.knobs.filter((p) => p.group !== 'hidden'); }
 
   function build(selCh = ch) {
     ch = selCh;

@@ -111,10 +111,83 @@ Message cur;
 uint8_t seen_uio = 0;
 
 inline bool busy() { return (seen_uio >> 5) & 1; }
+#ifdef UDS_HOST_WINDOW
+inline bool spi_idle() { return st == IDLE && q_head == q_tail; }
+#else
 inline bool spi_idle() { return st == IDLE && wait == 0 && q_head == q_tail; }
+#endif
 
 inline void set_pin(int pin, int v) { uio_in = (uio_in & ~(1 << pin)) | ((v & 1) << pin); }
 
+#ifdef UDS_HOST_WINDOW
+// UDS v3 host (tt-uds-v3 model/uds3_model.py, class Host: "the standard host, as the tests and the browser
+// twin drive the chip"): at most one byte per voice window of WIN clocks. A byte goes out in the first window
+// that starts with BUSY low: CS low (for the whole message), GAP clocks into the window, 8 bits at
+// SCK = clk / SCK_DIV (MOSI changes with SCK low, the chip samples on the rising edge). CS goes high after the
+// last byte of a message. So every byte of a HIT waits for BUSY low, as CONTRACT 1 requires.
+constexpr int WIN = FRAME / 2, GAP = 8, SCK_DIV = 6;
+int h_byte = 0;                       // byte of cur being sent
+bool h_active = false;                // a byte is on the wire in this window
+void spi_tick() {
+  const int pos = int(cycles % WIN);
+  // The host decides on the window's second clock: the BUSY it reads then (the pins of the clock before) is
+  // the BUSY of the new window, and a message queued between two frames (render, runFrames) is in time for
+  // the window that starts the next frame, as in the model's run().
+  if (pos == 1 && !h_active) {
+    if (st == IDLE && q_head != q_tail && !busy()) {          // a new message
+      cur = queue[q_head];
+      q_head = (q_head + 1) % QUEUE;
+      st = BIT_LOW; h_byte = 0; rx = 0; bit = 0;
+      set_pin(0, 0);                                         // CS low
+      cs_seen = 1;
+      h_active = true;
+    } else if (st != IDLE && !busy()) {                       // the next byte of the current message
+      h_active = true;
+    }
+    return;
+  }
+  if (!h_active) return;
+  const int k = pos - GAP;
+  if (k < 0) return;
+  const int b = k / SCK_DIV, ph = k % SCK_DIV;
+  if (b < 8) {
+    if (ph == 0) {                                           // SCK low, next MOSI bit
+      set_pin(3, 0);
+      set_pin(1, (cur.bytes[h_byte] >> (7 - b)) & 1);
+    } else if (ph == SCK_DIV / 2) {                          // MISO read just before SCK rises
+      rx = (rx << 1) | ((seen_uio >> 2) & 1);
+      set_pin(3, 1);
+      last_rise = cycles;
+      bit++;
+    }
+    return;
+  }
+  if (b == 8 && ph == 0) {                                   // the byte is done
+    set_pin(3, 0);
+    h_active = false;
+    if (++h_byte < cur.len) return;                          // more bytes: wait for the next window
+    set_pin(0, 1);                                           // CS high after the last byte
+    if ((cur.bytes[0] & 0xF8) == 0x18) hits_sent++;
+    if (log_count < LOG) {
+      LogEntry &e = log_buf[log_count++];
+      e.last_sck = double(last_rise);
+      e.sent = 0; e.recv = 0;
+#if UDS_MSG_MAX > 4
+      e.sent_hi = 0; e.recv_hi = 0;
+#endif
+      for (int i = 0; i < cur.len; i++) {
+        uint32_t sb = cur.bytes[i], rb = uint32_t((rx >> (8 * (cur.len - 1 - i))) & 0xFF);
+#if UDS_MSG_MAX > 4
+        if (i >= 4) { e.sent_hi |= sb << (8 * (i - 4)); e.recv_hi |= rb << (8 * (i - 4)); continue; }
+#endif
+        e.sent |= sb << (8 * i); e.recv |= rb << (8 * i);
+      }
+      e.len = cur.len;
+    }
+    st = IDLE;
+  }
+}
+#else
 void spi_tick() {
   if (wait > 0) { wait--; return; }
   switch (st) {
@@ -176,6 +249,8 @@ void spi_tick() {
       break;
   }
 }
+
+#endif  // UDS_HOST_WINDOW
 
 // ---- the Audio Pmod: averaging, AC coupling, RC filter, resampling --------
 constexpr int MAX_OUT = 8192;
@@ -392,6 +467,9 @@ void do_reset(double rate) {
   backend::set_rst_n(true);
   cycles = 0; frames = 0; ones = 0; fpos = 0; last_frame_ones = 48;
   q_head = q_tail = 0; st = IDLE; wait = 0; bit = 0;
+#ifdef UDS_HOST_WINDOW
+  h_active = false; h_byte = 0;
+#endif
   seen_uio = backend::uio; uio_or = 0; cs_seen = 0; hits_sent = 0;
   log_count = 0;
   dc = rc = 0.0; phase = 0.0;
