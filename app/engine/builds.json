@@ -1,9 +1,11 @@
 {
-  "description": "Engine builds of the UDS-1x1 chip, one per audio DAC. wasm is relative to this file; gain is the audio worker's make-up gain (matched on a reference pattern by engine/test/loudness.mjs); available false = not built yet (the panel shows it as coming soon).",
+  "description": "Engine builds, one per chip version (the panel's Chip selector). wasm is relative to this file; gain is the audio worker's make-up gain (matched on a reference pattern by engine/test/loudness.mjs); available false = not built yet (the panel shows it as coming soon). Each build declares its clock (clockHz), its frame length (frameClocks), its parameter list (params, or paramsUrl: a copy of the chip's params.json) and its HIT packing (hit: bytes after the opcode, fields MSB first). patchSet: builds with the same patchSet share their channel patches (v1 and v2 differ only in the DAC). CONTRACT.md section 3a.",
   "default": "1st",
   "builds": [
     {
       "id": "1st",
+      "version": "v1",
+      "label": "v1 (1st-order DAC, as built)",
       "name": "1st order (as built)",
       "dac": "first-order 1-bit sigma-delta",
       "wasm": "uds_engine.wasm",
@@ -13,10 +15,75 @@
       "chipDir": "chip",
       "backend": "gen",
       "gain": 3,
-      "available": true
+      "available": true,
+      "clockHz": 6000000,
+      "frameClocks": 96,
+      "voices": 2,
+      "patchSet": "v1",
+      "params": [
+        {
+          "id": "pitch",
+          "label": "Pitch",
+          "bits": 8,
+          "min": 0,
+          "max": 255,
+          "note": "8-bit exponential pitch, 32 steps per octave"
+        },
+        {
+          "id": "sweep",
+          "label": "Sweep",
+          "bits": 4,
+          "min": 0,
+          "max": 7,
+          "note": "pitch sweep depth (bit 3 of the nibble is reserved, always 0)"
+        },
+        {
+          "id": "decay",
+          "label": "Decay",
+          "bits": 4,
+          "min": 0,
+          "max": 13,
+          "note": "envelope steps every 2^decay frames; the chip treats 14 and 15 as 13"
+        },
+        {
+          "id": "balance",
+          "label": "Tone/noise",
+          "bits": 4,
+          "min": 0,
+          "max": 15,
+          "note": "0 = all tone ... 15 = almost all noise"
+        },
+        {
+          "id": "level",
+          "label": "Level",
+          "bits": 4,
+          "min": 0,
+          "max": 15,
+          "note": "0 = silent"
+        }
+      ],
+      "hit": {
+        "opcode": "0x18|ch",
+        "bytes": [
+          [
+            "pitch"
+          ],
+          [
+            "decay",
+            "sweep"
+          ],
+          [
+            "balance",
+            "level"
+          ]
+        ]
+      },
+      "velocity": "level"
     },
     {
       "id": "2nd",
+      "version": "v2",
+      "label": "v2 (2nd-order DAC, preview)",
       "name": "2nd order (preview)",
       "dac": "second-order 1-bit sigma-delta (proposed, not taped out)",
       "wasm": "uds_engine_sd2.wasm",
@@ -26,7 +93,100 @@
       "chipDir": "chip-sd2",
       "backend": "gen",
       "gain": 5.95,
-      "available": true
+      "available": true,
+      "clockHz": 6000000,
+      "frameClocks": 96,
+      "voices": 2,
+      "patchSet": "v1",
+      "params": [
+        {
+          "id": "pitch",
+          "label": "Pitch",
+          "bits": 8,
+          "min": 0,
+          "max": 255,
+          "note": "8-bit exponential pitch, 32 steps per octave"
+        },
+        {
+          "id": "sweep",
+          "label": "Sweep",
+          "bits": 4,
+          "min": 0,
+          "max": 7,
+          "note": "pitch sweep depth (bit 3 of the nibble is reserved, always 0)"
+        },
+        {
+          "id": "decay",
+          "label": "Decay",
+          "bits": 4,
+          "min": 0,
+          "max": 13,
+          "note": "envelope steps every 2^decay frames; the chip treats 14 and 15 as 13"
+        },
+        {
+          "id": "balance",
+          "label": "Tone/noise",
+          "bits": 4,
+          "min": 0,
+          "max": 15,
+          "note": "0 = all tone ... 15 = almost all noise"
+        },
+        {
+          "id": "level",
+          "label": "Level",
+          "bits": 4,
+          "min": 0,
+          "max": 15,
+          "note": "0 = silent"
+        }
+      ],
+      "hit": {
+        "opcode": "0x18|ch",
+        "bytes": [
+          [
+            "pitch"
+          ],
+          [
+            "decay",
+            "sweep"
+          ],
+          [
+            "balance",
+            "level"
+          ]
+        ]
+      },
+      "velocity": "level"
+    },
+    {
+      "id": "v3",
+      "version": "v3",
+      "label": "v3 (modern, preview)",
+      "name": "v3 (modern, preview)",
+      "dac": "second-order 1-bit sigma-delta",
+      "wasm": "uds_engine_v3.wasm",
+      "chip": "ai-wrangler/tt-uds-v3",
+      "branch": "main",
+      "commit": null,
+      "chipDir": "chip-v3",
+      "backend": "gen",
+      "gain": 3,
+      "available": false,
+      "clockHz": 12000000,
+      "frameClocks": 192,
+      "voices": 2,
+      "patchSet": "v3",
+      "paramsUrl": "params_v3.json",
+      "velocity": "level",
+      "editor": true,
+      "strip": [
+        "pitch",
+        "decay",
+        "mix",
+        "level"
+      ],
+      "kits": "../kits/index.json",
+      "mock": "mock-engine-v3"
     }
   ]
 }

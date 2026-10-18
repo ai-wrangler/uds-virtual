@@ -1,0 +1,138 @@
+{
+  "id": "init",
+  "name": "Init",
+  "inspiredBy": "",
+  "description": "V3-WEB's starter kit for the editor: one plain sound per channel on the default GM note map. V3-SOUND's kits replace it as the default when they land.",
+  "contract": 0,
+  "tempo": 120,
+  "channels": [
+    {
+      "ch": 0,
+      "name": "Snare",
+      "patch": {
+        "pitch": 92,
+        "decay": 7,
+        "level": 13,
+        "bend": 3,
+        "bendtime": 0,
+        "mix": 5,
+        "wave": 0,
+        "color": 2,
+        "clap": 0,
+        "snap": 4
+      }
+    },
+    {
+      "ch": 1,
+      "name": "High tom",
+      "patch": {
+        "pitch": 104,
+        "decay": 8,
+        "level": 12,
+        "bend": 3,
+        "bendtime": 1,
+        "mix": 1,
+        "wave": 0,
+        "color": 0,
+        "clap": 0,
+        "snap": 1
+      }
+    },
+    {
+      "ch": 2,
+      "name": "Mid tom",
+      "patch": {
+        "pitch": 88,
+        "decay": 8,
+        "level": 12,
+        "bend": 3,
+        "bendtime": 1,
+        "mix": 1,
+        "wave": 0,
+        "color": 0,
+        "clap": 0,
+        "snap": 1
+      }
+    },
+    {
+      "ch": 3,
+      "name": "Low tom",
+      "patch": {
+        "pitch": 72,
+        "decay": 9,
+        "level": 12,
+        "bend": 3,
+        "bendtime": 1,
+        "mix": 1,
+        "wave": 0,
+        "color": 0,
+        "clap": 0,
+        "snap": 1
+      }
+    },
+    {
+      "ch": 4,
+      "name": "Kick",
+      "patch": {
+        "pitch": 30,
+        "decay": 9,
+        "level": 15,
+        "bend": 6,
+        "bendtime": 1,
+        "mix": 0,
+        "wave": 1,
+        "color": 0,
+        "clap": 0,
+        "snap": 3
+      }
+    },
+    {
+      "ch": 5,
+      "name": "Cymbal",
+      "patch": {
+        "pitch": 232,
+        "decay": 11,
+        "level": 10,
+        "bend": 0,
+        "bendtime": 0,
+        "mix": 6,
+        "wave": 3,
+        "color": 3,
+        "clap": 0,
+        "snap": 0
+      }
+    },
+    {
+      "ch": 6,
+      "name": "Closed hat",
+      "patch": {
+        "pitch": 250,
+        "decay": 5,
+        "level": 10,
+        "bend": 0,
+        "bendtime": 0,
+        "mix": 7,
+        "wave": 3,
+        "color": 2,
+        "clap": 0,
+        "snap": 1
+      }
+    },
+    {
+      "ch": 7,
+      "name": "Open hat",
+      "patch": {
+        "pitch": 250,
+        "decay": 9,
+        "level": 10,
+        "bend": 0,
+        "bendtime": 0,
+        "mix": 7,
+        "wave": 3,
+        "color": 2,
+        "clap": 0,
+        "snap": 0
+      }
+    }
+  ]
+}

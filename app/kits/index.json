@@ -1,0 +1,12 @@
+{
+  "description": "Kits for the v3 chip: kits/<id>.json in the tt-uds-v3 kit format (docs/v3/BRIEF.md section 4). The first entry is the default. Copied from ai-wrangler/tt-uds-v3 kits/ by tools/vendor_v3.sh; init.json is the panel's own starter kit.",
+  "default": "init",
+  "kits": [
+    {
+      "id": "init",
+      "file": "init.json",
+      "name": "Init",
+      "source": "uds-virtual"
+    }
+  ]
+}

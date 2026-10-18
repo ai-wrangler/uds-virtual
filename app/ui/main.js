@@ -1,6 +1,8 @@
 // main.js — the UDS-1x1 panel. Talks only to the UDSAudio API (CONTRACT.md section 5).
 import { createKnob } from './knob.js';
 import { loadStored, storeSlot, forgetSlot, forgetAll, storeSelection, bytesFromB64 } from './slot-store.js';
+import { loadPatches, storePatches } from './patch-store.js';
+import { createEditor } from './editor.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -8,7 +10,10 @@ const SEG = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 // pad labels by chip channel: snare, small (high) tom, middle tom, big (low) tom, bass drum, cymbal, hats
 const PAD_SHORT = ['SD', 'HT', 'MT', 'LT', 'BD', 'CY', 'CH', 'OH'];
 const SLOTS = 16;
-const DAC_KEY = 'uds-virtual.dac.v1';   // the DAC choice ('1st' | '2nd')
+const DAC_KEY = 'uds-virtual.dac.v1';   // the engine build ('1st' | '2nd' | 'v3'); the Chip selector's choice
+// the Chip selector: chip version <-> engine build id (builds.json); ?chip=v1|v2|v3, ?dac=1st|2nd (alias)
+const CHIP_BUILD = { v1: '1st', v2: '2nd', v3: 'v3' };
+const BUILD_CHIP = { '1st': 'v1', '2nd': 'v2', v3: 'v3' };
 function storedDac() {
   try { return localStorage.getItem(DAC_KEY); } catch { return null; }
 }
@@ -47,9 +52,11 @@ function toast(msg, kind = '') {
 async function loadAudio() {
   const opts = {};
   if (params.get('engine') === 'mock') opts.engine = 'mock';
-  // ?dac=1st|2nd overrides the stored choice
-  const dac = params.get('dac') || storedDac();
-  if (dac === '1st' || dac === '2nd') opts.dac = dac;
+  // ?v3=mock: the v3 entry plays the mock v3 synth until the real v3 engine is built (development, tests)
+  if (params.get('v3') === 'mock') opts.v3Mock = true;
+  // ?chip=v1|v2|v3 or ?dac=1st|2nd override the stored choice
+  const want = CHIP_BUILD[params.get('chip')] || params.get('dac') || storedDac();
+  if (want === '1st' || want === '2nd' || want === 'v3') opts.dac = want;
   if (params.get('fake') === '1') {
     const { FakeUDSAudio } = await import('./fake-audio.js');
     return { uds: await FakeUDSAudio.create(opts), fake: true, why: '?fake=1' };
@@ -131,73 +138,136 @@ async function main() {
   }
   uds.addEventListener('state', onState);
 
-  // ---------------- channel strips ----------------
+  // ---------------- channel strips (generated from the selected build's parameters) ----------------
   const strips = $('strips');
-  const legend = h('div', 'legend');
-  legend.appendChild(h('div', 'legend-head'));
-  for (const k of uds.knobs) {
-    const row = h('div', 'legend-row');
-    row.append(h('span', 'lb', k.label));
-    row.title = k.note || '';
-    legend.appendChild(row);
-  }
-  legend.appendChild(h('div', 'legend-pad'));
-  strips.appendChild(legend);
-
-  const knobs = {};   // knobs[ch][key]
+  let knobs = {};   // knobs[ch][key]: the strip knobs
   const stripLeds = [];
   const pads = [];
-  for (const c of uds.channels) {
-    const strip = h('div', 'strip');
-    strip.dataset.ch = c.ch;
-    const head = h('div', 'strip-head');
-    const led = h('i', 'led led-red strip-led');
-    stripLeds[c.ch] = led;
-    const num = h('span', 'strip-num', String(c.ch + 1));
-    num.title = `Pad ${c.ch + 1} (key ${c.ch + 1}) = chip channel ${c.ch}`;
-    const names = h('div', 'strip-names');
-    const chTag = h('small', 'strip-ch', `ch ${c.ch}`);
-    chTag.title = `Chip channel ${c.ch}: the 7-segment display shows ${c.ch} when this pad plays`;
-    names.append(h('span', 'lb', c.name), chTag);
-    head.append(num, names, led);
-    strip.appendChild(head);
-    knobs[c.ch] = {};
-    const cur = uds.getParams(c.ch);
-    const kb = h('div', 'strip-knobs');
-    for (const k of uds.knobs) {
-      const knob = createKnob({
-        min: k.min, max: k.max, value: cur[k.key], def: c.params[k.key],
-        label: k.label, testid: `knob-${c.ch}-${k.key}`,
-        ariaLabel: `${c.name} ${k.label}`, title: `${c.name} ${k.label}: ${k.note || ''}\nDouble-click: default (${c.params[k.key]})`,
-        onChange: (v) => uds.setParams(c.ch, { [k.key]: v }),
-      });
-      knobs[c.ch][k.key] = knob;
-      kb.appendChild(knob.el);
-    }
-    strip.appendChild(kb);
-    const pad = h('button', 'pad');
-    pad.type = 'button';
-    pad.dataset.testid = `pad-${c.ch}`;
-    pad.setAttribute('aria-label', `${c.name} pad (key ${c.ch + 1}, chip channel ${c.ch})`);
-    pad.title = `${c.name} · key ${c.ch + 1} · chip channel ${c.ch}`;
-    pad.append(h('span', 'pad-short', PAD_SHORT[c.ch] || c.name.slice(0, 2).toUpperCase()), h('kbd', 'pad-key', String(c.ch + 1)));
-    pad.addEventListener('pointerdown', (e) => { if (e.button === 0) { e.preventDefault(); padHit(c.ch); } });
-    pad.addEventListener('click', (e) => { if (e.detail === 0) padHit(c.ch); }); // keyboard activation
-    pads[c.ch] = pad;
-    strip.appendChild(pad);
-    strips.appendChild(strip);
+  const stripEls = [];
+  let selCh = 4;    // the channel the editor shows (v3)
+  const isEditorBuild = () => !!(uds.currentBuild && uds.currentBuild.editor);
+  // the strip shows these parameters: all of them for v1/v2 (5 knobs), the build's "strip" list for v3
+  function stripKnobs() {
+    const all = uds.knobs;
+    const pick = uds.currentBuild?.strip;
+    return pick ? pick.map((id) => all.find((k) => k.key === id)).filter(Boolean) : all;
   }
-  const resetBtn = h('button', 'btn btn-small reset-all');
-  resetBtn.type = 'button';
-  resetBtn.append(lbl('Reset', 'knobs'));
-  resetBtn.addEventListener('click', () => {
-    uds.resetParams();
+  function buildStrips() {
+    strips.textContent = '';
+    knobs = {};
+    stripEls.length = 0;
+    const list = stripKnobs();
+    strips.style.setProperty('--nk', String(list.length));
+    strips.classList.toggle('has-editor', isEditorBuild());
+    const legend = h('div', 'legend');
+    legend.appendChild(h('div', 'legend-head'));
+    for (const k of list) {
+      const row = h('div', 'legend-row');
+      row.append(h('span', 'lb', k.label));
+      row.title = k.note || '';
+      legend.appendChild(row);
+    }
+    legend.appendChild(h('div', 'legend-pad'));
+    strips.appendChild(legend);
+    const editable = isEditorBuild();
+    for (const c of uds.channels) {
+      const strip = h('div', 'strip');
+      strip.dataset.ch = c.ch;
+      const head = h('div', 'strip-head');
+      const led = h('i', 'led led-red strip-led');
+      stripLeds[c.ch] = led;
+      const num = h('span', 'strip-num', String(c.ch + 1));
+      num.title = `Pad ${c.ch + 1} (key ${c.ch + 1}) = chip channel ${c.ch}`;
+      const names = h('div', 'strip-names');
+      const chTag = h('small', 'strip-ch', `ch ${c.ch}`);
+      chTag.title = `Chip channel ${c.ch}: the 7-segment display shows ${c.ch} when this pad plays`;
+      names.append(h('span', 'lb', c.name), chTag);
+      head.append(num, names, led);
+      if (editable) {
+        // v3: the head selects the channel for the sound editor
+        head.classList.add('strip-sel');
+        head.tabIndex = 0;
+        head.setAttribute('role', 'button');
+        head.dataset.testid = `strip-sel-${c.ch}`;
+        head.setAttribute('aria-label', `Edit the sound of channel ${c.ch}, ${c.name}`);
+        head.title = `${c.name}: click to edit its sound below`;
+        head.addEventListener('click', () => selectChannel(c.ch));
+        head.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); selectChannel(c.ch); } });
+        strip.classList.toggle('sel', c.ch === selCh);
+      }
+      strip.appendChild(head);
+      knobs[c.ch] = {};
+      const cur = uds.getParams(c.ch);
+      const kb = h('div', 'strip-knobs');
+      for (const k of list) {
+        const knob = createKnob({
+          min: k.min, max: k.max, value: cur[k.key], def: c.params[k.key],
+          label: k.label, testid: `knob-${c.ch}-${k.key}`,
+          ariaLabel: `${c.name} ${k.label}`, title: `${c.name} ${k.label}: ${k.note || ''}\nDouble-click: default (${c.params[k.key]})`,
+          onChange: (v) => { uds.setParams(c.ch, { [k.key]: v }); if (c.ch === selCh) editor.refresh(); },
+        });
+        knobs[c.ch][k.key] = knob;
+        kb.appendChild(knob.el);
+      }
+      strip.appendChild(kb);
+      const pad = h('button', 'pad');
+      pad.type = 'button';
+      pad.dataset.testid = `pad-${c.ch}`;
+      pad.setAttribute('aria-label', `${c.name} pad (key ${c.ch + 1}, chip channel ${c.ch})`);
+      pad.title = `${c.name} · key ${c.ch + 1} · chip channel ${c.ch}`;
+      pad.append(h('span', 'pad-short', editable ? shortName(c.name, c.ch) : PAD_SHORT[c.ch] || c.name.slice(0, 2).toUpperCase()), h('kbd', 'pad-key', String(c.ch + 1)));
+      pad.addEventListener('pointerdown', (e) => { if (e.button === 0) { e.preventDefault(); padHit(c.ch); } });
+      pad.addEventListener('click', (e) => { if (e.detail === 0) padHit(c.ch); }); // keyboard activation
+      pads[c.ch] = pad;
+      strip.appendChild(pad);
+      stripEls[c.ch] = strip;
+      strips.appendChild(strip);
+    }
+    const resetBtn = h('button', 'btn btn-small reset-all');
+    resetBtn.type = 'button';
+    resetBtn.append(lbl('Reset', editable ? 'kit' : 'knobs'));
+    if (editable) resetBtn.title = 'All 8 channels back to the patches of the current kit';
+    resetBtn.addEventListener('click', () => {
+      uds.resetParams();
+      syncKnobs();
+      editor.refresh();
+    });
+    legend.appendChild(resetBtn);
+  }
+  // pad label of a v3 channel: the kit's name for it, shortened
+  function shortName(name, ch) {
+    const w = String(name || '').trim().split(/[\s/-]+/).filter(Boolean);
+    if (!w.length) return String(ch + 1);
+    if (w.length === 1) return (w[0].length <= 4 ? w[0] : w[0].slice(0, 3)).toUpperCase();
+    return w.slice(0, 3).map((x) => x[0]).join('').toUpperCase();
+  }
+  // strip knobs <- the patches (after a reset, a kit or a chip switch)
+  function syncKnobs() {
     for (const c of uds.channels) {
       const p = uds.getParams(c.ch);
-      for (const k of uds.knobs) knobs[c.ch][k.key].set(p[k.key], false);
+      for (const k of stripKnobs()) knobs[c.ch]?.[k.key]?.set(p[k.key], false);
     }
+  }
+  function selectChannel(ch) {
+    selCh = ch;
+    for (const st of stripEls) st?.classList.toggle('sel', Number(st.dataset.ch) === ch);
+    editor.show(ch);
+  }
+
+  // ---------------- sound editor (v3): every parameter of the selected channel, kits ----------------
+  const editor = createEditor({
+    root: $('editor'), uds, h, lbl, toast,
+    onChange: (ch, key, v) => { knobs[ch]?.[key]?.set(v, false); },
+    onKit: () => { buildStrips(); editor.show(selCh); },
+    onSelect: (ch) => selectChannel(ch),
   });
-  legend.appendChild(resetBtn);
+  function showEditor() {
+    const on = isEditorBuild();
+    $('editor').hidden = !on;
+    if (on) editor.build(selCh);
+  }
+  buildStrips();
+  showEditor();
 
   async function ensureRunning() {
     if (uds.state === 'idle' || uds.state === 'suspended') await power();
@@ -548,34 +618,63 @@ async function main() {
   uds.addEventListener('midi-input', (e) => showInputs(e.detail.inputs));
 
   // ---------------- output ----------------
-  // DAC switch: one option per engine build (app/engine/builds.json); builds not made yet stay disabled
-  const dacSel = $('dac');
-  const builds = uds.builds?.length ? uds.builds : [{ id: '1st', name: '1st order (as built)', available: true }];
-  dacSel.textContent = '';
+  // Chip selector: one option per engine build (app/engine/builds.json): v1, v2 (the 2nd-order DAC) and
+  // v3; builds not made yet stay disabled ("coming soon")
+  const chipSel = $('chip');
+  const builds = uds.builds?.length ? uds.builds : [{ id: '1st', version: 'v1', label: 'v1 (1st-order DAC, as built)', available: true }];
+  const chipOf = (b) => b.version || BUILD_CHIP[b.id] || b.id;
+  chipSel.textContent = '';
   for (const b of builds) {
-    const o = h('option', null, b.available ? b.name : `${b.name} · coming soon`);
-    o.value = b.id;
+    const name = b.label || b.name;
+    const o = h('option', null, b.available ? name + (b.mock ? ' · mock engine' : '') : `${name} · coming soon`);
+    o.value = chipOf(b);
     o.disabled = !b.available;
-    dacSel.append(o);
+    chipSel.append(o);
   }
-  const showDac = () => { dacSel.value = uds.dac || '1st'; body.dataset.dac = dacSel.value; };
-  showDac();
-  dacSel.addEventListener('change', async () => {
-    const v = dacSel.value;
-    dacSel.disabled = true;
+  const curChip = () => BUILD_CHIP[uds.dac] || uds.chip || 'v1';
+  function showChip() {
+    chipSel.value = curChip();
+    body.dataset.dac = uds.dac || '1st';
+    body.dataset.chip = curChip();
+    const b = uds.currentBuild || builds[0];
+    const mhz = ((b && b.clockHz) || 6000000) / 1e6;
+    $('foot-chip').textContent = curChip() === 'v3' ? `UDS v3 — Tiny Tapeout chip (preview), Verilog simulated at ${mhz} MHz` : 'UDS-1x1 — Tiny Tapeout chip, Verilog simulated at 6 MHz';
+    document.querySelector('.plate h1').textContent = curChip() === 'v3' ? 'UDS v3' : 'UDS-1x1';
+    $('h-strips-sub').textContent = curChip() === 'v3' ? 'pads 1–8 · chip ch 0–7 · click a name to edit its sound' : 'pads 1–8 · chip ch 0–7';
+  }
+  let shownSet = uds.currentBuild?.patchSet || 'v1';
+  function afterChip() {
+    showChip();
+    const set = uds.currentBuild?.patchSet || 'v1';
+    if (set !== shownSet || isEditorBuild()) { shownSet = set; buildStrips(); }
+    else syncKnobs();
+    showEditor();
+    showBackend();
+  }
+  showChip();
+  chipSel.addEventListener('change', async () => {
+    const v = chipSel.value;
+    chipSel.disabled = true;
     try {
-      await uds.setDac(v);
-      storeDac(v);
-      toast(`DAC: ${builds.find((b) => b.id === v)?.name || v}`);
+      await uds.setDac(CHIP_BUILD[v] || v);
+      storeDac(uds.dac);
+      toast(`Chip: ${builds.find((b) => chipOf(b) === v)?.label || v}`);
     } catch (err) {
       console.warn(err);
-      toast('DAC switch failed: ' + (err?.message || err), 'bad');
+      toast('Chip switch failed: ' + (err?.message || err), 'bad');
     } finally {
-      dacSel.disabled = false;
-      showDac();
+      chipSel.disabled = false;
+      afterChip();
     }
   });
-  uds.addEventListener('dac', showDac);
+  uds.addEventListener('dac', afterChip);
+
+  // patches are kept per chip version in this browser (patch-store.js)
+  let storeTimer = 0;
+  uds.addEventListener('patches', () => {
+    clearTimeout(storeTimer);
+    storeTimer = setTimeout(() => storePatches(uds), 150);
+  });
 
   $('filter').value = 'rc';
   $('filter').addEventListener('change', (e) => uds.setFilter(e.target.value));
@@ -623,14 +722,14 @@ async function main() {
     btn.textContent = '';
     btn.append(lbl('Rendering…'));
     try {
-      const dacTag = `dac${(uds.dac || '1st')[0]}`;   // renderWav uses the DAC selected now
+      const dacTag = curChip() === 'v3' ? 'v3' : `dac${(uds.dac || '1st')[0]}`;   // renderWav uses the chip selected now
       const blob = await uds.renderWav({ what, seconds });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const slotName = (curSlot()?.name || '').replace(/\.midi?$/i, '').replace(/[^\w.-]+/g, '_').slice(0, 40);
       const base = what === 'midi' ? (midiInfo?.name || 'midi').replace(/\.midi?$/i, '') : `slot${uds.slot + 1}-${slotName}-${uds.tempo}bpm`;
       a.href = url;
-      a.download = `uds-1x1-${base}-${dacTag}.wav`;
+      a.download = `${curChip() === 'v3' ? 'uds-v3' : 'uds-1x1'}-${base}-${dacTag}.wav`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -711,7 +810,8 @@ async function main() {
   function scopeKick(ch, level) {
     if (uds.analyser) return;
     const c = uds.channels[ch]?.params || {};
-    kicks.push({ t: performance.now(), amp: (level || 8) / 15, f: 2 + (c.pitch || 80) / 18, noise: (c.balance || 0) / 15 });
+    const noise = c.balance !== undefined ? c.balance / 15 : (c.mix || 0) / 7;
+    kicks.push({ t: performance.now(), amp: (level || 8) / 15, f: 2 + (c.pitch || 80) / 18, noise });
     if (kicks.length > 8) kicks.shift();
   }
   function sizeCanvas() {
@@ -780,6 +880,8 @@ async function main() {
   }
   requestAnimationFrame(draw);
 
+  // stored patches (per chip version) before the stored slots, then the panel shows them
+  if (loadPatches(uds)) { syncKnobs(); if (isEditorBuild()) { buildStrips(); editor.show(selCh); } }
   await restoreSlots();
   onState();
   syncTransport();

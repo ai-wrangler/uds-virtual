@@ -10,8 +10,10 @@ import { loadMockEngine } from './mock-engine.js';
 import { Scheduler } from './scheduler.js';
 import { encodeWav } from './wav.js';
 import { softLimit, KNEE } from './limiter.js';
+import { packHit, paramList, defaultPatch } from './patch.js';
 
-const CLOCK_HZ = 6000000;
+// Chip clock of the selected build (6 MHz for v1/v2, 12 MHz for v3): status.realtime = simHz / clockHz
+let clockHz = 6000000;
 // Make-up gain of the selected engine build (app/engine/builds.json): 3 for the chip as built (a full-level
 // voice reaches about 1/6 of the pin's swing); the 2nd-order DAC preview is about 6 dB quieter.
 const DEFAULT_GAIN = 3;
@@ -24,6 +26,7 @@ const SLICE_MS = 30;            // longest stretch of rendering before yielding 
 
 let engine = null, mock = false, backend = 'none';
 let gain = DEFAULT_GAIN, dac = '1st';
+let build = null;               // the selected build of app/engine/builds.json (params, hit packing), or null
 let fade = null;                // { engine, gain, left, total }: the previous engine, fading out after setDac
 let filterHz = 15900;
 const wasmCache = new Map();    // url -> Promise of the compiled WebAssembly.Module (a switch needs no fetch)
@@ -56,6 +59,15 @@ function wasmModule(url) {
   return wasmCache.get(url);
 }
 
+// The mock engine of a build: the v1 port of the chip model, or the v3 synth (mock-engine-v3.js)
+async function loadMockFor(b, rate) {
+  if (b && b.version === 'v3') {
+    const { loadMockV3Engine } = await import('./mock-engine-v3.js');
+    return loadMockV3Engine({ sampleRate: rate, build: b });
+  }
+  return loadMockEngine({ sampleRate: rate });
+}
+
 async function loadWasm(wasmUrl, rate) {
   const mod = await import('../engine/uds-engine.js');
   const source = wasmUrl || new URL('../engine/uds_engine.wasm', import.meta.url).href;
@@ -65,18 +77,23 @@ async function loadWasm(wasmUrl, rate) {
 // Compile another build and run it for a moment in the background: a module's first runs use the browser's
 // baseline WebAssembly code, several times slower than the optimized code it tiers up to, which made the
 // first switch to a new DAC underrun. Small chunks, so the live pump keeps running in between.
-async function warmUp(url) {
+async function warmUp(target) {
+  const url = typeof target === 'string' ? target : target.wasmUrl;
+  const b = typeof target === 'string' ? null : target.build;
   const e = await loadWasm(url, sampleRate);
+  const hit = (ch, p) => (b && b.hit && b.version !== 'v1' && b.version !== 'v2'
+    ? e.send(packHit(b, ch, { ...defaultPatch(paramList(b)), level: 12 })) : e.hit(ch, p));
   for (let i = 0; i < 100; i++) {
-    if (i % 25 === 0) { e.hit(4, { pitch: 20, sweep: 6, decay: 9, balance: 1, level: 15 }); e.hit(6, { pitch: 255, decay: 6, balance: 15, level: 10 }); }
+    if (i % 25 === 0) { hit(4, { pitch: 20, sweep: 6, decay: 9, balance: 1, level: 15 }); hit(6, { pitch: 255, decay: 6, balance: 15, level: 10 }); }
     e.render(480);
     await new Promise((r) => setTimeout(r, 5));
   }
 }
 
-async function loadAnyEngine(kind, wasmUrl, rate) {
-  if (kind === 'mock') {
-    engine = await loadMockEngine({ sampleRate: rate }); mock = true; backend = engine.backend;
+// kind 'mock' (or a build marked mock: the v3 synth before the real v3 engine exists) -> the mock engine
+async function loadAnyEngine(kind, wasmUrl, rate, b = build) {
+  if (kind === 'mock' || (b && b.mock === true)) {
+    engine = await loadMockFor(b, rate); mock = true; backend = engine.backend;
     return null;
   }
   try {
@@ -84,10 +101,12 @@ async function loadAnyEngine(kind, wasmUrl, rate) {
     mock = false; backend = engine.backend || 'wasm';
     return null;
   } catch (e) {
-    engine = await loadMockEngine({ sampleRate: rate }); mock = true; backend = engine.backend;
+    engine = await loadMockFor(b, rate); mock = true; backend = engine.backend;
     return 'Real engine failed to load, using the mock engine: ' + (e && e.message || e);
   }
 }
+
+function setClock() { clockHz = engine && engine.clockHz ? engine.clockHz : (build && build.clockHz) || 6000000; }
 
 function setDc(rate) { dcR = Math.exp(-2 * Math.PI * 10 / rate); dc = { x: 0, y: 0 }; }
 
@@ -133,8 +152,11 @@ function renderInto(dst, off, n) {
   if (a) { act.busy = act.busy || a.busy; act.cs = act.cs || a.cs; act.hits += a.hits; }
 }
 
+// v1/v2: engine.hit (5 knobs, 4 bytes). Other builds: the build's own HIT packing (v3: 5 bytes).
 function applyHit(ch, params) {
-  if (!engine.hit(ch, params)) dropped++;
+  const ok = build && build.hit && build.version !== 'v1' && build.version !== 'v2'
+    ? engine.send(packHit(build, ch, params)) : engine.hit(ch, params);
+  if (!ok) dropped++;
 }
 
 // Render one block [start, start+n) with events applied at their exact samples; returns { buf, marks }
@@ -193,7 +215,7 @@ function maybeStatus(force) {
   // adapt the lead
   if (underruns > lastUnderruns) {
     leadMs = Math.min(LEAD_MAX, Math.round(leadMs * 1.25 + 5)); lastUnderrunAt = now;
-  } else if (now - lastUnderrunAt > 8000 && now - lastLeadDrop > 4000 && simHz > 1.5 * CLOCK_HZ) {
+  } else if (now - lastUnderrunAt > 8000 && now - lastLeadDrop > 4000 && simHz > 1.5 * clockHz) {
     // a fast engine and no underruns for a while: shorten the lead (lower pad latency), not below LEAD_FLOOR
     const floor = leadMs > LEAD_DEFAULT ? LEAD_DEFAULT : LEAD_FLOOR;
     if (leadMs > floor) leadMs = Math.max(floor, leadMs - 5);
@@ -202,7 +224,7 @@ function maybeStatus(force) {
   lastUnderruns = underruns;
   const pp = playPos();
   const st = {
-    simHz: Math.round(simHz), realtime: simHz / CLOCK_HZ,
+    simHz: Math.round(simHz), realtime: simHz / clockHz, clockHz, chip: build ? build.version : 'v1',
     cycles: engine.cycles, frames: engine.frames, uoOut: engine.uoOut, uioOut: engine.uioOut,
     busy: act.busy, cs: act.cs, queue: engine.queueLength(),
     leadMs: Math.round((rendered - pp) / sampleRate * 1000), leadTargetMs: leadMs, underruns, dropped,
@@ -248,14 +270,16 @@ self.onmessage = async (e) => {
         slowdown = Number(m.slowdown) || 0;
         if (m.dac) dac = m.dac;
         if (m.gain > 0) gain = m.gain;
+        if (m.build) build = m.build;
         const err = await loadAnyEngine(m.engine, m.wasmUrl, sampleRate);
+        setClock();
         sched = new Scheduler({ sampleRate, patterns: m.patterns, channels: m.channels, accentLevelDrop: m.accentLevelDrop });
         if (m.state) restoreState(m.state);
         setDc(sampleRate);
-        if (err) { dac = '1st'; gain = DEFAULT_GAIN; }
+        if (err && (!build || build.version !== 'v3')) { dac = '1st'; gain = DEFAULT_GAIN; }
         // compile the other DAC builds in the background, so a switch while playing is instant
         else if (!mock && m.prefetch) for (const u of m.prefetch) warmUp(u).catch(() => {});
-        post({ type: 'ready', info: { backend, mock, sampleRate, dac, gain }, error: err });
+        post({ type: 'ready', info: { backend, mock, sampleRate, dac, gain, clockHz, frameClocks: engine.frameClocks || 96 }, error: err });
         break;
       }
       case 'start': {
@@ -266,7 +290,7 @@ self.onmessage = async (e) => {
         startLive();
         break;
       }
-      case 'params': sched.setParams(m.ch, m.params); break;
+      case 'params': if (m.replace) sched.params[m.ch] = { ...m.params }; else sched.setParams(m.ch, m.params); break;
       case 'hit': {
         const params = sched.hitParams(m.ch, m.v ?? 1);
         if (params.level > 0 && running) live.push({ ch: m.ch, params, source: m.source || 'pad' });   // no sound before start()
@@ -300,17 +324,29 @@ self.onmessage = async (e) => {
 // Switch to another engine build (another DAC), one switch at a time (dacChain). The chip restarts from
 // reset: sounding voices are cut (with a short crossfade); the rhythm and the MIDI file go on.
 let dacChain = Promise.resolve();
+// Another chip version (v3) also brings its own patches (m.params: one per channel) and clock.
 async function switchDac(m) {
   try {
-    if (!mock) {
-      const next = await loadWasm(m.wasmUrl, sampleRate);
+    const nb = m.build || build;
+    const family = (b) => (b && b.version === 'v3' ? 'v3' : 'v1');
+    // the v1 mock plays v1 and v2 alike (as before); a switch to or from v3 always changes the engine
+    if (!mock || family(nb) !== family(build) || nb.mock === true) {
+      const prev = engine, prevMock = mock, prevBackend = backend;
+      const kind = mock && family(nb) === family(build) ? 'mock' : (nb.mock === true ? 'mock' : (m.kind || 'wasm'));
+      const err = await loadAnyEngine(kind, m.wasmUrl, sampleRate, nb);
+      const next = engine;
+      engine = prev; mock = prevMock; backend = prevBackend;
+      if (err) throw new Error(err);
       next.setFilterHz(filterHz);
       const n = Math.round(FADE_MS / 1000 * sampleRate);
       if (running) fade = { engine, gain, left: n, total: n };
-      engine = next; backend = engine.backend || 'wasm';
+      engine = next; mock = next.backend === 'mock'; backend = engine.backend || 'wasm';
     }
+    build = nb;
+    setClock();
+    if (m.params) m.params.forEach((p, ch) => { sched.params[ch] = { ...p }; });
     dac = m.dac; gain = m.gain > 0 ? m.gain : DEFAULT_GAIN;
-    post({ type: 'dac', id: m.id, dac, gain, backend });
+    post({ type: 'dac', id: m.id, dac, gain, backend, mock, clockHz, frameClocks: engine.frameClocks || 96 });
     maybeStatus(true);
   } catch (err) {
     post({ type: 'error', message: String(err && err.message || err), id: m.id });
@@ -319,7 +355,7 @@ async function switchDac(m) {
 
 function restoreState(s) {
   if (!s) return;
-  if (s.params) s.params.forEach((p, ch) => sched.setParams(ch, p));
+  if (s.params) s.params.forEach((p, ch) => { sched.params[ch] = { ...p }; });
   if (s.extraPatterns) for (const p of s.extraPatterns) sched.addPattern(p);
   if (s.pattern) sched.setPattern(s.pattern);
   if (s.tempo) sched.setTempo(s.tempo);
