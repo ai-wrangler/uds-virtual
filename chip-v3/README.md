@@ -1,7 +1,7 @@
 # chip-v3: UDS v3 (preview, read-only)
 
 Vendored from [ai-wrangler/tt-uds-v3](https://github.com/ai-wrangler/tt-uds-v3) `main` at commit
-[`08ee452`](https://github.com/ai-wrangler/tt-uds-v3/commit/08ee45234c9f233cf3b6c258ffdd7427841d1412) ("Merge V3-SOUND kits re-tuned for CONTRACT 2 (PR #3)", 2026-10-18T14:30:12+03:00) by `tools/vendor_v3.sh`.
+[`7232722`](https://github.com/ai-wrangler/tt-uds-v3/commit/723272210ab1a1e01cacdf96dae4190ec60e8a9b) ("Merge V3-SOUND renders on baed8b7 and SOUND.md limits (PR #4)", 2026-10-18T14:52:58+03:00) by `tools/vendor_v3.sh`.
 Do not edit; re-run the script to update.
 
 UDS v3 is the modern UDS: 8 channels, each with a fully editable sound sent with every HIT (the patch fields

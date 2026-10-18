@@ -167,10 +167,10 @@
       "wasm": "uds_engine_v3.wasm",
       "chip": "ai-wrangler/tt-uds-v3",
       "branch": "main",
-      "commit": "08ee452",
+      "commit": "7232722",
       "chipDir": "chip-v3",
       "backend": "gen",
-      "gain": 6.82,
+      "gain": 6.83,
       "available": true,
       "clockHz": 8000000,
       "frameClocks": 128,
@@ -187,7 +187,7 @@
       ],
       "kits": "../kits/index.json",
       "mockEngine": "mock-engine-v3.js",
-      "mockGain": 6.82
+      "mockGain": 6.83
     }
   ]
 }

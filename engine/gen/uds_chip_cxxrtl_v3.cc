@@ -87,7 +87,7 @@ struct p_tt__um__ai__wrangler__uds3 : public module {
 	wire<3> p_core_2e_cb;
 	// \hdlname: core lfsr
 	// \src: chip-v3/src/project.v:47.13-59.4|chip-v3/src/uds3_core.v:281.14-281.18
-	wire<17> p_core_2e_lfsr;
+	wire<15> p_core_2e_lfsr;
 	// \hdlname: core sd_v1
 	// \src: chip-v3/src/project.v:47.13-59.4|chip-v3/src/uds3_core.v:318.15-318.20
 	wire<11> p_core_2e_sd__v1;
@@ -1204,7 +1204,7 @@ bool p_tt__um__ai__wrangler__uds3::eval() {
 	}
 	// cells $procdff$571 $procmux$489 $procmux$486 $flatten\core.$xor$chip-v3/src/uds3_core.v:286$195
 	if (posedge_p_clk) {
-		p_core_2e_lfsr.next = (p_rst__n ? (p_core_2e_fend ? p_core_2e_lfsr.curr.slice<15,0>().concat(xor_uu<1>(p_core_2e_lfsr.curr.slice<16>().val(), p_core_2e_lfsr.curr.slice<13>().val())).val() : p_core_2e_lfsr.curr) : value<17>{0x1u});
+		p_core_2e_lfsr.next = (p_rst__n ? (p_core_2e_fend ? p_core_2e_lfsr.curr.slice<13,0>().concat(xor_uu<1>(p_core_2e_lfsr.curr.slice<14>().val(), p_core_2e_lfsr.curr.slice<13>().val())).val() : p_core_2e_lfsr.curr) : value<15>{0x1u});
 	}
 	// cells $procdff$572 $procmux$495 $flatten\core.$add$chip-v3/src/uds3_core.v:322$229 $flatten\core.$not$chip-v3/src/uds3_core.v:321$228
 	if (posedge_p_clk) {

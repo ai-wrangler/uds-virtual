@@ -30,7 +30,7 @@ machine the sd2 build should run at about 110 MHz (18x real time). Chromium trut
 
 ### UDS v3 (`uds_engine_v3.wasm`)
 
-Built by `engine/build.sh all v3` from `chip-v3/` (ai-wrangler/tt-uds-v3 `main` at `08ee452`, CONTRACT 2,
+Built by `engine/build.sh all v3` from `chip-v3/` (ai-wrangler/tt-uds-v3 `main` at `7232722`, CONTRACT 2,
 top `tt_um_ai_wrangler_uds3`; `tools/vendor_v3.sh` vendors and rebuilds it). The harness takes the chip's
 shape from `chip-v3/docs/v3/params.json`: 8 MHz, 128-clock frames (2 voices x 64-clock windows), 5-byte HITs.
 Three things differ from v1/v2 (compile-time options, so the v1/v2 `.wasm` files stay byte-identical):

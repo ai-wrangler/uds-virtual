@@ -302,7 +302,7 @@ __attribute__((always_inline)) inline void step(State &s) {
   const uint64_t c218 = (c116) ? uint64_t((uint64_t(s.c151 >> 100) & uint64_t(0x7))) : uint64_t(((uint64_t(s.c151 >> 81) & uint64_t(0x1)) | ((uint64_t(s.c151 >> 80) & uint64_t(0x1)) << 1) | ((uint64_t(s.c151 >> 79) & uint64_t(0x1)) << 2)));
   const uint64_t c219 = (c64) ? uint64_t(c218) : uint64_t(c221);
   const uint64_t c217 = (c63) ? uint64_t(c216) : uint64_t(c219);
-  const uint64_t c259 = (uint64_t((s.c18 >> 16)) ^ uint64_t(((s.c18 >> 13) & uint64_t(0x1)))) & (~uint64_t(0) >> 63);
+  const uint64_t c259 = (uint64_t((s.c18 >> 14)) ^ uint64_t(((s.c18 >> 13) & uint64_t(0x1)))) & (~uint64_t(0) >> 63);
   const uint64_t c262 = (uint64_t(s.c1) + uint64_t(uint64_t(0x1))) & (~uint64_t(0) >> 61);
   const uint64_t c263 = (uint64_t(s.c0) + uint64_t(uint64_t(0x1))) & (~uint64_t(0) >> 61);
   const uint64_t c264 = (uint64_t(c284) & uint64_t((s.c23 >> 6))) & (~uint64_t(0) >> 63);
@@ -344,7 +344,7 @@ __attribute__((always_inline)) inline void step(State &s) {
   const uint64_t c15_next = ((c24) != 0) ? uint64_t(c185) : s.c15;
   const uint64_t c16_next = ((c200) != 0) ? uint64_t(((uint64_t(s.c151 >> 94) & uint64_t(0x1)) | ((uint64_t(s.c151 >> 93) & uint64_t(0x1)) << 1) | ((uint64_t(s.c151 >> 92) & uint64_t(0x1)) << 2) | ((uint64_t(s.c151 >> 91) & uint64_t(0x1)) << 3) | ((uint64_t(s.c151 >> 90) & uint64_t(0x1)) << 4) | ((uint64_t(s.c151 >> 89) & uint64_t(0x1)) << 5) | ((uint64_t(s.c151 >> 88) & uint64_t(0x1)) << 6) | ((uint64_t(s.c151 >> 87) & uint64_t(0x1)) << 7))) : s.c16;
   const uint64_t c17_next = ((c26) != 0) ? uint64_t(s.c0) : s.c17;
-  const uint64_t c18_next = ((in_rst_n) == 0) ? uint64_t(0x1) : (((c56) != 0) ? uint64_t((c259 | ((s.c18 & uint64_t(0xffff)) << 1))) : s.c18);
+  const uint64_t c18_next = ((in_rst_n) == 0) ? uint64_t(0x1) : (((c56) != 0) ? uint64_t((c259 | ((s.c18 & uint64_t(0x3fff)) << 1))) : s.c18);
   const uint64_t c19_next = ((c115) != 0) ? uint64_t(0xfff) : uint64_t(((c41 & uint64_t(0x1ff)) | (c44 << 9)));
   const uint64_t c20_next = ((c115) != 0) ? uint64_t(0x0) : uint64_t(c40);
   const uint64_t c21_next = ((in_rst_n) == 0) ? uint64_t(0x1) : (((c56) != 0) ? uint64_t(uint64_t(0x0)) : s.c21);
@@ -652,7 +652,7 @@ template <int P, int UIO> __attribute__((always_inline)) inline void step_at(Sta
   const uint64_t c218 = (c116) ? uint64_t((uint64_t(s.c151 >> 100) & uint64_t(0x7))) : uint64_t(((uint64_t(s.c151 >> 81) & uint64_t(0x1)) | ((uint64_t(s.c151 >> 80) & uint64_t(0x1)) << 1) | ((uint64_t(s.c151 >> 79) & uint64_t(0x1)) << 2)));
   const uint64_t c219 = (c64) ? uint64_t(c218) : uint64_t(c221);
   const uint64_t c217 = (c63) ? uint64_t(c216) : uint64_t(c219);
-  const uint64_t c259 = (uint64_t((s.c18 >> 16)) ^ uint64_t(((s.c18 >> 13) & uint64_t(0x1)))) & (~uint64_t(0) >> 63);
+  const uint64_t c259 = (uint64_t((s.c18 >> 14)) ^ uint64_t(((s.c18 >> 13) & uint64_t(0x1)))) & (~uint64_t(0) >> 63);
   const uint64_t c262 = (uint64_t(s.c1) + uint64_t(uint64_t(0x1))) & (~uint64_t(0) >> 61);
   const uint64_t c263 = (uint64_t(s.c0) + uint64_t(uint64_t(0x1))) & (~uint64_t(0) >> 61);
   const uint64_t c264 = (uint64_t(c284) & uint64_t((s.c23 >> 6))) & (~uint64_t(0) >> 63);
@@ -692,7 +692,7 @@ template <int P, int UIO> __attribute__((always_inline)) inline void step_at(Sta
   const uint64_t c15_next = ((c24) != 0) ? uint64_t(c185) : s.c15;
   const uint64_t c16_next = ((c200) != 0) ? uint64_t(((uint64_t(s.c151 >> 94) & uint64_t(0x1)) | ((uint64_t(s.c151 >> 93) & uint64_t(0x1)) << 1) | ((uint64_t(s.c151 >> 92) & uint64_t(0x1)) << 2) | ((uint64_t(s.c151 >> 91) & uint64_t(0x1)) << 3) | ((uint64_t(s.c151 >> 90) & uint64_t(0x1)) << 4) | ((uint64_t(s.c151 >> 89) & uint64_t(0x1)) << 5) | ((uint64_t(s.c151 >> 88) & uint64_t(0x1)) << 6) | ((uint64_t(s.c151 >> 87) & uint64_t(0x1)) << 7))) : s.c16;
   const uint64_t c17_next = ((c26) != 0) ? uint64_t(s.c0) : s.c17;
-  const uint64_t c18_next = ((in_rst_n) == 0) ? uint64_t(0x1) : (((c56) != 0) ? uint64_t((c259 | ((s.c18 & uint64_t(0xffff)) << 1))) : s.c18);
+  const uint64_t c18_next = ((in_rst_n) == 0) ? uint64_t(0x1) : (((c56) != 0) ? uint64_t((c259 | ((s.c18 & uint64_t(0x3fff)) << 1))) : s.c18);
   const uint64_t c19_next = ((c115) != 0) ? uint64_t(0xfff) : uint64_t(((c41 & uint64_t(0x1ff)) | (c44 << 9)));
   const uint64_t c20_next = ((c115) != 0) ? uint64_t(0x0) : uint64_t(c40);
   const uint64_t c21_next = ((in_rst_n) == 0) ? uint64_t(0x1) : (((c56) != 0) ? uint64_t(uint64_t(0x0)) : s.c21);

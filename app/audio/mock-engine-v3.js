@@ -207,7 +207,7 @@ class MockV3Engine {
       if (this.pend) { this.tgt = this.choose(a0, a1); this.pend = false; }
       if (!a0 && !a1) { this.d1 = 0; this.d2 = -1; }
       const l = this.lfsr;
-      this.lfsr = ((l << 1) | (((l >> 16) ^ (l >> 13)) & 1)) & 0x1ffff;
+      this.lfsr = ((l << 1) | (((l >> 14) ^ (l >> 13)) & 1)) & 0x7fff;   // 15 bits, x^15 + x^14 + 1 (CONTRACT 2)
       this.frame = (this.frame + 1) & 0x1fff;
     }
     this.n++;

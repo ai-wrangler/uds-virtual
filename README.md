@@ -75,11 +75,11 @@ The Output section has a **Chip** selector (it replaced the DAC switch; `?dac=1s
   downloads the 8 sounds as JSON, **Import kit** loads one.
 - **Saved.** The patches are kept per chip version in this browser (v1 and v2 share theirs: they differ only
   in the DAC).
-- **The engine.** v3 runs its own Verilog the same way as v1: `chip-v3/` (tt-uds-v3 `main` at `08ee452`,
+- **The engine.** v3 runs its own Verilog the same way as v1: `chip-v3/` (tt-uds-v3 `main` at `7232722`,
   CONTRACT 2) → Yosys → `gen.py` → zig wasm32, at 8 MHz with 128-clock frames, its 5-byte HITs sent by the
   virtual RP2040 with a BUSY wait after every byte. It matches V3-CHIP's golden model with 0 mismatches (43 006
   frames through the engine API, and V3-CHIP's own pin-level fixtures, CRC included); details and speed in
-  [engine/README.md](engine/README.md). Its loudness is matched to v1 (make-up gain 6.82, within 0.01 dB).
+  [engine/README.md](engine/README.md). Its loudness is matched to v1 (make-up gain 6.83, within 0.01 dB).
   `?v3=mock` plays `app/audio/mock-engine-v3.js`, a JavaScript port of the golden model, for development.
 
 The 2nd-order DAC is **not taped out**. It lives on branch [`sd2` of ai-wrangler/tt-uds-1x1](https://github.com/ai-wrangler/tt-uds-1x1/tree/sd2)
