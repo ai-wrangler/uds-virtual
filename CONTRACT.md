@@ -11,6 +11,8 @@ integration session keeps this file up to date.
 | --- | --- | --- |
 | `chip/` | nobody (read-only) | the chip, vendored from ai-wrangler/tt-uds-1x1 at commit ba09c49 |
 | `chip-sd2/` | nobody (read-only) | the 2nd-order DAC preview, vendored from tt-uds-1x1 branch `sd2` (commit in its README) |
+| `chip-v3/` | nobody (read-only) | UDS v3, vendored from ai-wrangler/tt-uds-v3 by `tools/vendor_v3.sh` (commit in its README) |
+| `app/kits/`, `app/engine/params_v3.json`, `app/audio/patch.js`, `app/audio/mock-engine-v3.js`, `app/ui/editor.js`, `app/ui/patch-store.js` | v3 (V3-WEB) | v3 kits, parameters, packing, mock v3 synth, sound editor |
 | `engine/`, `app/engine/` | engine | Verilog to WebAssembly build, harness, JS wrapper, engine tests |
 | `app/audio/`, `app/data/`, `tools/export_patterns.py`, `tests/audio/` | audio | AudioContext, worker, worklet, sequencer, MIDI, mock engine |
 | `app/index.html`, `app/ui/`, `app/assets/`, `tests/ui/` | ui | the panel |
@@ -94,6 +96,34 @@ a `WebAssembly.Module`: Chromium does not deliver a Module posted to a worklet p
 The engine is the bottleneck. Its README in `engine/` must state the measured simulation speed (MHz of chip
 clock in Node, and in Chrome if measured) and the method used to verify it against the model.
 
+### 3a. Chip versions (`app/engine/builds.json`)
+
+The Chip selector offers one entry per build: `1st` = **v1** (the chip as built), `2nd` = **v2** (v1 with the
+2nd-order DAC, preview), `v3` = **v3** (the modern chip, ai-wrangler/tt-uds-v3, preview). Every build declares:
+
+- `version` (`v1` | `v2` | `v3`), `label` (the selector's text), `clockHz`, `frameClocks`, `voices`;
+- its parameter list `params` (`[{ id, label, bits, min, max, note }]`) or `paramsUrl`, a copy of the chip's
+  `params.json` (v3: `params_v3.json`, the twin of tt-uds-v3 `docs/v3/CONTRACT.md`), with `default`,
+  `options`, `group`, `unit`, `help`;
+- its HIT packing `hit: { opcode: "0x18|ch", bytes: [[field ids of byte 1, MSB first], ...] }` (`patch.js`
+  `packHit`; for v1/v2 it gives exactly `UDSEngine.hit`);
+- `patchSet`: builds with the same set share their patches (v1 and v2 differ only in the DAC);
+- v3 also: `editor: true` (the sound editor), `strip` (the parameters on the channel strips), `kits`
+  (`../kits/index.json`), `mockGain` (the mock synth's matched gain).
+
+`available: false` keeps an entry "coming soon". **v3 becomes available only with the real engine**
+(`uds_engine_v3.wasm`, built by `engine/build.sh all v3` from `chip-v3/`). Until then the page plays v3 only
+with `?v3=mock` (or `?engine=mock`), the mock v3 synth in `app/audio/mock-engine-v3.js`, which is not the chip.
+
+Engine builds with another shape export `sim_clock_hz`, `sim_frame_clocks`, `sim_msg_max`; `UDSEngine` then has
+`clockHz`, `frameClocks`, `frameRate` and `maxMessage` (6 MHz, 96, 4 for v1/v2), and `send()` takes up to
+`maxMessage` bytes (v3: 5-byte HITs).
+
+Kits (v3): `app/kits/index.json` = `{ default, kits: [{ id, file, name, inspiredBy, source }] }`; each
+`kits/<id>.json` = `{ id, name, inspiredBy, description, contract, tempo, channels: [8 x { ch, name, notes?,
+patch }] }` (tt-uds-v3 `docs/v3/BRIEF.md` section 4). `notes` are the GM notes that play the channel (MIDI file,
+slots, live MIDI) while v3 is selected; a channel without `notes` keeps the GM map below.
+
 ## 4. Mock engine: `app/audio/mock-engine.js` (owner: audio)
 
 `loadMockEngine({ sampleRate })` returns an object with the same interface as section 3 (`backend: 'mock'`)
@@ -123,7 +153,16 @@ uds.setFilter(mode);        // 'rc' (default, 15.9 kHz) | 'warm' (4 kHz) | 'off'
 await uds.setDac(id);       // '1st' (the chip as built, default) | '2nd' (2nd-order DAC preview); works while playing:
                             //   the chip restarts from reset (20 ms crossfade), rhythm and MIDI go on. Throws for an
                             //   unknown or unavailable build. UDSAudio.create({ dac }) picks the first one.
-uds.dac;                    // '1st' | '2nd'; uds.builds: the entries of app/engine/builds.json (+ url)
+uds.dac;                    // '1st' | '2nd' | 'v3'; uds.builds: the entries of app/engine/builds.json (+ url)
+await uds.setChip(v);       // 'v1' | 'v2' | 'v3' (= setDac('1st' | '2nd' | 'v3')); uds.chip: 'v1' | 'v2' | 'v3'
+uds.currentBuild;           // the selected entry of builds.json (params, hit, clockHz, frameClocks, ...)
+// uds.knobs and uds.channels follow the selected chip: v1/v2 the 5 knobs of channels.json; v3 the params.json
+// list (with bits, default, options, group, help) and the kit's channel names and patches as defaults.
+uds.resetChannel(ch);       // the channel back to its default (v3: the current kit's patch)
+uds.kits; uds.kit;          // v3 kits (index.json entries) and the loaded kit
+await uds.loadKit(idOrKit); // replaces the 8 v3 patches and names; throws a plain Error for a bad kit
+uds.exportKit(); await uds.importKit(jsonOrObject);   // kits/<id>.json format
+uds.getPatchSet(set); uds.setPatchSet(set, data);     // 'v1' | 'v3': { patches, names, kit } (the panel stores them)
 
 uds.patterns;               // [{ id: 'A0'..'A15', 'B0', 'B1', bank, index, name, nameRu, meter, stepsPerBeat, length, bpm }]
 // patterns entries also carry steps and accents (for step LEDs)
@@ -157,7 +196,9 @@ await uds.renderWav({ what: 'rhythm' | 'midi', seconds });   // -> Blob (audio/w
 //  'slots'  { slots, slot }                       after loadSlot, clearSlot, setSlot
 //  'midi'   { position, duration, playing }
 //  'midi-input' { inputs }
-//  'dac'    { dac, name }                         after setDac
+//  'dac'    { dac, name, chip }                   after setDac / setChip
+//  'patches' { set, ch? }                         after a patch change (knob, kit, reset, setPatchSet)
+//  'kit'    { kit }                               after loadKit / importKit
 //  'error'  { message }
 ```
 
@@ -214,7 +255,12 @@ The page sets `window.uds` to its `UDSAudio` instance once created, mirrors `uds
 | `rhythm-toggle`, `tempo` | rhythm start/stop, tempo control (`role="slider"` or `<input type=range>`) |
 | `midi-file`, `midi-play`, `midi-input` | `<input type=file>` for .mid, play/stop, enable live MIDI |
 | `filter`, `volume` | filter switch, master volume |
-| `dac` | DAC switch `<select>` (values `1st`, `2nd`; a build that is not available is a disabled option, "coming soon"); stored in localStorage `uds-virtual.dac.v1`, URL flag `?dac=` |
+| `chip` | Chip selector `<select>` (values `v1`, `v2`, `v3`; a build that is not available is a disabled option, "coming soon"); it replaced the DAC switch. The build id is stored in localStorage `uds-virtual.dac.v1`; URL flags `?chip=v1\|v2\|v3` and `?dac=1st\|2nd` (alias); `?v3=mock` plays v3 on the mock synth |
+| `editor`, `editor-name` | the v3 sound editor (hidden for v1/v2) and its "ch N · name" title |
+| `strip-sel-<ch>` | v3: the strip head that selects the channel for the editor; `edit-ch-<ch>` the same in the editor |
+| `edit-<param>` | v3 editor controls, one per parameter: a knob (`role="slider"`), a `<select>` (params with `options`) or a checkbox (1-bit params) |
+| `edit-play`, `channel-reset` | play the edited channel; reset it to the kit's patch |
+| `kit`, `kit-export`, `kit-import`, `kit-desc` | kit `<select>`, export (downloads `<id>.json`), import (`<input type=file>`), the kit's description |
 | `display` | the 7-segment display (child elements `seg-a` .. `seg-g` with class `on` when lit) |
 | `sim-speed` | text such as `11.8 MHz · 1.97x real time` |
 | `wav-export` | WAV export button |
@@ -223,6 +269,7 @@ The page sets `window.uds` to its `UDSAudio` instance once created, mirrors `uds
   knob (`role="slider"`).
 - The pattern buttons (`pattern-<id>`) were removed: the panel is English only and the Autorhythm plays .mid
   files from 16 slots, saved in localStorage (`uds-virtual.slots.v1`: base64 bytes + name, and the selection).
+- Patches are stored per patch set in localStorage `uds-virtual.patches.v1` (`{ v1, v3 }`), with try/catch.
 - `body.ready` is set once the panel is fully built (pads, knobs and stored slots appear after
   `UDSAudio.create()` resolves); tests wait for it.
 
