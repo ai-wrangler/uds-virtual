@@ -18,7 +18,10 @@
 
 namespace backend {
 
-cxxrtl_design::p_tt__um__ai__wrangler__uds1x1 chip;
+#ifndef CXXRTL_TOP
+#define CXXRTL_TOP p_tt__um__ai__wrangler__uds1x1   // another top module (build.sh v3)
+#endif
+cxxrtl_design::CXXRTL_TOP chip;
 uint8_t uo = 0, uio = 0;
 
 inline void init() {

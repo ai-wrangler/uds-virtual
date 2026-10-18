@@ -13,8 +13,14 @@ export const GM_MAP = Object.freeze({
   49: 5, 51: 5, 52: 5, 55: 5, 57: 5, 59: 5,
 });
 
+// A kit (v3) may bring its own map; null = the GM map. Set by UDSAudio; used by the MIDI file, the
+// Autorhythm slots and live MIDI, all on the main thread.
+let noteMap = null;
+export function setNoteMap(map) { noteMap = map ? Object.freeze({ ...map }) : null; }
+export function getNoteMap() { return noteMap || GM_MAP; }
+
 export function mapNote(note) {
-  const ch = GM_MAP[note];
+  const ch = (noteMap || GM_MAP)[note];
   return ch === undefined ? -1 : ch;
 }
 

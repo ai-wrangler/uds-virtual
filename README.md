@@ -53,13 +53,34 @@ _Final report from the integration session, night of 17–18 October 2026, about
 
 <!-- STATUS:END -->
 
-## DAC preview
+## Chip selector: v1, v2, v3
 
-The Output section has a **DAC** switch:
+The Output section has a **Chip** selector (it replaced the DAC switch; `?dac=1st|2nd` still works, and
+`?chip=v1|v2|v3` too):
 
-- **1st order (as built)** is the default. It is the chip as built: `chip/`, the engine as before, byte for byte.
-- **2nd order (preview)** is a proposed chip change. The chip's first-order 1-bit sigma-delta audio DAC is
+- **v1 (1st-order DAC, as built)** is the default. It is the chip as built: `chip/`, the engine as before, byte for byte.
+- **v2 (2nd-order DAC, preview)** is a proposed chip change. The chip's first-order 1-bit sigma-delta audio DAC is
   replaced by a second-order one, so quiet decay tails no longer break into sparse single-bit clicks.
+- **v3 (modern, preview)** is UDS v3 ([ai-wrangler/tt-uds-v3](https://github.com/ai-wrangler/tt-uds-v3)): the
+  same pads, but every channel has a fully editable sound. See **v3** below.
+
+### v3
+
+- **Sound editor.** On v3 the strips show Pitch, Decay, Tone/noise and Level; click a channel's name (or 1–8 in
+  the editor) to edit every parameter of its sound below the strips: knobs, option selectors (wave, noise
+  colour, envelope mode) and switches (click), generated from the chip's `params.json`. **Play** auditions it, **Reset
+  channel** brings back the kit's sound.
+- **Kits.** The kit selector loads `app/kits/<id>.json` (V3-SOUND's kits from tt-uds-v3, with their note maps:
+  a kit can say which GM notes play which channel, for MIDI files, slots and live MIDI). **Export kit**
+  downloads the 8 sounds as JSON, **Import kit** loads one.
+- **Saved.** The patches are kept per chip version in this browser (v1 and v2 share theirs: they differ only
+  in the DAC).
+- **The engine.** v3 runs its own Verilog the same way as v1: `chip-v3/` (tt-uds-v3 `main` at `7232722`,
+  CONTRACT 2) → Yosys → `gen.py` → zig wasm32, at 8 MHz with 128-clock frames, its 5-byte HITs sent by the
+  virtual RP2040 with a BUSY wait after every byte. It matches V3-CHIP's golden model with 0 mismatches (43 006
+  frames through the engine API, and V3-CHIP's own pin-level fixtures, CRC included); details and speed in
+  [engine/README.md](engine/README.md). Its loudness is matched to v1 (make-up gain 6.83, within 0.01 dB).
+  `?v3=mock` plays `app/audio/mock-engine-v3.js`, a JavaScript port of the golden model, for development.
 
 The 2nd-order DAC is **not taped out**. It lives on branch [`sd2` of ai-wrangler/tt-uds-1x1](https://github.com/ai-wrangler/tt-uds-1x1/tree/sd2)
 ([changes against main](https://github.com/ai-wrangler/tt-uds-1x1/compare/main...sd2); no pull request was open

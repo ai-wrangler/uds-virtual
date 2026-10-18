@@ -8,9 +8,14 @@
 // 10 Hz DC blocker. The level is the RMS over the whole render (the tails are part of what is heard).
 // The first build (1st order, as built) keeps its gain; every other build gets
 // gain = gain_1st * rms_1st / rms_build, rounded to 0.01.
+// v3 plays the same groove with the patches of its default kit (app/kits/index.json), sent with the build's
+// own HIT packing. While app/engine/uds_engine_v3.wasm is not built, the mock v3 synth is measured instead
+// and --write stores its gain as mockGain (the gain the page uses with ?v3=mock).
 // SPDX-License-Identifier: Apache-2.0
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { loadEngine } from '../../app/engine/uds-engine.js';
+import { loadMockV3Engine } from '../../app/audio/mock-engine-v3.js';
+import { packHit } from '../../app/audio/patch.js';
 
 const APP = new URL('../../app/', import.meta.url);
 const RATE = 48000, BPM = 120, BARS = 8, STEP = Math.round(RATE * 60 / BPM / 4);
@@ -28,15 +33,32 @@ function stepHits(bar, s) {
   return h;
 }
 
-/** RMS (linear, before make-up gain) of the reference pattern rendered by the engine in wasmBytes. */
-export async function referenceRms(wasmBytes) {
-  const e = await loadEngine(wasmBytes, { sampleRate: RATE });
-  e.reset();
+/** A v3 build with its params.json and the patches of its default kit. */
+export function v3Setup(d) {
+  const pj = JSON.parse(readFileSync(new URL('engine/' + d.paramsUrl, APP)));
+  const build = { ...d, params: pj.params, hit: pj.hit };
+  const kitsUrl = new URL('engine/' + (d.kits || '../kits/index.json'), APP);
+  const idx = JSON.parse(readFileSync(kitsUrl));
+  const entry = idx.kits.find((k) => k.id === idx.default) || idx.kits[0];
+  const kit = JSON.parse(readFileSync(new URL(entry.file, kitsUrl)));
+  const patches = [];
+  for (const c of kit.channels) patches[c.ch] = c.patch;
+  return { build, patches, kit: entry.id };
+}
+
+/**
+ * RMS (linear, before make-up gain) of the reference pattern rendered by the engine in wasmBytes (or an
+ * engine object). v3: pass setup = v3Setup(build entry).
+ */
+export async function referenceRms(wasmBytes, setup = null) {
+  const e = wasmBytes && typeof wasmBytes.render === 'function' ? wasmBytes : await loadEngine(wasmBytes, { sampleRate: RATE });
+  e.reset(RATE);
+  const hit = setup ? (ch) => e.send(packHit(setup.build, ch, setup.patches[ch])) : (ch) => e.hit(ch, channels[ch].params);
   const dcR = Math.exp(-2 * Math.PI * 10 / RATE);
   let x = 0, y = 0, sum = 0, n = 0, peak = 0;
   const total = BARS * 16 * STEP + RATE;                     // + 1 s of tail
   for (let pos = 0, k = 0; pos < total; k++) {
-    if (k < BARS * 16) for (const ch of stepHits(Math.floor(k / 16), k % 16)) e.hit(ch, channels[ch].params);
+    if (k < BARS * 16) for (const ch of stepHits(Math.floor(k / 16), k % 16)) hit(ch);
     const len = Math.min(STEP, total - pos);
     const buf = e.render(len);
     for (let i = 0; i < len; i++) {
@@ -59,12 +81,16 @@ export async function measure() {
   let ref = null;
   for (const d of b.builds) {
     const f = new URL('engine/' + d.wasm, APP);
-    if (!existsSync(f)) { out.push({ id: d.id, missing: true }); continue; }
-    const m = await referenceRms(readFileSync(f));
+    const setup = d.paramsUrl ? v3Setup(d) : null;
+    let m, mock = false;
+    if (existsSync(f)) m = await referenceRms(readFileSync(f), setup);
+    else if (d.version === 'v3') { m = await referenceRms(await loadMockV3Engine({ sampleRate: RATE, build: setup.build }), setup); mock = true; }
+    else { out.push({ id: d.id, missing: true }); continue; }
     if (!ref) ref = { rms: m.rms, gain: d.gain };
     const suggested = Math.round(ref.gain * ref.rms / m.rms * 100) / 100;
-    const db = (g) => 20 * Math.log10(m.rms * g);
-    out.push({ id: d.id, rms: m.rms, peak: m.peak, gain: d.gain, suggested, dbOut: db(d.gain), dbRaw: 20 * Math.log10(m.rms) });
+    const g = mock ? (d.mockGain ?? d.gain) : d.gain;
+    const db = (x) => 20 * Math.log10(m.rms * x);
+    out.push({ id: d.id, mock, kit: setup ? setup.kit : null, rms: m.rms, peak: m.peak, gain: g, suggested, dbOut: db(g), dbRaw: 20 * Math.log10(m.rms) });
   }
   return out;
 }
@@ -73,12 +99,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const res = await measure();
   for (const r of res) {
     if (r.missing) { console.log(`${r.id}: not built`); continue; }
-    console.log(`${r.id}: raw ${r.dbRaw.toFixed(2)} dBFS (peak ${r.peak.toFixed(3)}), gain ${r.gain} -> ` +
+    console.log(`${r.id}${r.mock ? ' (mock engine)' : ''}${r.kit ? ' kit ' + r.kit : ''}: raw ${r.dbRaw.toFixed(2)} dBFS (peak ${r.peak.toFixed(3)}), gain ${r.gain} -> ` +
       `${r.dbOut.toFixed(2)} dBFS; matching gain ${r.suggested}`);
   }
   if (process.argv.includes('--write')) {
     const b = readBuilds();
-    for (const r of res) if (!r.missing) b.builds.find((d) => d.id === r.id).gain = r.suggested;
+    for (const r of res) if (!r.missing) b.builds.find((d) => d.id === r.id)[r.mock ? 'mockGain' : 'gain'] = r.suggested;
     writeFileSync(new URL('engine/builds.json', APP), JSON.stringify(b, null, 2) + '\n');
     console.log('app/engine/builds.json updated');
   }

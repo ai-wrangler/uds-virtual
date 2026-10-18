@@ -28,6 +28,34 @@ wider DAC loop in the netlist). That sandbox was about 2.3x slower than the one 
 machine the sd2 build should run at about 110 MHz (18x real time). Chromium truth test: 17.8 to 31.5 MHz on `runFrames(1)` per frame
 (the as-built engine ran 22.9 to 25.3 MHz the same way).
 
+### UDS v3 (`uds_engine_v3.wasm`)
+
+Built by `engine/build.sh all v3` from `chip-v3/` (ai-wrangler/tt-uds-v3 `main` at `7232722`, CONTRACT 2,
+top `tt_um_ai_wrangler_uds3`; `tools/vendor_v3.sh` vendors and rebuilds it). The harness takes the chip's
+shape from `chip-v3/docs/v3/params.json`: 8 MHz, 128-clock frames (2 voices x 64-clock windows), 5-byte HITs.
+Three things differ from v1/v2 (compile-time options, so the v1/v2 `.wasm` files stay byte-identical):
+
+- **Host** (`UDS_HOST_WINDOW`): the virtual RP2040 is the golden model's standard host: one SPI byte per
+  64-clock window, CS low 6 clocks before the first bit, the byte 8 clocks into the window at SCK = clk/6, a
+  BUSY wait (read on the window's second clock) before every byte of a HIT, CS high 4 clocks after the last bit.
+- **Frames** (`UDS_FRAME_START=0`): frame k is cycles 128k .. 128k+127, as the model counts them.
+- **Fast idle frame**: `chip-v3/engine.json` names the window counters `core.t` (P % 64) and `core.v`
+  ((P / 64) % 2) that `gen.py` folds into `step_at`.
+
+Verification (`engine/test/v3_truth.test.mjs`, `cross.test.mjs`, `tests/e2e/v3-truth.spec.mjs`):
+
+- against the golden model through the engine API: `fixtures/model_frames_v3.json`
+  (`make_fixture_v3.py` from `chip-v3/model/uds3_model.py`): 43 006 frames, 455 messages, **0 mismatches**, in Node
+  and in Chromium;
+- V3-CHIP's own pin-level fixtures (`chip-v3/test/fixtures/uds3_kit.json`, `uds3_random.json`): 4 166 + 2 050
+  windows, **0 mismatches** in the 1s per window, BUSY, the digit and the CRC of the whole audio bitstream;
+- gen = CXXRTL on every pin for 10 004 294 clocks, and frame by frame on 105 650 frames of the fast path;
+- READ ID 0xD5, VERSION 0x32. V3-CHIP's cocotb tests (`test/test.py`, 3 tests) pass on the vendored RTL.
+
+Speed in this sandbox (2 vCPU; the v1 engine measured 67.6 MHz here, against 152 MHz on the original sandbox):
+70.0 MHz in Node (8.75x real time at 8 MHz); in headless Chromium the page reports 49 to 71 MHz while the
+demo groove plays (6.1x to 8.9x real time), with 0 underruns. CXXRTL: 10.1 MHz.
+
 ## How it works
 
 ```

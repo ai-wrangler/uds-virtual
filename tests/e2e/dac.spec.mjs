@@ -1,5 +1,7 @@
-// DAC switch (Output section): "1st order (as built)" vs "2nd order (preview)", the second-order
-// sigma-delta proposed on ai-wrangler/tt-uds-1x1 branch sd2. Tests that need the 2nd-order build skip
+// Chip selector (Output section; it replaced the DAC switch): "v1 (1st-order DAC, as built)" vs "v2 (2nd-order
+// DAC, preview)", the second-order sigma-delta proposed on ai-wrangler/tt-uds-1x1 branch sd2 (v3: tests/e2e/v3.spec.mjs).
+// The selector's values are chip versions (v1, v2, v3); uds.dac stays the build id ('1st', '2nd'), and
+// ?dac=1st|2nd still works. Tests that need the 2nd-order build skip
 // until app/engine/builds.json marks it available (UDS_FORCE_DAC2=1 forces it on, for a local
 // uds_engine_sd2.wasm that is not listed yet).
 import { test, expect } from '@playwright/test';
@@ -53,22 +55,26 @@ async function wavOf(page) {
   });
 }
 
-test('DAC switch sits in the Output section with a tooltip; 1st order is the default', async ({ page }) => {
+test('Chip selector sits in the Output section with a tooltip; v1 (as built) is the default', async ({ page }) => {
   const errors = await open(page);
-  const sel = page.getByTestId('dac');
+  const sel = page.getByTestId('chip');
   await expect(sel).toBeVisible();
-  await expect(page.locator('.out-block [data-testid=dac]')).toHaveCount(1);
-  const title = await page.locator('#dac-ctl').getAttribute('title');
-  expect(title).toMatch(/1st order/);
-  expect(title).toMatch(/2nd order/);
+  await expect(page.locator('.out-block [data-testid=chip]')).toHaveCount(1);
+  await expect(page.getByTestId('dac')).toHaveCount(0);
+  const title = await page.locator('#chip-ctl').getAttribute('title');
+  expect(title).toMatch(/v1: the chip as built, 1st-order DAC/);
+  expect(title).toMatch(/v2: v1 with a 2nd-order DAC/);
+  expect(title).toMatch(/v3: the modern chip/);
   expect(title.includes('\n')).toBe(false);
   const opts = await sel.locator('option').evaluateAll((os) => os.map((o) => ({ v: o.value, t: o.textContent, d: o.disabled })));
-  expect(opts.map((o) => o.v)).toEqual(['1st', '2nd']);
-  expect(opts[0]).toMatchObject({ t: '1st order (as built)', d: false });
-  expect(opts[1].t).toMatch(/^2nd order \(preview\)/);
+  expect(opts.map((o) => o.v)).toEqual(['v1', 'v2', 'v3']);
+  expect(opts[0]).toMatchObject({ t: 'v1 (1st-order DAC, as built)', d: false });
+  expect(opts[1].t).toMatch(/^v2 \(2nd-order DAC, preview\)/);
+  expect(opts[2].t).toMatch(/^v3 \(modern, preview\)/);
   const builds = await page.evaluate(() => window.uds.builds.map((b) => ({ id: b.id, available: b.available })));
-  if (!builds[1].available) expect(opts[1]).toMatchObject({ d: true, t: '2nd order (preview) · coming soon' });
-  await expect(sel).toHaveValue('1st');
+  if (!builds[1].available) expect(opts[1]).toMatchObject({ d: true, t: 'v2 (2nd-order DAC, preview) · coming soon' });
+  if (!builds[2].available) expect(opts[2]).toMatchObject({ d: true, t: 'v3 (modern, preview) · coming soon' });
+  await expect(sel).toHaveValue('v1');
   expect(await page.evaluate(() => window.uds.dac)).toBe('1st');
   expect(errors).toEqual([]);
 });
@@ -76,17 +82,20 @@ test('DAC switch sits in the Output section with a tooltip; 1st order is the def
 test('2nd-order DAC: the choice is remembered (localStorage) and ?dac= overrides it', async ({ page }) => {
   await open(page);
   await requireDac2(page);
-  await page.getByTestId('dac').selectOption('2nd');
+  await page.getByTestId('chip').selectOption('v2');
   await expect.poll(() => page.evaluate(() => window.uds.dac)).toBe('2nd');
   expect(await page.evaluate(() => localStorage.getItem('uds-virtual.dac.v1'))).toBe('2nd');
   await page.reload();
   await page.waitForSelector('body.ready');
-  await expect(page.getByTestId('dac')).toHaveValue('2nd');
+  await expect(page.getByTestId('chip')).toHaveValue('v2');
   expect(await page.evaluate(() => window.uds.dac)).toBe('2nd');
   await page.goto('./?dac=1st');
   await page.waitForSelector('body.ready');
-  await expect(page.getByTestId('dac')).toHaveValue('1st');
-  await page.getByTestId('dac').selectOption('1st');
+  await expect(page.getByTestId('chip')).toHaveValue('v1');
+  await page.goto('./?chip=v2');
+  await page.waitForSelector('body.ready');
+  await expect(page.getByTestId('chip')).toHaveValue('v2');
+  await page.getByTestId('chip').selectOption('v1');
   await page.evaluate(() => localStorage.removeItem('uds-virtual.dac.v1'));
 });
 
@@ -105,7 +114,7 @@ test('2nd-order DAC: switching both ways while the rhythm plays', async ({ page 
   under.push(await page.evaluate(() => window.uds.lastStatus.underruns));
   for (const dac of ['2nd', '1st', '2nd', '1st']) {
     const t0 = await now(page);
-    await page.getByTestId('dac').selectOption(dac);
+    await page.getByTestId('chip').selectOption(dac === '2nd' ? 'v2' : 'v1');
     await expect.poll(() => page.evaluate(() => window.uds.dac)).toBe(dac);
     await expect.poll(async () => (await events(page, 'status', t0)).some((e) => e.detail.dac === dac)).toBe(true);
     const m = await measure(page, 1200);
@@ -136,7 +145,7 @@ test('2nd-order DAC: the WAV export follows the selected DAC (file name and audi
   const w1 = await wavOf(page);
   const w1b = await wavOf(page);
   expect(w1b.hash, 'renderWav is deterministic').toBe(w1.hash);
-  await page.getByTestId('dac').selectOption('2nd');
+  await page.getByTestId('chip').selectOption('v2');
   await expect.poll(() => page.evaluate(() => window.uds.dac)).toBe('2nd');
   const w2 = await wavOf(page);
   expect(w2.dac).toBe('2nd');
@@ -150,7 +159,7 @@ test('2nd-order DAC: the WAV export follows the selected DAC (file name and audi
   const dl = page.waitForEvent('download', { timeout: 60_000 });
   await page.getByTestId('wav-export').click();
   expect((await dl).suggestedFilename()).toMatch(/-dac2\.wav$/);
-  await page.getByTestId('dac').selectOption('1st');
+  await page.getByTestId('chip').selectOption('v1');
   await expect.poll(() => page.evaluate(() => window.uds.dac)).toBe('1st');
   const dl1 = page.waitForEvent('download', { timeout: 60_000 });
   await page.getByTestId('wav-export').click();
