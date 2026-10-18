@@ -165,7 +165,8 @@ export class UDSAudio extends EventTarget {
   _dacInit(id) {
     const b = this._build(id) || this.builds[0];
     const wasmUrl = this.wasmUrl && b === this.builds[0] ? this.wasmUrl : b.url;
-    return { dac: b.id, wasmUrl, gain: b.gain, build: this._buildMsg(b) };
+    // the mock v3 synth has its own make-up gain (mockGain, matched by engine/test/loudness.mjs)
+    return { dac: b.id, wasmUrl, gain: b.mock === true ? (b.mockGain ?? b.gain) : b.gain, build: this._buildMsg(b) };
   }
   _setInfo(i) {
     const b = this.currentBuild;

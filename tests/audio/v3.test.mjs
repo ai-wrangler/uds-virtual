@@ -53,7 +53,7 @@ test('builds.json: every build declares its clock, frame, parameters and HIT pac
 test('the v3 entry is not available without the real engine (the live site never plays the mock)', () => {
   const wasm = new URL('../../app/engine/' + v3entry.wasm, import.meta.url);
   if (v3entry.available) assert.ok(fs.existsSync(wasm), 'v3 available but ' + v3entry.wasm + ' missing');
-  assert.notEqual(v3entry.mock, true);
+  assert.equal(v3entry.mock, undefined, 'builds.json never marks a build as mock: only the page does, with ?v3=mock');
 });
 
 test('v1 packing: packHit gives exactly the bytes UDSEngine.hit sends', async () => {
@@ -181,4 +181,12 @@ test('the scheduler plays v3 patches with velocity on the level field', () => {
   assert.equal(p.wave, kit.channels[4].patch.wave);
   assert.deepEqual(packHit(V3, 4, p).length, 5);
   assert.ok(DRAFT0_BUILD.hit.bytes.length === 4);
+});
+
+test('v3 loudness matches v1 within 1 dB on the reference groove (real engine, or the mock until it is built)', async () => {
+  const { measure } = await import('../../engine/test/loudness.mjs');
+  const r = await measure();
+  const v1 = r.find((x) => x.id === '1st'), v3 = r.find((x) => x.id === 'v3');
+  console.log(`# loudness: v1 ${v1.dbOut.toFixed(2)} dBFS, v3${v3.mock ? ' (mock)' : ''} ${v3.dbOut.toFixed(2)} dBFS (gain ${v3.gain})`);
+  assert.ok(Math.abs(v3.dbOut - v1.dbOut) < 1, `${(v3.dbOut - v1.dbOut).toFixed(2)} dB`);
 });
