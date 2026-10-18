@@ -9,8 +9,8 @@
 # Steps:
 #   1. chip-v3/ <- src/*.v, model/*.py, test/*.py + test/*.v, docs/info.md, docs/v3/{CONTRACT.md,params.json},
 #      info.yaml (+ engine.json if the chip repo has one), README.md naming the commit;
-#   2. app/engine/params_v3.json <- docs/v3/params.json; app/kits/ <- kits/*.json and kits/*.mid notes maps
-#      (index.json lists them, the panel's own init.json stays);
+#   2. app/engine/params_v3.json <- docs/v3/params.json; app/kits/ <- kits/*.json (with their note maps) and
+#      kits/patterns/*.mid (index.json lists them, the panel's own init.json stays);
 #   3. engine/build.sh all v3 (gen + CXXRTL);
 #   4. engine/test/fixtures/model_frames_v3.json <- the chip repo's web fixture, if it has one;
 #   5. node --test engine/test/v3_truth.test.mjs tests/audio/v3.test.mjs.
@@ -60,29 +60,7 @@ if [ -n "${UDS_V3_KITS_REF:-}" ]; then
   git -C "$C" fetch -q origin "${UDS_V3_KITS_REF#origin/}" || true
   git -C "$C" archive "$UDS_V3_KITS_REF" kits 2>/dev/null | tar -x -C "$TMP/kits" && KITS_SRC="$TMP/kits/kits"
 fi
-if [ -d "$KITS_SRC" ]; then
-  find app/kits -maxdepth 1 -name '*.json' ! -name init.json ! -name index.json -delete
-  cp "$KITS_SRC"/*.json app/kits/ 2>/dev/null || true
-  python3 - "$SHA" <<'PY'
-import json, os, sys
-kits = []
-for f in sorted(os.listdir('app/kits')):
-    if not f.endswith('.json') or f in ('index.json',):
-        continue
-    k = json.load(open(os.path.join('app/kits', f)))
-    if 'channels' not in k:
-        continue
-    kits.append({"id": k.get("id", f[:-5]), "file": f, "name": k.get("name", f[:-5]),
-                 "inspiredBy": k.get("inspiredBy", ""), "source": "uds-virtual" if f == "init.json" else "tt-uds-v3@" + sys.argv[1][:7]})
-# V3-SOUND's kits first (the first one is the default), the panel's own starter kit last
-kits.sort(key=lambda k: (k["file"] == "init.json", k["name"].lower()))
-idx = json.load(open('app/kits/index.json'))
-idx["kits"] = kits
-idx["default"] = kits[0]["id"]
-open('app/kits/index.json', 'w').write(json.dumps(idx, indent=2, ensure_ascii=False) + "\n")
-print("app/kits:", ", ".join(k["id"] for k in kits))
-PY
-fi
+if [ -d "$KITS_SRC" ]; then python3 tools/sync_v3_kits.py "$KITS_SRC" "tt-uds-v3@${SHA:0:7}"; fi
 
 engine/build.sh all v3
 for f in "$C"/test/fixtures/web_frames*.json "$C"/test/web_frames*.json "$C"/docs/v3/web_frames*.json; do

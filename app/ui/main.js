@@ -260,6 +260,20 @@ async function main() {
     onChange: (ch, key, v) => { knobs[ch]?.[key]?.set(v, false); },
     onKit: () => { buildStrips(); editor.show(selCh); },
     onSelect: (ch) => selectChannel(ch),
+    // the kit's demo groove into the selected slot (or the first empty one)
+    onPattern: async (url, name) => {
+      try {
+        const r = await fetch(url);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const file = new File([await r.arrayBuffer()], name, { type: 'audio/midi' });
+        let i = uds.slot ?? -1;
+        if (!(i >= 0)) i = uds.slots.findIndex((x) => !x);
+        if (!(i >= 0)) i = 0;
+        await loadSlotFile(i, file);
+      } catch (err) {
+        toast('Demo groove failed: ' + (err?.message || err), 'bad');
+      }
+    },
   });
   function showEditor() {
     const on = isEditorBuild();

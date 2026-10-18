@@ -174,6 +174,14 @@ test('v3: kits load from app/kits, with names and note maps', async ({ page }) =
       await expect(page.locator(`.strip[data-ch="${c.ch}"] .strip-names .lb`)).toHaveText(c.name);
     }
   }
+  // a kit's demo groove goes into the selected slot
+  const withPattern = idx.kits.find((k) => k.pattern);
+  if (withPattern) {
+    await page.getByTestId('kit').selectOption(withPattern.id);
+    await expect.poll(() => page.evaluate(() => window.uds.kit.id)).toBe(withPattern.id);
+    await page.getByTestId('kit-pattern').click();
+    await expect.poll(() => page.evaluate(() => window.uds.slots[0] && window.uds.slots[0].name)).toBe(`${withPattern.id}.mid`);
+  }
   // a kit with its own note map: note 60 plays channel 4, note 36 no longer does
   const kit = JSON.parse(fs.readFileSync(path.join(ROOT, 'app/kits', idx.kits[0].file), 'utf8'));
   kit.id = 'mapped'; kit.name = 'Mapped';

@@ -5,11 +5,11 @@ import { createKnob } from './knob.js';
 
 const GROUPS = [['tone', 'Tone'], ['amp', 'Amplitude'], ['noise', 'Noise']];
 
-export function createEditor({ root, uds, h, lbl, toast, onChange, onKit, onSelect }) {
+export function createEditor({ root, uds, h, lbl, toast, onChange, onKit, onSelect, onPattern }) {
   let ch = 0;
   let controls = {};   // key -> { set(v) }
   let built = false;
-  let nameEl, descEl, kitSel, chBtns = [];
+  let nameEl, descEl, kitSel, patBtn, chBtns = [];
 
   function params() { return uds.knobs; }
 
@@ -126,7 +126,16 @@ export function createEditor({ root, uds, h, lbl, toast, onChange, onKit, onSele
       for (const p of params()) onChange(ch, p.key, uds.getParams(ch)[p.key]);
       toast(`Channel ${ch + 1}: back to the kit's sound`);
     });
-    foot.append(kl, exp, imp, rst);
+    patBtn = h('button', 'btn btn-small');
+    patBtn.type = 'button';
+    patBtn.dataset.testid = 'kit-pattern';
+    patBtn.append(lbl('Demo groove', 'to a slot'));
+    patBtn.title = "Load the kit's demo groove (.mid) into the selected Autorhythm slot";
+    patBtn.addEventListener('click', () => {
+      const e = (uds.kits || []).find((x) => x.id === uds.kit?.id);
+      if (e && e.pattern && onPattern) onPattern(e.pattern, `${e.id}.mid`);
+    });
+    foot.append(kl, exp, imp, rst, patBtn);
     root.append(foot);
     descEl = h('p', 'ed-desc dim');
     descEl.dataset.testid = 'kit-desc';
@@ -195,6 +204,7 @@ export function createEditor({ root, uds, h, lbl, toast, onChange, onKit, onSele
       kitSel.append(o);
     }
     kitSel.value = k ? (known ? k.id : '__custom') : '';
+    if (patBtn) patBtn.hidden = !(known && (uds.kits || []).find((e) => e.id === k.id)?.pattern);
     if (descEl) {
       descEl.textContent = k ? [k.inspiredBy ? `Inspired by ${k.inspiredBy}.` : '', k.description || ''].filter(Boolean).join(' ') : 'No kit loaded: the sounds are the defaults of params.json.';
     }

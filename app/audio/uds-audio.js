@@ -333,7 +333,7 @@ export class UDSAudio extends EventTarget {
     const kitsUrl = this.kitsUrl || new URL(b.kits || '../kits/index.json', this.buildsUrl).href;
     try {
       const idx = await fetchJson(kitsUrl);
-      this.kits = (idx.kits || []).map(k => ({ id: k.id, name: k.name || k.id, file: k.file || k.id + '.json', source: k.source || '', inspiredBy: k.inspiredBy || '', url: new URL(k.file || k.id + '.json', kitsUrl).href }));
+      this.kits = (idx.kits || []).map(k => ({ id: k.id, name: k.name || k.id, file: k.file || k.id + '.json', source: k.source || '', inspiredBy: k.inspiredBy || '', url: new URL(k.file || k.id + '.json', kitsUrl).href, pattern: k.pattern ? new URL(k.pattern, kitsUrl).href : null }));
       const def = this.kits.find(k => k.id === idx.default) || this.kits[0];
       if (def) this._useKit(validateKit(await this._fetchKit(def), b), b);
     } catch (e) {

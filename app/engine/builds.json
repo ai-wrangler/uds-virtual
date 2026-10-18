@@ -187,7 +187,7 @@
       ],
       "kits": "../kits/index.json",
       "mockEngine": "mock-engine-v3.js",
-      "mockGain": 4.71
+      "mockGain": 4.46
     }
   ]
 }

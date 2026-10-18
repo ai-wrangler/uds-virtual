@@ -1,11 +1,52 @@
 {
   "description": "Kits for the v3 chip: kits/<id>.json in the tt-uds-v3 kit format (docs/v3/BRIEF.md section 4). The first entry is the default. Copied from ai-wrangler/tt-uds-v3 kits/ by tools/vendor_v3.sh; init.json is the panel's own starter kit.",
-  "default": "init",
+  "default": "default",
   "kits": [
+    {
+      "id": "default",
+      "file": "default.json",
+      "name": "Default",
+      "inspiredBy": "",
+      "source": "tt-uds-v3 sound@f82c1b6",
+      "pattern": "patterns/default.mid"
+    },
+    {
+      "id": "copenhagen",
+      "file": "copenhagen.json",
+      "name": "Copenhagen Night",
+      "inspiredBy": "Trentemøller",
+      "source": "tt-uds-v3 sound@f82c1b6",
+      "pattern": "patterns/copenhagen.mid"
+    },
+    {
+      "id": "reykjavik",
+      "file": "reykjavik.json",
+      "name": "Reykjavík",
+      "inspiredBy": "GusGus",
+      "source": "tt-uds-v3 sound@f82c1b6",
+      "pattern": "patterns/reykjavik.mid"
+    },
+    {
+      "id": "shoreditch",
+      "file": "shoreditch.json",
+      "name": "Shoreditch",
+      "inspiredBy": "Simian Mobile Disco",
+      "source": "tt-uds-v3 sound@f82c1b6",
+      "pattern": "patterns/shoreditch.mid"
+    },
+    {
+      "id": "tromso",
+      "file": "tromso.json",
+      "name": "Tromsø",
+      "inspiredBy": "Röyksopp",
+      "source": "tt-uds-v3 sound@f82c1b6",
+      "pattern": "patterns/tromso.mid"
+    },
     {
       "id": "init",
       "file": "init.json",
       "name": "Init",
+      "inspiredBy": "",
       "source": "uds-virtual"
     }
   ]
