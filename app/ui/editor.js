@@ -207,7 +207,9 @@ export function createEditor({ root, uds, h, lbl, toast, onChange, onKit, onSele
     kitSel.value = k ? (known ? k.id : '__custom') : '';
     if (patBtn) patBtn.hidden = !(known && (uds.kits || []).find((e) => e.id === k.id)?.pattern);
     if (descEl) {
-      descEl.textContent = k ? [k.inspiredBy ? `Inspired by ${k.inspiredBy}.` : '', k.description || ''].filter(Boolean).join(' ') : 'No kit loaded: the sounds are the defaults of params.json.';
+      // the description usually names the inspiration itself; add it only when it does not
+      const insp = k && k.inspiredBy && !(k.description || '').includes(k.inspiredBy) ? `Inspired by ${k.inspiredBy}.` : '';
+      descEl.textContent = k ? [insp, k.description || ''].filter(Boolean).join(' ') : 'No kit loaded: the sounds are the defaults of params.json.';
     }
   }
 
