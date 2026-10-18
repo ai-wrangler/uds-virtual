@@ -214,6 +214,16 @@ export class UDSEngine {
   }
 
   /**
+   * Drive the SPI input pins directly (pin-level fixtures; v3 builds only): uio_in bit 0 CS_N, 1 MOSI, 3 SCK.
+   * Use with runTrace/runCycles while no message is queued.
+   * @param {number} uioIn
+   */
+  setPins(uioIn) {
+    if (!this._x.sim_set_uio_in) throw new Error('uds-engine: this build cannot drive the pins directly');
+    this._x.sim_set_uio_in(uioIn | 0);
+  }
+
+  /**
    * Run exactly n clocks (no audio output is kept).
    * @param {number} n
    */

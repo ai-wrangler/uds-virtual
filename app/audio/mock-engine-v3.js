@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Mock UDS v3 engine: a JavaScript port of V3-CHIP's golden model (tt-uds-v3 model/uds3_model.py, CONTRACT 1),
+// Mock UDS v3 engine: a JavaScript port of V3-CHIP's golden model (tt-uds-v3 model/uds3_model.py, CONTRACT 2),
 // with the interface of app/engine/uds-engine.js (CONTRACT.md section 3).
 //
 // It runs the model at window granularity (2 voices x 64-clock windows = one 128-clock frame at 8 MHz), with the
@@ -19,9 +19,9 @@ const QUEUE_MAX = 255;
 const L = 64;                 // clocks per window
 const DAC_FB = 256;
 
-// CONTRACT 1 packing, used when the loader gives no build (tests that load the mock directly)
+// CONTRACT 1/2 packing (the same), used when the loader gives no build (tests that load the mock directly)
 export const CONTRACT1_BUILD = {
-  version: 'v3', contract: 1, clockHz: 8000000, frameClocks: 128,
+  version: 'v3', contract: 2, clockHz: 8000000, frameClocks: 128,
   params: [
     { id: 'pitch', bits: 8, default: 64 }, { id: 'decay', bits: 4, default: 8 }, { id: 'wave', bits: 2, default: 0 },
     { id: 'color', bits: 2, default: 1 }, { id: 'bend', bits: 2, default: 0 }, { id: 'res', bits: 1, default: 0 },
@@ -48,10 +48,13 @@ function waveform(ph, wave, frame) {
   if (wave === 3) sq ^= (frame & 1) ^ ((frame >> 2) & 1);
   return sq ? -128 : 127;
 }
-function amplitudes(env, aux, mode) {
-  const cmp = mode === 3 ? (((aux & 63) << 2) | 3) : aux;
-  const mn = Math.min(env, cmp);
-  return [mode === 1 ? mn : env, (mode === 2 || (mode === 3 && (aux >> 6))) ? mn : env];
+// CONTRACT 2: the envelope mode moves the noise share with the aux envelope (both parts follow env)
+function effMix(mix, mode, aux) {
+  const a3 = aux >> 5;
+  if (mode === 1) return Math.max(mix, 7 - a3);           // short tone: the noise takes over
+  if (mode === 2) return Math.min(mix, a3);               // short noise: the noise share falls
+  if (mode === 3) return aux >> 6 ? (aux >> 3) & 7 : mix; // clap: 3 bursts, then the tail
+  return mix;
 }
 const POP4 = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
 function noise(color, lfsr, frame) {
@@ -158,10 +161,9 @@ class MockV3Engine {
     const n = this.n, vi = n & 1, clearing = (n >> 1) === 0;
     const voc = this.v[vi];
     const capFrame = vi === 1 ? this.frame : (this.frame - 1) & 0x1fff;
-    const pe = effPitch(voc.pitch, voc.aux, voc.bend);
     const tone = waveform(voc.phase, voc.wave, capFrame);
-    const [at, an] = amplitudes(voc.env, voc.aux, voc.mode);
-    const mix = voc.mix, color = voc.color;
+    const env0 = voc.env, meff = effMix(voc.mix, voc.mode, voc.aux), clap = voc.mode === 3;
+    const color = voc.color;
     const tz = tz13(this.frame);
     const dec = voc.env !== 0 && (tz >= voc.decay || tz === 13);
     const lin = voc.mode === 3;
@@ -172,10 +174,11 @@ class MockV3Engine {
     if (clearing) {
       for (let t = 0; t < L; t++) { const y = v2 >= 0 ? 1 : 0, fb = y ? DAC_FB : -DAC_FB; ones += y; const nv1 = v1 - fb; v2 = v2 + v1 - 2 * fb; v1 = nv1; }
     } else {
-      const nz = noise(color, this.lfsr, this.frame), sel = SEL[mix];
+      const nz = noise(color, this.lfsr, this.frame), sel = SEL[meff], q = env0 >> 3, r = env0 & 7;
+      const tn = clap ? 0 : tone;
       for (let t = 0; t < L; t++) {
-        const sn = sel[t], a = sn ? an : at, src = sn ? nz : tone, q = a >> 3;
-        const x = t < q ? src : (t < q + (a & 7) ? src >> 3 : 0);
+        const src = sel[t] ? nz : tn;
+        const x = t < q ? src : (t < q + r ? src >> 3 : 0);
         const y = v2 >= 0 ? 1 : 0, fb = y ? DAC_FB : -DAC_FB;
         ones += y;
         const nv1 = v1 + x - fb; v2 = v2 + v1 - 2 * fb; v1 = nv1;
@@ -192,8 +195,9 @@ class MockV3Engine {
       if (dec) voc.env -= voc.env < 8 ? 1 : voc.env >> 3;
       if (this.kill) voc.env = 0;
       if (adec) voc.aux -= (voc.aux < 8 || lin) ? 1 : voc.aux >> 3;
-      voc.phase = (voc.phase + increment(pe)) & 0xffff;
+      const p3 = this.con && this.cb === 4;
       if (this.con) this.commit(voc);
+      if (!p3) voc.phase = (voc.phase + increment(effPitch(voc.pitch, voc.aux, voc.bend))) & 0xffff;   // the new aux
     }
     if (this.hv && !this.pend && (1 - vi) === this.tgt) this.con = true;
     else if (this.con) { this.con = false; this.hv = false; }

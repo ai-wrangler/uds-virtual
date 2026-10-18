@@ -15,6 +15,9 @@
 #ifndef UDS_FRAME
 #define UDS_FRAME 96
 #endif
+#ifndef UDS_FRAME_START
+#define UDS_FRAME_START 1    // the cycle number (mod UDS_FRAME) a frame starts on (harness.cc)
+#endif
 #define BACKEND_ID 3
 
 namespace backend {
@@ -46,7 +49,7 @@ __attribute__((always_inline)) inline void frame_idle_seq(std::integer_sequence<
   int n = 0;
   uint64_t o = 0;
   gen::State s = gen::S;           // a local copy the compiler keeps in registers
-  ((gen::step_at<(I + 1) % UDS_FRAME, UIO>(s), n += int(s.out_uo_out >> 7), o |= s.out_uio_out), ...);
+  ((gen::step_at<(I + UDS_FRAME_START) % UDS_FRAME, UIO>(s), n += int(s.out_uo_out >> 7), o |= s.out_uio_out), ...);
   gen::S = s;
   ones += n;
   uio_or |= uint8_t(o);
@@ -62,7 +65,7 @@ __attribute__((always_inline)) inline void frame_idle_seq3(std::integer_sequence
   int n = 0, a1 = 0, a2 = 0;
   uint64_t o = 0;
   gen::State s = gen::S;
-  ((gen::step_at<(I + 1) % UDS_FRAME, UIO>(s), n += int(s.out_uo_out >> 7), a1 += int(s.out_uo_out >> 7) * I,
+  ((gen::step_at<(I + UDS_FRAME_START) % UDS_FRAME, UIO>(s), n += int(s.out_uo_out >> 7), a1 += int(s.out_uo_out >> 7) * I,
     a2 += int(s.out_uo_out >> 7) * (I * I), o |= s.out_uio_out), ...);
   gen::S = s;
   ones += n;

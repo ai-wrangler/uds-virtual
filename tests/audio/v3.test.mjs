@@ -69,8 +69,8 @@ test('v1 packing: packHit gives exactly the bytes UDSEngine.hit sends', async ()
   }
 });
 
-test('v3 packing: CONTRACT 1 layout, MSB first, and unpack is its inverse', () => {
-  assert.equal(pj.contract, 1);
+test('v3 packing: CONTRACT 2 layout (as CONTRACT 1), MSB first, and unpack is its inverse', () => {
+  assert.equal(pj.contract, 2);
   const b = packHit(V3, 4, { pitch: 0x9a, decay: 0xc, wave: 2, color: 1, bend: 3, res: 0, bendtime: 5, mode: 2, mix: 3, level: 9, click: 1 });
   // P1 = decay<<4 | wave<<2 | color; P2 = bend<<6 | res<<5 | btime<<2 | mode; P3 = mix<<5 | level<<1 | click
   assert.deepEqual(b, [0x1c, 0x9a, (0xc << 4) | (2 << 2) | 1, (3 << 6) | (5 << 2) | 2, (3 << 5) | (9 << 1) | 1]);
@@ -172,8 +172,8 @@ test('kits: every kit in app/kits validates against params_v3.json; bad kits are
   // missing fields take the defaults
   const k = JSON.parse(JSON.stringify(good));
   delete k.channels[2].patch.click;
-  assert.equal(validateKit(k, V3).channels[2].patch.click, 0, 'CONTRACT 1: a missing id is 0');
-  bad((k) => { k.contract = 0; }, /contract 0, this chip is contract 1/);
+  assert.equal(validateKit(k, V3).channels[2].patch.click, 0, 'a missing id is 0 (CONTRACT 1 and 2)');
+  bad((k) => { k.contract = 0; }, /contract 0, this chip is contract 2/);
 });
 
 test('note maps: a kit may bring its own notes; channels without notes keep their GM notes', () => {

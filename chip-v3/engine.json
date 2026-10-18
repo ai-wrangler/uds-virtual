@@ -1,0 +1,1 @@
+{"phase": {"core.t": "uint64_t(P % 64)", "core.v": "uint64_t((P / 64) % 2)"}}

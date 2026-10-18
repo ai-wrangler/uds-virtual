@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { loadEngine } from '../../app/engine/uds-engine.js';
 
@@ -44,3 +44,41 @@ test('v3 engine matches the v3 model frame by frame', { skip }, async () => {
     assert.deepEqual(e.takeLog().map((m) => m.rx[1]), [fx.regs.id, fx.regs.version]);
   }
 });
+
+// V3-CHIP's own fixtures (tt-uds-v3 test/make_fixtures.py, vendored in chip-v3/test/fixtures/): the SPI pins
+// clock by clock, and the model's 1s per 64-clock window, BUSY at each window start, the channel digit and the
+// CRC of the whole audio bitstream.
+const PIN_FIX = fileURLToPath(new URL('../../chip-v3/test/fixtures/', import.meta.url));
+const pinFixtures = existsSync(PIN_FIX) ? readdirSync(PIN_FIX).filter((f) => f.endsWith('.json')) : [];
+const CRC = new Int32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c; });
+const SEG7 = [0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07];
+for (const f of pinFixtures.length ? pinFixtures : ['(none)']) {
+  test(`v3 engine replays V3-CHIP's pin-level fixture ${f}`, { skip: !existsSync(WASM) ? 'v3 engine not built yet' : !pinFixtures.length && 'no pin-level fixtures in chip-v3/test/fixtures' }, async () => {
+    const fx = JSON.parse(readFileSync(PIN_FIX + f));
+    const e = await loadEngine(readFileSync(WASM));
+    e.reset();
+    const changes = new Map(fx.spi.map(([c, cs, sck, mosi]) => [c, cs | (mosi << 1) | (sck << 3)]));
+    const W = fx.windowClocks, n = fx.windowOnes.length * W;
+    let pins = 0x01, crc = -1, ones = 0, badOnes = 0, badBusy = 0, badDigit = 0;
+    for (let c = 0; c < n; c++) {
+      if (changes.has(c)) pins = changes.get(c);
+      e.setPins(pins);
+      const t = e.runTrace(1)[0];
+      const bit = (t >> 7) & 1;
+      crc = CRC[(crc ^ bit) & 255] ^ (crc >>> 8);
+      ones += bit;
+      const w = Math.floor(c / W);
+      if (c % W === 0 && ((t >> 13) & 1) !== fx.busy[w]) badBusy++;
+      if (c % W === W - 1) {
+        if (ones !== fx.windowOnes[w]) badOnes++;
+        if ((t & 0x7f) !== SEG7[fx.digit[w]]) badDigit++;
+        ones = 0;
+      }
+    }
+    console.log(`# ${f}: ${fx.windowOnes.length} windows, ${fx.spi.length} pin changes: ${badOnes} count, ${badBusy} BUSY, ${badDigit} digit mismatches`);
+    assert.equal(badOnes, 0, '1s per window');
+    assert.equal((crc ^ -1) >>> 0, fx.crc32, 'CRC of the audio bitstream');
+    assert.equal(badDigit, 0, '7-segment digit');
+    assert.equal(badBusy, 0, 'BUSY at window starts');
+  });
+}

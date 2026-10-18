@@ -3,7 +3,7 @@
   "name": "Init",
   "inspiredBy": "",
   "description": "V3-WEB's starter kit for the editor: one plain sound per channel on the default GM note map. V3-SOUND's kits replace it as the default when they land.",
-  "contract": 1,
+  "contract": 2,
   "tempo": 120,
   "channels": [
     {

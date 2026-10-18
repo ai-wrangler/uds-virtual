@@ -39,6 +39,13 @@ cp "$C"/docs/v3/CONTRACT.md "$C"/docs/v3/params.json chip-v3/docs/v3/
 cp "$C"/info.yaml chip-v3/
 [ -f "$C/engine.json" ] && cp "$C/engine.json" chip-v3/
 [ -f "$C/docs/v3/engine.json" ] && cp "$C/docs/v3/engine.json" chip-v3/
+# the window counters of uds3_core.v ({frame, v, t} counts clocks from reset): gen.py folds them into its fast
+# idle frame. The truth test (v3_truth.test.mjs) proves the folding right on the model's fixtures.
+if [ ! -f chip-v3/engine.json ] && grep -q "{frame, v, t}" chip-v3/src/uds3_core.v; then
+  echo '{"phase": {"core.t": "uint64_t(P % 64)", "core.v": "uint64_t((P / 64) % 2)"}}' > chip-v3/engine.json
+fi
+mkdir -p chip-v3/test/fixtures
+cp "$C"/test/fixtures/*.json chip-v3/test/fixtures/ 2>/dev/null || true
 cat > chip-v3/README.md <<EOF
 # chip-v3: UDS v3 (preview, read-only)
 

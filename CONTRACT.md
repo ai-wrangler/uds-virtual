@@ -119,7 +119,8 @@ chip's Verilog.
 
 Engine builds with another shape export `sim_clock_hz`, `sim_frame_clocks`, `sim_msg_max`; `UDSEngine` then has
 `clockHz`, `frameClocks`, `frameRate` and `maxMessage` (6 MHz, 96, 4 for v1/v2), and `send()` takes up to
-`maxMessage` bytes (v3: 5-byte HITs). The v3 build's virtual controller is the model's standard host
+`maxMessage` bytes (v3: 5-byte HITs). v3 builds also have `setPins(uioIn)` (drive the SPI pins directly, for
+V3-CHIP's pin-level fixtures) and count frame k as cycles 128k .. 128k+127 (`UDS_FRAME_START=0`), as the model. The v3 build's virtual controller is the model's standard host
 (`UDS_HOST_WINDOW`): one byte per 64-clock window, a BUSY wait after every byte of a HIT (CONTRACT 1).
 
 Kits (v3): `app/kits/index.json` = `{ default, kits: [{ id, file, name, inspiredBy, source }] }`; each

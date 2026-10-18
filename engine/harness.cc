@@ -44,6 +44,12 @@ namespace {
 #ifndef UDS_MSG_MAX
 #define UDS_MSG_MAX 4
 #endif
+// The cycle frame 0 starts on: 1 for v1/v2 (frame k = the pins during cycles k*FRAME+1 .. (k+1)*FRAME, the
+// audio pin carries the sigma-delta carry of the cycle before), 0 for v3 (frame k = cycles k*FRAME ..
+// (k+1)*FRAME-1, as tt-uds-v3 model/uds3_model.py and its pin-level fixtures count them).
+#ifndef UDS_FRAME_START
+#define UDS_FRAME_START 1
+#endif
 #if defined(AUDIO_SINC3) && UDS_FRAME != 96
 #error "AUDIO_SINC3 assumes 96-clock frames"
 #endif
@@ -138,7 +144,6 @@ void spi_tick() {
       cur = queue[q_head];
       q_head = (q_head + 1) % QUEUE;
       st = BIT_LOW; h_byte = 0; rx = 0; bit = 0;
-      set_pin(0, 0);                                         // CS low
       cs_seen = 1;
       h_active = true;
     } else if (st != IDLE && !busy()) {                       // the next byte of the current message
@@ -146,7 +151,11 @@ void spi_tick() {
     }
     return;
   }
-  if (!h_active) return;
+  if (!h_active) {
+    if (st == CS_HOLD && pos == GAP + 8 * SCK_DIV + 4) { set_pin(0, 1); st = IDLE; }   // CS high after the last byte
+    return;
+  }
+  if (h_byte == 0 && pos == GAP - SCK_DIV) set_pin(0, 0);  // CS low 6 clocks before the first bit (test/make_fixtures.py)
   const int k = pos - GAP;
   if (k < 0) return;
   const int b = k / SCK_DIV, ph = k % SCK_DIV;
@@ -166,7 +175,6 @@ void spi_tick() {
     set_pin(3, 0);
     h_active = false;
     if (++h_byte < cur.len) return;                          // more bytes: wait for the next window
-    set_pin(0, 1);                                           // CS high after the last byte
     if ((cur.bytes[0] & 0xF8) == 0x18) hits_sent++;
     if (log_count < LOG) {
       LogEntry &e = log_buf[log_count++];
@@ -184,7 +192,7 @@ void spi_tick() {
       }
       e.len = cur.len;
     }
-    st = IDLE;
+    st = CS_HOLD;                                            // CS goes high 4 clocks later
   }
 }
 #else
@@ -384,7 +392,7 @@ inline void cycle_spi() {
   uint8_t u = backend::uio;
   seen_uio = u;
   uio_or |= u;
-  if (cycles != 0) {
+  if (UDS_FRAME_START == 0 || cycles != 0) {
     ones += backend::uo >> 7;
 #ifdef AUDIO_SINC3
     if (backend::uo >> 7) { m1 += fpos; m2 += fpos * fpos; }
@@ -402,7 +410,7 @@ inline void cycle_spi() {
 // Run until the end of the current frame. While the SPI is idle the inputs
 // do not change, so the loop is just the clock and the audio count.
 void run_to_frame_end() {
-  if (cycles == 0) cycle_spi();
+  if (UDS_FRAME_START == 1 && cycles == 0) cycle_spi();
   for (;;) {
     if (spi_idle()) {
 #ifdef BACKEND_HAS_FRAME_IDLE
@@ -519,6 +527,9 @@ EXPORT(sim_clock_hz) double sim_clock_hz() { return CLOCK_HZ; }
 EXPORT(sim_frame_clocks) int sim_frame_clocks() { return FRAME; }
 EXPORT(sim_msg_max) int sim_msg_max() { return MSG_MAX; }
 EXPORT(sim_log_stride) int sim_log_stride() { return int(sizeof(LogEntry)); }
+// Drive the SPI pins directly (pin-level fixtures): uio_in bits 0 CS_N, 1 MOSI, 3 SCK. Use with
+// sim_run_trace / sim_run_cycles while no message is queued (the virtual controller leaves the pins alone).
+EXPORT(sim_set_uio_in) void sim_set_uio_in(int v) { uio_in = uint8_t(v); }
 #endif
 
 EXPORT(sim_queue_len) int sim_queue_len() {
