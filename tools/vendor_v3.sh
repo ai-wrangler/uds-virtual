@@ -12,7 +12,7 @@
 #   2. app/engine/params_v3.json <- docs/v3/params.json; app/kits/ <- kits/*.json (with their note maps) and
 #      kits/patterns/*.mid (index.json lists them, the panel's own init.json stays);
 #   3. engine/build.sh all v3 (gen + CXXRTL);
-#   4. engine/test/fixtures/model_frames_v3.json <- the chip repo's web fixture, if it has one;
+#   4. engine/test/fixtures/model_frames_v3.json <- engine/test/make_fixture_v3.py (the vendored golden model);
 #   5. node --test engine/test/v3_truth.test.mjs tests/audio/v3.test.mjs.
 # It does not set "available": true in app/engine/builds.json: do that (and run the loudness match,
 # node engine/test/loudness.mjs --write) only after V3-CHIP's RTL tests pass against the model.
@@ -63,9 +63,7 @@ fi
 if [ -d "$KITS_SRC" ]; then python3 tools/sync_v3_kits.py "$KITS_SRC" "tt-uds-v3@${SHA:0:7}"; fi
 
 engine/build.sh all v3
-for f in "$C"/test/fixtures/web_frames*.json "$C"/test/web_frames*.json "$C"/docs/v3/web_frames*.json; do
-  [ -f "$f" ] && cp "$f" engine/test/fixtures/model_frames_v3.json && echo "fixture <- ${f#$C/}" && break
-done
+python3 engine/test/make_fixture_v3.py          # the truth fixture, from the vendored golden model
 python3 - "$SHA" <<'PY'
 import json, sys
 p = 'app/engine/builds.json'
