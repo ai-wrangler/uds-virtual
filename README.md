@@ -17,6 +17,32 @@ Every sound you hear is the count of 1s the simulated chip put on its audio pin,
 ## Status
 
 <!-- STATUS:BEGIN -->
+_UDS v3 added on 18 October 2026, about 15:30 Riga time (V3-WEB, PR #12)._
+
+**v3 (modern, preview) is live**: choose it in the Output section's **Chip** selector (or open `?chip=v3`).
+
+![v3 on the desktop, 1440x900: the Reykjavík kit playing, the sound editor on channel 1](docs/screenshots/v3-desktop.png)
+
+<img src="docs/screenshots/v3-mobile.png" width="260" alt="v3 on a phone, 390x844">
+
+- **Engine:** the v3 Verilog of ai-wrangler/tt-uds-v3 `main` at `7232722` (CONTRACT 2, the GDS-green RTL) runs
+  clock by clock at 8 MHz (128-clock frames) in WebAssembly, like v1.
+- **Verified:**
+  - against V3-CHIP's golden model: 0 mismatches on 43 006 frames, in Node and on the live site;
+  - V3-CHIP's own pin-level fixtures: 0 mismatches, CRC equal;
+  - gen = CXXRTL on 10 004 294 clocks;
+  - V3-CHIP's cocotb tests pass on the vendored RTL.
+- **Sound editor:** every parameter of a channel; 5 kits by V3-SOUND (Default, Copenhagen Night, Reykjavík,
+  Shoreditch, Tromsø) with their note maps and demo grooves; export and import of kits; patches kept per chip in
+  the browser.
+- **Loudness** matched to v1 within 0.02 dB.
+- **Speed** on the live site while a groove plays: 58 to 71 MHz, 7.3x to 8.9x real time, 0 underruns (2-vCPU
+  cloud sandbox, headless Chromium).
+- **Tests:** Node 69/69, Playwright 81/81 locally; the e2e suite against the live site 52/52.
+
+The v1 report below is unchanged.
+
+
 _Final report from the integration session, night of 17–18 October 2026, about 00:00 Riga time._
 
 **URL: https://ai-wrangler.github.io/uds-virtual/** (Chrome or Edge, desktop). Deployed from `main` by GitHub Actions; every merge redeploys.
