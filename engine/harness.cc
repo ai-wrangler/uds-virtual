@@ -31,10 +31,31 @@
 
 namespace {
 
-constexpr int VOICES = 2;
-constexpr int FRAME = 48 * VOICES;   // clocks per audio frame
+// Chip variants set these with -D (build.sh v3): clocks per audio frame, chip clock, longest SPI message.
+// The defaults are the UDS-1x1 (v1, v2): 2 voices x 48 clocks, 6 MHz, 4-byte messages. Such builds also
+// set UDS_EXPORT_SHAPE, which exports sim_clock_hz / sim_frame_clocks / sim_msg_max / sim_log_stride (the
+// v1 and v2 builds stay byte-identical; uds-engine.js assumes the defaults when those exports are missing).
+#ifndef UDS_FRAME
+#define UDS_FRAME 96
+#endif
+#ifndef UDS_CLOCK_HZ
+#define UDS_CLOCK_HZ 6000000.0
+#endif
+#ifndef UDS_MSG_MAX
+#define UDS_MSG_MAX 4
+#endif
+#if defined(AUDIO_SINC3) && UDS_FRAME != 96
+#error "AUDIO_SINC3 assumes 96-clock frames"
+#endif
+constexpr int FRAME = UDS_FRAME;     // clocks per audio frame
 constexpr int HALF = 4;              // SPI: clocks per SCK half period (SCK = clk / 8)
-constexpr double CLOCK_HZ = 6000000.0;
+constexpr double CLOCK_HZ = UDS_CLOCK_HZ;
+constexpr int MSG_MAX = UDS_MSG_MAX;
+#if UDS_MSG_MAX > 4
+typedef uint64_t RxWord;             // MISO shift register: up to 8 bytes
+#else
+typedef uint32_t RxWord;
+#endif
 
 uint64_t cycles = 0;                 // clocks since reset = number of the next cycle
 uint32_t frames = 0;                 // complete frames since reset
@@ -54,7 +75,7 @@ int hits_sent = 0;                   // HIT messages completed
 // ---- the virtual RP2040: a queue of messages sent over SPI --------------
 struct Message {
   uint8_t len;
-  uint8_t bytes[4];
+  uint8_t bytes[MSG_MAX];
 };
 constexpr int QUEUE = 256;           // ring buffer: holds QUEUE - 1 messages
 Message queue[QUEUE];
@@ -69,6 +90,10 @@ struct LogEntry {
   uint32_t recv;
   uint32_t len;
   uint32_t pad;
+#if UDS_MSG_MAX > 4
+  uint32_t sent_hi;                  // bytes 4..7
+  uint32_t recv_hi;
+#endif
 };
 constexpr int LOG = 1024;
 LogEntry log_buf[LOG];
@@ -78,7 +103,7 @@ int log_count = 0;                   // entries since the last sim_log_take
 enum State { IDLE, CS_SETUP, BIT_LOW, BIT_HIGH, CS_HOLD, CS_GAP };
 State st = IDLE;
 int wait = 0, bit = 0;
-uint32_t rx = 0;
+RxWord rx = 0;
 uint64_t last_rise = 0;
 Message cur;
 
@@ -128,10 +153,19 @@ void spi_tick() {
         LogEntry &e = log_buf[log_count++];
         e.last_sck = double(last_rise);
         e.sent = 0; e.recv = 0;
+#if UDS_MSG_MAX > 4
+        e.sent_hi = 0; e.recv_hi = 0;
+        for (int i = 0; i < cur.len; i++) {
+          uint32_t sb = cur.bytes[i], rb = uint32_t((rx >> (8 * (cur.len - 1 - i))) & 0xFF);
+          if (i < 4) { e.sent |= sb << (8 * i); e.recv |= rb << (8 * i); }
+          else { e.sent_hi |= sb << (8 * (i - 4)); e.recv_hi |= rb << (8 * (i - 4)); }
+        }
+#else
         for (int i = 0; i < cur.len; i++) {
           e.sent |= uint32_t(cur.bytes[i]) << (8 * i);
           e.recv |= ((rx >> (8 * (cur.len - 1 - i))) & 0xFF) << (8 * i);
         }
+#endif
         e.len = cur.len;
       }
       st = CS_GAP; wait = HALF - 1;
@@ -387,6 +421,27 @@ EXPORT(sim_send) int sim_send(int len, int b0, int b1, int b2, int b3) {
   q_tail = next;
   return 1;
 }
+
+#if UDS_MSG_MAX > 4
+// Messages longer than 4 bytes: write the bytes to sim_msg_ptr(), then call sim_send_buf(len).
+uint8_t msg_in[MSG_MAX];
+EXPORT(sim_msg_ptr) uint8_t *sim_msg_ptr() { return msg_in; }
+EXPORT(sim_send_buf) int sim_send_buf(int len) {
+  int next = (q_tail + 1) % QUEUE;
+  if (next == q_head || len < 1 || len > MSG_MAX) return 0;
+  Message &m = queue[q_tail];
+  m.len = uint8_t(len);
+  for (int i = 0; i < len; i++) m.bytes[i] = msg_in[i];
+  q_tail = next;
+  return 1;
+}
+#endif
+#ifdef UDS_EXPORT_SHAPE
+EXPORT(sim_clock_hz) double sim_clock_hz() { return CLOCK_HZ; }
+EXPORT(sim_frame_clocks) int sim_frame_clocks() { return FRAME; }
+EXPORT(sim_msg_max) int sim_msg_max() { return MSG_MAX; }
+EXPORT(sim_log_stride) int sim_log_stride() { return int(sizeof(LogEntry)); }
+#endif
 
 EXPORT(sim_queue_len) int sim_queue_len() {
   return (q_tail - q_head + QUEUE) % QUEUE + (st != IDLE ? 1 : 0);

@@ -53,6 +53,8 @@ struct State {
   uint64_t c225 = 0;  // $dff spi.is_hit
 };
 State S;
+// free-running counters folded into step_at (0 = none: the harness then skips the unrolled idle frame)
+#define GEN_PHASE_REGS 2
 
 __attribute__((always_inline)) inline void step(State &s) {
   const uint64_t c221 = uint64_t(((s.c3 >> 1)) == 0);

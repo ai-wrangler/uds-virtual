@@ -12,6 +12,9 @@
 #include GEN_HEADER
 
 #define BACKEND_NAME "gen"
+#ifndef UDS_FRAME
+#define UDS_FRAME 96
+#endif
 #define BACKEND_ID 3
 
 namespace backend {
@@ -32,9 +35,10 @@ __attribute__((always_inline)) inline void clock(uint8_t uio_in) {
   uio = uint8_t(gen::S.out_uio_out);
 }
 
-// One whole frame on an idle SPI bus, cycles 96k+1 .. 96k+96, with the
+// One whole frame on an idle SPI bus, cycles Fk+1 .. Fk+F (F = UDS_FRAME, 96 for v1/v2), with the
 // window counters folded into the code (gen::step_at). Adds the frame's 1s
 // on the audio pin to ones and ORs uio_out into uio_or.
+#if GEN_PHASE_REGS > 0   // without known counters an unrolled frame is large and gains little
 #define BACKEND_HAS_FRAME_IDLE 1
 template <int UIO, int... I>
 __attribute__((always_inline)) inline void frame_idle_seq(std::integer_sequence<int, I...>, int &ones,
@@ -42,7 +46,7 @@ __attribute__((always_inline)) inline void frame_idle_seq(std::integer_sequence<
   int n = 0;
   uint64_t o = 0;
   gen::State s = gen::S;           // a local copy the compiler keeps in registers
-  ((gen::step_at<(I + 1) % 96, UIO>(s), n += int(s.out_uo_out >> 7), o |= s.out_uio_out), ...);
+  ((gen::step_at<(I + 1) % UDS_FRAME, UIO>(s), n += int(s.out_uo_out >> 7), o |= s.out_uio_out), ...);
   gen::S = s;
   ones += n;
   uio_or |= uint8_t(o);
@@ -58,7 +62,7 @@ __attribute__((always_inline)) inline void frame_idle_seq3(std::integer_sequence
   int n = 0, a1 = 0, a2 = 0;
   uint64_t o = 0;
   gen::State s = gen::S;
-  ((gen::step_at<(I + 1) % 96, UIO>(s), n += int(s.out_uo_out >> 7), a1 += int(s.out_uo_out >> 7) * I,
+  ((gen::step_at<(I + 1) % UDS_FRAME, UIO>(s), n += int(s.out_uo_out >> 7), a1 += int(s.out_uo_out >> 7) * I,
     a2 += int(s.out_uo_out >> 7) * (I * I), o |= s.out_uio_out), ...);
   gen::S = s;
   ones += n;
@@ -70,8 +74,8 @@ __attribute__((always_inline)) inline void frame_idle_seq3(std::integer_sequence
 }
 inline bool frame_idle(uint8_t uio_in, int &ones, uint8_t &uio_or, int &m1, int &m2) {
   gen::in_uio_in = uio_in;
-  if (uio_in == 0x01) frame_idle_seq3<0x01>(std::make_integer_sequence<int, 96>{}, ones, uio_or, m1, m2);
-  else if (uio_in == 0x03) frame_idle_seq3<0x03>(std::make_integer_sequence<int, 96>{}, ones, uio_or, m1, m2);
+  if (uio_in == 0x01) frame_idle_seq3<0x01>(std::make_integer_sequence<int, UDS_FRAME>{}, ones, uio_or, m1, m2);
+  else if (uio_in == 0x03) frame_idle_seq3<0x03>(std::make_integer_sequence<int, UDS_FRAME>{}, ones, uio_or, m1, m2);
   else return false;
   return true;
 }
@@ -79,11 +83,38 @@ inline bool frame_idle(uint8_t uio_in, int &ones, uint8_t &uio_or, int &m1, int 
 // Returns false if these inputs have no specialised version.
 inline bool frame_idle(uint8_t uio_in, int &ones, uint8_t &uio_or) {
   gen::in_uio_in = uio_in;
-  if (uio_in == 0x01) frame_idle_seq<0x01>(std::make_integer_sequence<int, 96>{}, ones, uio_or);
-  else if (uio_in == 0x03) frame_idle_seq<0x03>(std::make_integer_sequence<int, 96>{}, ones, uio_or);
+  if (uio_in == 0x01) frame_idle_seq<0x01>(std::make_integer_sequence<int, UDS_FRAME>{}, ones, uio_or);
+  else if (uio_in == 0x03) frame_idle_seq<0x03>(std::make_integer_sequence<int, UDS_FRAME>{}, ones, uio_or);
   else return false;
   return true;
 }
 #endif
+#else   // GEN_PHASE_REGS == 0: no counters to fold, so a plain loop over a local copy of the state with the
+        // idle-bus inputs as constants (one copy of the logic instead of UDS_FRAME unrolled ones)
+#define BACKEND_HAS_FRAME_IDLE 1
+template <int UIO>
+__attribute__((noinline)) void frame_idle_loop(int &ones, uint8_t &uio_or) {
+  int n = 0;
+  uint64_t o = 0;
+  gen::State s = gen::S;
+  for (int i = 0; i < UDS_FRAME; i++) {
+    gen::step_at<0, UIO>(s);
+    n += int(s.out_uo_out >> 7);
+    o |= s.out_uio_out;
+  }
+  gen::S = s;
+  ones += n;
+  uio_or |= uint8_t(o);
+  uo = uint8_t(s.out_uo_out);
+  uio = uint8_t(s.out_uio_out);
+}
+inline bool frame_idle(uint8_t uio_in, int &ones, uint8_t &uio_or) {
+  gen::in_uio_in = uio_in;
+  if (uio_in == 0x01) frame_idle_loop<0x01>(ones, uio_or);
+  else if (uio_in == 0x03) frame_idle_loop<0x03>(ones, uio_or);
+  else return false;
+  return true;
+}
+#endif  // GEN_PHASE_REGS
 
 }  // namespace backend

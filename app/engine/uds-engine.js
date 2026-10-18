@@ -68,6 +68,18 @@ export class UDSEngine {
      */
     this.audioModel = x.sim_audio_order ? 'sinc3' : 'count';
     /** @private */ this._rate = sampleRate;
+    /**
+     * Chip clock in Hz and clocks per audio frame of this build: 6 MHz and 96 for the UDS-1x1 builds (v1, v2),
+     * whatever the chip declares for others (v3: 12 MHz, 192). Builds that do not export them are UDS-1x1.
+     * @type {number}
+     */
+    this.clockHz = x.sim_clock_hz ? x.sim_clock_hz() : CLOCK_HZ;
+    /** @type {number} */
+    this.frameClocks = x.sim_frame_clocks ? x.sim_frame_clocks() : FRAME_CLOCKS;
+    /** Frames per second. @type {number} */
+    this.frameRate = this.clockHz / this.frameClocks;
+    /** Longest SPI message send() takes, in bytes (4 for v1/v2, 8 for v3). @type {number} */
+    this.maxMessage = x.sim_msg_max ? x.sim_msg_max() : 4;
     x.sim_reset(sampleRate);
   }
 
@@ -91,13 +103,18 @@ export class UDSEngine {
   setFilterHz(hz) { this._x.sim_set_filter(+hz || 0); }
 
   /**
-   * Queue one SPI message of 1..4 bytes.
+   * Queue one SPI message of 1..maxMessage bytes (4 for v1/v2).
    * @param {ArrayLike<number>} bytes
    * @returns {boolean} false if the queue is full (or the length is wrong)
    */
   send(bytes) {
     const n = bytes.length;
-    if (!(n >= 1 && n <= 4)) return false;
+    if (!(n >= 1 && n <= this.maxMessage)) return false;
+    if (n > 4) {
+      const buf = new Uint8Array(this._mem.buffer, this._x.sim_msg_ptr(), n);
+      for (let i = 0; i < n; i++) buf[i] = bytes[i] | 0;
+      return this._x.sim_send_buf(n) === 1;
+    }
     return this._x.sim_send(n, bytes[0] | 0, n > 1 ? bytes[1] | 0 : 0, n > 2 ? bytes[2] | 0 : 0,
       n > 3 ? bytes[3] | 0 : 0) === 1;
   }
@@ -132,9 +149,9 @@ export class UDSEngine {
   }
 
   /**
-   * Simulate n whole frames (frames are FRAME_CLOCKS clocks).
+   * Simulate n whole frames (frames are frameClocks clocks).
    * @param {number} n
-   * @returns {number} 1s on the audio pin in the last frame (0..96)
+   * @returns {number} 1s on the audio pin in the last frame (0..frameClocks)
    */
   runFrames(n) { return this._x.sim_run_frames(n | 0); }
 
@@ -167,14 +184,19 @@ export class UDSEngine {
     const n = this._x.sim_log_count();
     const p = this._x.sim_log_ptr();
     const dv = new DataView(this._mem.buffer);
+    const stride = this._x.sim_log_stride ? this._x.sim_log_stride() : 24;
     const out = [];
     for (let i = 0; i < n; i++) {
-      const o = p + i * 24;
+      const o = p + i * stride;
       const lastSck = dv.getFloat64(o, true);
       const sent = dv.getUint32(o + 8, true), recv = dv.getUint32(o + 12, true);
       const len = dv.getUint32(o + 16, true);
+      const sentHi = stride > 24 ? dv.getUint32(o + 24, true) : 0, recvHi = stride > 24 ? dv.getUint32(o + 28, true) : 0;
       const bytes = [], rx = [];
-      for (let k = 0; k < len; k++) { bytes.push((sent >>> (8 * k)) & 255); rx.push((recv >>> (8 * k)) & 255); }
+      for (let k = 0; k < len; k++) {
+        const s = k < 4 ? sent >>> (8 * k) : sentHi >>> (8 * (k - 4)), r = k < 4 ? recv >>> (8 * k) : recvHi >>> (8 * (k - 4));
+        bytes.push(s & 255); rx.push(r & 255);
+      }
       out.push({ lastSck, bytes, rx });
     }
     this._x.sim_log_clear();
